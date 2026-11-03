@@ -5,17 +5,17 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { UserRole } from '../users/user.entity';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('settings')
 export class SettingsController {
   constructor(private settings: SettingsService) {}
 
-  @Roles(UserRole.ADMIN)
+  // Public: the pricing page shows learners the refund terms before they pay.
   @Get('refund-policy')
   getRefundPolicy() {
     return this.settings.getRefundPolicy();
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Patch('refund-policy')
   setRefundPolicy(@Body() body: Partial<RefundPolicy>) {

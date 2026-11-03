@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../../../lib/api';
-import { toSlug } from '../CourseListing';
+import { toSlug } from '../trackSlug';
 
 export interface OpenProgram {
   id: string;

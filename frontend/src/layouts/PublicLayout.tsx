@@ -1,231 +1,156 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Facebook, Twitter, Linkedin, Youtube } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowRight, Menu, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { TRACKS } from '../pages/public/trackContent';
+
+const NAV = [
+  { name: 'Home', path: '/public/home' },
+  { name: 'About', path: '/public/about' },
+  { name: 'Tracks', path: '/public/courses' },
+  { name: 'Pricing', path: '/public/tracks', exact: true },
+  { name: 'Verify', path: '/public/verify' },
+];
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const navLinks = [
-    { name: 'Home', path: '/public/home' },
-    { name: 'About Us', path: '/public/about' },
-    { name: 'Courses', path: '/public/courses' },
-    { name: 'Pricing', path: '/public/tracks' },
-    { name: 'Verify', path: '/public/verify' },
-  ];
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  useEffect(() => { setIsMenuOpen(false); window.scrollTo(0, 0); }, [location.pathname]);
 
-  const handleDashboard = () => {
-    if (!user) { navigate('/login'); return; }
-    if (user.role === 'admin') navigate('/admin/dashboard');
-    else if (user.role === 'instructor') navigate('/instructor/dashboard');
-    else navigate('/learner/dashboard');
-  };
+  const isActive = (path: string, exact?: boolean) =>
+    exact ? location.pathname === path : location.pathname === path || location.pathname.startsWith(`${path}/`);
+
+  const dashboardPath = !user ? '/login'
+    : user.role === 'admin' ? '/admin/dashboard'
+    : user.role === 'learner' ? '/learner/dashboard'
+    : '/instructor/dashboard';
 
   const footerColumns = [
-    {
-      title: 'Tracks',
-      links: [
-        { label: 'Frontend Engineering', path: '/public/courses' },
-        { label: 'Backend Engineering', path: '/public/courses' },
-        { label: 'Product Design', path: '/public/courses' },
-        { label: 'Data Analysis', path: '/public/courses' },
-        { label: 'Cloud Engineering', path: '/public/courses' },
-        { label: 'Cybersecurity', path: '/public/courses' },
-      ],
-    },
-    {
-      title: 'Company',
-      links: [
-        { label: 'About Us', path: '/public/about' },
-        { label: 'Blog', path: '/public/about' },
-        { label: 'Careers', path: '/public/about' },
-        { label: 'Contact Us', path: '/public/about' },
-        { label: 'Partner With Us', path: '/public/about' },
-      ],
-    },
-    {
-      title: 'Support',
-      links: [
-        { label: 'Help Center', path: '/public/about' },
-        { label: 'Verify Certificate', path: '/public/verify' },
-        { label: 'Refund Policy', path: '/public/about' },
-        { label: 'Terms of Service', path: '/public/about' },
-        { label: 'Privacy Policy', path: '/public/about' },
-      ],
-    },
-    {
-      title: 'Quick Links',
-      links: [
-        { label: 'Log In', path: '/login' },
-        { label: 'Register', path: '/register' },
-        { label: 'My Dashboard', path: '/learner/dashboard' },
-        { label: 'Course Catalogue', path: '/public/courses' },
-        { label: 'Pricing', path: '/public/tracks' },
-      ],
-    },
+    { title: 'Tracks', links: Object.values(TRACKS).map((t) => ({ label: t.track, path: `/public/tracks/${t.slug}` })) },
+    { title: 'Explore', links: [{ label: 'About NetraNova', path: '/public/about' }, { label: 'All tracks', path: '/public/courses' }, { label: 'Pricing & refunds', path: '/public/tracks' }] },
+    { title: 'Learners', links: [{ label: 'Verify a certificate', path: '/public/verify' }, { label: 'Log in', path: '/login' }, { label: 'Create an account', path: '/register' }, { label: 'Forgot password', path: '/forgot-password' }] },
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-white">
       {/* ── Navbar ── */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/public/home" className="flex items-center gap-2">
+      <header className={`sticky top-0 z-50 transition-all ${scrolled ? 'border-b border-gray-100 bg-white/85 shadow-sm backdrop-blur-lg' : 'bg-white'}`}>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            <Link to="/public/home" className="flex items-center gap-2" aria-label="NetraNova home">
               <img src="/netranova-logo.webp" alt="NetraNova" className="h-10" />
             </Link>
 
-            <nav className="hidden md:flex items-center gap-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  to={link.path}
-                  className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
-                    (link.path === '/public/tracks' && location.pathname === '/public/tracks') ||
-                    (link.path === '/public/home' && location.pathname === '/public/home' && link.name === 'Home')
-                      ? 'text-qore-medium'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  {link.name}
-                </Link>
-              ))}
+            <nav className="hidden items-center gap-1 rounded-full bg-gray-50 p-1 md:flex">
+              {NAV.map((link) => {
+                const active = isActive(link.path, link.exact);
+                return (
+                  <Link key={link.name} to={link.path} className={`relative rounded-full px-4 py-2 text-sm font-medium transition-colors ${active ? 'text-white' : 'text-gray-600 hover:text-qore-dark'}`}>
+                    {active && <motion.span layoutId="nn-nav-pill" className="absolute inset-0 rounded-full bg-qore-dark" transition={{ type: 'spring', stiffness: 400, damping: 32 }} />}
+                    <span className="relative">{link.name}</span>
+                  </Link>
+                );
+              })}
             </nav>
 
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden items-center gap-2 md:flex">
               {user ? (
-                <button
-                  onClick={handleDashboard}
-                  className="text-sm font-medium text-gray-600 hover:text-qore-dark px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Go to Dashboard
+                <button onClick={() => navigate(dashboardPath)} className="flex items-center gap-2 rounded-full bg-qore-dark px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-qore-medium">
+                  My dashboard <ArrowRight size={15} />
                 </button>
               ) : (
-                <Link
-                  to="/login"
-                  className="text-sm font-medium text-gray-600 hover:text-gray-900 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Log In
-                </Link>
+                <>
+                  <Link to="/login" className="rounded-full px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:text-qore-dark">
+                    Log in
+                  </Link>
+                  <Link to="/register" className="rounded-full bg-gradient-to-r from-[#FFB020] to-[#FF6A00] px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-orange-500/25 transition-transform hover:scale-[1.03]">
+                    Get started
+                  </Link>
+                </>
               )}
-              <Link
-                to="/register"
-                className="bg-qore-medium hover:bg-qore-dark text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors"
-              >
-                Register
-              </Link>
             </div>
 
-            <button className="md:hidden p-2 text-gray-600" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            <button className="p-2 text-gray-600 md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label={isMenuOpen ? 'Close menu' : 'Open menu'} aria-expanded={isMenuOpen}>
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
 
-        {isMenuOpen && (
-          <div className="md:hidden border-t border-gray-100 bg-white">
-            <div className="px-4 pt-2 pb-6 space-y-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  to={link.path}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-3 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg"
-                >
-                  {link.name}
-                </Link>
-              ))}
-              <div className="mt-6 pt-6 border-t border-gray-100 flex flex-col gap-3 px-3">
-                {user ? (
-                  <button
-                    onClick={() => { setIsMenuOpen(false); handleDashboard(); }}
-                    className="text-center py-3 text-base font-medium text-gray-700 border border-gray-200 rounded-xl"
-                  >
-                    Go to Dashboard
-                  </button>
-                ) : (
-                  <Link
-                    to="/login"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="text-center py-3 text-base font-medium text-gray-700 border border-gray-200 rounded-xl"
-                  >
-                    Log In
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden border-t border-gray-100 bg-white md:hidden">
+              <div className="space-y-1 px-4 pb-6 pt-3">
+                {NAV.map((link) => (
+                  <Link key={link.name} to={link.path} className={`block rounded-xl px-4 py-3 text-base font-medium ${isActive(link.path, link.exact) ? 'bg-qore-light text-qore-dark' : 'text-gray-700 hover:bg-gray-50'}`}>
+                    {link.name}
                   </Link>
-                )}
-                <Link
-                  to="/register"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="text-center py-3 text-base font-medium text-white bg-qore-medium rounded-full"
-                >
-                  Register
-                </Link>
+                ))}
+                <div className="mt-4 flex flex-col gap-3 border-t border-gray-100 pt-4">
+                  {user ? (
+                    <Link to={dashboardPath} className="rounded-2xl bg-qore-dark py-3 text-center text-base font-semibold text-white">My dashboard</Link>
+                  ) : (
+                    <>
+                      <Link to="/login" className="rounded-2xl border border-gray-200 py-3 text-center text-base font-medium text-gray-700">Log in</Link>
+                      <Link to="/register" className="rounded-2xl bg-gradient-to-r from-[#FFB020] to-[#FF6A00] py-3 text-center text-base font-bold text-white">Get started</Link>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       <main className="flex-1">{children}</main>
 
       {/* ── Footer ── */}
-      <footer className="bg-white border-t border-gray-100 pt-14 pb-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Top row: logo + social */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
-            <Link to="/public/home">
-              <img src="/netranova-logo.webp" alt="NetraNova" className="h-10" />
-            </Link>
-            <div className="flex items-center gap-3">
-              {[
-                { Icon: Facebook, label: 'Facebook' },
-                { Icon: Twitter, label: 'Twitter' },
-                { Icon: Linkedin, label: 'LinkedIn' },
-                { Icon: Youtube, label: 'YouTube' },
-              ].map(({ Icon, label }) => (
-                <a
-                  key={label}
-                  href="#"
-                  aria-label={label}
-                  className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:text-qore-medium hover:border-qore-medium transition-colors"
-                >
-                  <Icon size={16} />
-                </a>
+      <footer className="relative overflow-hidden bg-qore-dark text-white">
+        <div className="nn-stars pointer-events-none absolute inset-0 opacity-40" />
+        <div className="pointer-events-none absolute -right-40 -top-40 h-[480px] w-[480px] rounded-full border border-white/5" />
+        <div className="pointer-events-none absolute -right-20 -top-20 h-[320px] w-[320px] rounded-full border border-dashed border-white/10" />
+        <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-16 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1.3fr_2fr]">
+            <div>
+              <Link to="/public/home" className="inline-flex items-center gap-2.5">
+                <img src="/netranova-icon.webp" alt="" className="h-10 w-10" />
+                <span className="font-display text-2xl font-extrabold tracking-tight">NetraNova</span>
+              </Link>
+              <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/55">
+                Live, cohort-based tech learning — expert-led classes, weekly projects and certificates anyone can verify.
+              </p>
+              <Link to="/register" className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#FFB020] to-[#FF6A00] px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-500/20">
+                Get notified about new cohorts <ArrowRight size={15} />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-10 sm:grid-cols-3">
+              {footerColumns.map((col) => (
+                <div key={col.title}>
+                  <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-qore-highlight">{col.title}</h4>
+                  <ul className="space-y-2.5">
+                    {col.links.map((link) => (
+                      <li key={link.label}>
+                        <Link to={link.path} className="text-sm text-white/60 transition-colors hover:text-white">{link.label}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
             </div>
           </div>
-
-          {/* Link columns */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
-            {footerColumns.map((col) => (
-              <div key={col.title}>
-                <h4 className="text-sm font-bold text-gray-900 mb-4">{col.title}</h4>
-                <ul className="space-y-2.5">
-                  {col.links.map((link) => (
-                    <li key={link.label}>
-                      <Link
-                        to={link.path}
-                        className="text-sm text-gray-500 hover:text-qore-medium transition-colors"
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          {/* Bottom bar */}
-          <div className="border-t border-gray-100 pt-6 flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-gray-400">
-            <p>© All rights reserved <span className="font-semibold text-gray-600">NetraNova</span> 2026.</p>
-            <div className="flex items-center gap-4">
-              <a href="#" className="hover:text-gray-600 transition-colors">Terms & Conditions</a>
-              <a href="#" className="hover:text-gray-600 transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-gray-600 transition-colors">Cookie Policy</a>
-            </div>
+          <div className="mt-14 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs text-white/40 md:flex-row">
+            <p>© {new Date().getFullYear()} NetraNova · A product of <a href="https://netrasoft.co" className="text-white/60 hover:text-white">NetraSoft Solutions</a></p>
+            <p>Payments secured by Paystack</p>
           </div>
         </div>
       </footer>

@@ -26,10 +26,12 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center bg-white px-6 sm:px-12 py-12">
-      <div className="mb-10 text-center">
+    <div className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-qore-dark px-4 sm:px-12 py-12">
+      <div className="nn-stars pointer-events-none absolute inset-0 opacity-60" />
+      <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-qore-medium/30 blur-3xl" />
+      <div className="relative mb-8 text-center">
         <Link to="/public/home">
-          <img src="/netranova-logo.webp" alt="NetraNova" className="h-8 inline" />
+          <span className="inline-flex items-center gap-2"><img src="/netranova-icon.webp" alt="" className="h-9 w-9" /><span className="font-display text-xl font-extrabold text-white">NetraNova</span></span>
         </Link>
       </div>
 
@@ -37,7 +39,7 @@ export default function ForgotPasswordPage() {
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="w-full max-w-[420px] mx-auto"
+        className="relative w-full max-w-[440px] mx-auto rounded-3xl bg-white p-8 shadow-2xl shadow-black/30 sm:p-10"
       >
         {sent ? (
           <div className="text-center">

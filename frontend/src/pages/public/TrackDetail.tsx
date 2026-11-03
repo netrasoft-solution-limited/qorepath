@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import api from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
-import { toSlug } from './CourseListing';
+import { toSlug } from './trackSlug';
 import { TRACKS, genericTrack, type TrackContent } from './trackContent';
 import { trackIcon, naira } from './home/data';
 

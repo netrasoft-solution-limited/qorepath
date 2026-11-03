@@ -4,9 +4,9 @@ import { motion, useMotionTemplate, useMotionValue, useReducedMotion, useSpring,
 import { ArrowUpRight, CalendarDays, Clock } from 'lucide-react';
 import { FALLBACK_TRACKS, naira, trackIcon } from './data';
 import { type OpenProgram, shortDate } from './useOpenPrograms';
-import { toSlug } from '../CourseListing';
+import { toSlug } from '../trackSlug';
 
-interface Card {
+export interface Card {
   key: string;
   track: string;
   blurb?: string;
@@ -23,7 +23,7 @@ const ACCENTS = [
   'from-[#1AA3F0] to-[#8CCBFF]',
 ];
 
-function TiltCard({ card, index }: { card: Card; index: number }) {
+export function TiltCard({ card, index }: { card: Card; index: number }) {
   const reduce = useReducedMotion();
   const px = useMotionValue(0.5);
   const py = useMotionValue(0.5);

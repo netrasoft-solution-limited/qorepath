@@ -35,6 +35,12 @@ export class CertificatesService {
   async verify(certificateNumber: string) {
     const cert = await this.repo.findOneBy({ certificateNumber });
     if (!cert) throw new NotFoundException('Certificate not found or invalid');
-    return cert;
+    // Public endpoint: confirm who/what/when only — never the holder's contact details.
+    return {
+      certificateNumber: cert.certificateNumber,
+      issuedDate: cert.issuedDate,
+      user: { firstName: cert.user?.firstName, lastName: cert.user?.lastName },
+      cohort: cert.cohort ? { name: cert.cohort.name, startDate: cert.cohort.startDate, endDate: cert.cohort.endDate } : null,
+    };
   }
 }

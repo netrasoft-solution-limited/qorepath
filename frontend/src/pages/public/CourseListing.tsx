@@ -1,247 +1,200 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Users, BookOpen, Layers, Video } from 'lucide-react';
-import api from '../../lib/api';
+import { ArrowRight, BadgeCheck, CalendarDays, Film, Video, Wallet } from 'lucide-react';
+import { TRACKS } from './trackContent';
+import { useOpenPrograms, shortDate, type OpenProgram } from './home/useOpenPrograms';
+import { TiltCard, type Card } from './home/TrackShowcase';
+import { naira, trackIcon } from './home/data';
 
-const TRACK_SLUGS: Record<string, string> = {
-  'Frontend Engineering':   'frontend',
-  'Backend Engineering':    'backend',
-  'Product Design (UI/UX)': 'product-design',
-  'Product Design':         'product-design',
-  'Data Analysis':          'data-analysis',
-  'Cloud Engineering':      'cloud',
-  'Cybersecurity':          'cybersecurity',
-};
+export { toSlug } from './trackSlug';
 
-export function toSlug(track: string) {
-  return TRACK_SLUGS[track] ?? track.toLowerCase().replace(/\s+/g, '-');
+interface Row {
+  slug: string;
+  track: string;
+  tagline: string;
+  duration: string;
+  level: string;
+  schedule: string;
+  next?: OpenProgram;
+  fromPrice: number | null;
 }
 
-// Representative images per track (Unsplash curated IDs)
-const TRACK_IMAGES: Record<string, string> = {
-  'frontend':       'https://images.unsplash.com/photo-1621839673705-6617adf9e890?w=600&q=80',
-  'backend':        'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80',
-  'product-design': 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&q=80',
-  'data-analysis':  'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80',
-  'cloud':          'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&q=80',
-  'cybersecurity':  'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=600&q=80',
-};
-
-const TRACK_TAG: Record<string, string> = {
-  'frontend':       'Design & Build',
-  'backend':        'Systems & APIs',
-  'product-design': 'Design & UX',
-  'data-analysis':  'Data & Insights',
-  'cloud':          'Infrastructure',
-  'cybersecurity':  'Security',
-};
-
-const TRACK_GRADIENT: Record<string, string> = {
-  'frontend':       'from-violet-600 to-purple-800',
-  'backend':        'from-blue-600 to-blue-900',
-  'product-design': 'from-pink-500 to-rose-700',
-  'data-analysis':  'from-amber-500 to-orange-700',
-  'cloud':          'from-cyan-500 to-teal-700',
-  'cybersecurity':  'from-red-600 to-rose-800',
-};
-
-interface CourseCard {
-  track: string;
-  description: string;
-  minPrice: number | null;
-  totalSeats: number;
-  openCohorts: number;
-  slug: string;
-  sampleProgramId: string;
-  sampleCohortId: string;
+/** Built-in tracks plus any extra tracks that only exist as open programs in the database. */
+function buildRows(programs: OpenProgram[]): Row[] {
+  const bySlug = new Map<string, OpenProgram[]>();
+  for (const p of programs) bySlug.set(p.slug, [...(bySlug.get(p.slug) ?? []), p]);
+  const slugs = [...new Set([...Object.keys(TRACKS), ...bySlug.keys()])];
+  return slugs.map((slug) => {
+    const t = TRACKS[slug];
+    const open = bySlug.get(slug) ?? [];
+    const priced = open.filter((o) => o.price > 0).map((o) => o.price);
+    return {
+      slug,
+      track: t?.track ?? open[0].track,
+      tagline: t?.tagline ?? open[0].description ?? 'Live, expert-led training with real projects.',
+      duration: t?.duration ?? '',
+      level: t?.level ?? '',
+      schedule: t?.schedule ?? '',
+      next: open[0],
+      fromPrice: priced.length ? Math.min(...priced) : null,
+    };
+  });
 }
 
 export function CourseListing() {
-  const [courses, setCourses] = useState<CourseCard[]>([]);
-  const [loading, setLoading] = useState(true);
+  const programs = useOpenPrograms();
+  const rows = programs ? buildRows(programs) : [];
 
   useEffect(() => {
-    api.get('/cohorts')
-      .then(({ data }) => {
-        const map = new Map<string, CourseCard>();
-        for (const cohort of data) {
-          if (cohort.status !== 'active' && cohort.status !== 'upcoming') continue;
-          for (const prog of (cohort.programs ?? [])) {
-            if (!map.has(prog.track)) {
-              map.set(prog.track, {
-                track: prog.track,
-                description: prog.description ?? '',
-                minPrice: null,
-                totalSeats: 0,
-                openCohorts: 0,
-                slug: toSlug(prog.track),
-                sampleProgramId: prog.id,
-                sampleCohortId: cohort.id,
-              });
-            }
-            const card = map.get(prog.track)!;
-            const price = Number(prog.price);
-            if (!isNaN(price) && price > 0) {
-              card.minPrice = card.minPrice === null ? price : Math.min(card.minPrice, price);
-            }
-            card.totalSeats += Number(prog.maxLearners) || 0;
-            card.openCohorts += 1;
-          }
-        }
-        setCourses(Array.from(map.values()));
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    document.title = 'Tracks · NetraNova';
+    return () => { document.title = 'NetraNova Live Learning Platform'; };
   }, []);
 
+  const cards: Card[] = rows.map((r) => ({
+    key: r.slug,
+    track: r.track,
+    blurb: r.tagline,
+    price: r.fromPrice ?? 0,
+    meta: r.next ? `${r.next.cohort} · starts ${shortDate(r.next.startDate)}` : 'Next cohort: dates announced soon',
+    meta2: [r.duration, r.level].filter(Boolean).join(' · ') || undefined,
+    href: r.next ? `/public/tracks/${r.slug}?program=${r.next.id}` : `/public/tracks/${r.slug}`,
+  }));
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F5F8FF]">
       {/* Hero */}
-      <div className="bg-[#0A1F5C] pt-20 pb-28 px-4 text-center relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #8CCBFF 0%, transparent 50%), radial-gradient(circle at 80% 20%, #52B788 0%, transparent 40%)' }} />
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative max-w-3xl mx-auto">
-          <span className="inline-flex items-center gap-2 bg-white/10 text-blue-200 text-xs font-bold px-4 py-1.5 rounded-full mb-5 backdrop-blur-sm border border-white/10">
-            <Layers size={12} /> Live Cohort Learning
-          </span>
-          <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-5 leading-tight">
-            Build Skills That<br /><span className="text-[#8CCBFF]">Get You Hired</span>
-          </h1>
-          <p className="text-lg text-blue-100/80 max-w-xl mx-auto">
-            Industry-led courses delivered live. Every track comes with real projects, mentorship, and career support.
-          </p>
-        </motion.div>
-
-        {!loading && courses.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-            className="relative mt-10 inline-flex flex-wrap justify-center gap-8 bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl px-8 py-4 text-white"
-          >
-            <span><strong className="text-xl font-extrabold">{courses.length}</strong><br /><span className="text-blue-200/70 text-xs">Tracks</span></span>
-            <div className="w-px bg-white/10 self-stretch" />
-            <span><strong className="text-xl font-extrabold">{courses.reduce((s, c) => s + c.openCohorts, 0)}</strong><br /><span className="text-blue-200/70 text-xs">Open Cohorts</span></span>
-            <div className="w-px bg-white/10 self-stretch" />
-            <span><strong className="text-xl font-extrabold">{courses.reduce((s, c) => s + c.totalSeats, 0)}</strong><br /><span className="text-blue-200/70 text-xs">Seats Available</span></span>
+      <section className="relative overflow-hidden bg-qore-dark pb-36 pt-20 text-white">
+        <div className="nn-stars pointer-events-none absolute inset-0 opacity-60" />
+        <div className="pointer-events-none absolute -right-40 -top-40 h-[520px] w-[520px] rounded-full bg-qore-medium/30 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-40 -left-32 h-96 w-96 rounded-full bg-[#FF6A00]/10 blur-3xl" />
+        <div className="relative mx-auto max-w-4xl px-4 text-center sm:px-6">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <p className="mb-5 text-xs font-bold uppercase tracking-[0.2em] text-qore-highlight">Tracks</p>
+            <h1 className="font-display text-4xl font-extrabold leading-tight tracking-tight sm:text-6xl">
+              Learn the skills.{' '}
+              <span className="bg-gradient-to-r from-[#FFB020] to-[#FF6A00] bg-clip-text text-transparent">Ship the work.</span>
+            </h1>
+            <p className="mx-auto mt-5 max-w-xl text-white/60">
+              Every track is taught live by an expert, with weekly projects, recordings of every class and a certificate anyone can verify.
+            </p>
+            <div className="mt-8 flex flex-wrap justify-center gap-3 text-sm">
+              {[[Video, 'Live classes'], [Film, 'Recorded sessions'], [Wallet, 'Pay in 2 instalments'], [BadgeCheck, 'Verifiable certificate']].map(([I, t]: any) => (
+                <span key={t} className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-white/80">
+                  <I size={15} className="text-qore-highlight" /> {t}
+                </span>
+              ))}
+            </div>
           </motion.div>
-        )}
-
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 60" className="w-full fill-gray-50" preserveAspectRatio="none">
-            <path d="M0,40 C360,80 1080,0 1440,40 L1440,60 L0,60 Z" />
-          </svg>
         </div>
-      </div>
+      </section>
 
       {/* Cards */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 pb-24">
-        {loading && (
-          <div className="flex justify-center items-center py-32">
-            <div className="w-10 h-10 border-4 border-qore-medium border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
-
-        {!loading && courses.length === 0 && (
-          <div className="text-center py-32 text-gray-400">
-            <BookOpen size={40} className="mx-auto mb-4 opacity-30" />
-            <p className="text-lg font-medium mb-2">No courses available right now.</p>
-            <p className="text-sm">
-              <Link to="/register" className="text-qore-medium font-semibold hover:underline">Create an account</Link> to get notified when new cohorts open.
-            </p>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7 pt-6">
-          {courses.map((course, idx) => {
-            const img = TRACK_IMAGES[course.slug];
-            const gradient = TRACK_GRADIENT[course.slug] ?? 'from-qore-medium to-qore-dark';
-            const tag = TRACK_TAG[course.slug] ?? 'Technology';
-
-            return (
-              <motion.div
-                key={course.track}
-                initial={{ opacity: 0, y: 28 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.05 + idx * 0.07 }}
-                className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col"
-              >
-                {/* Course image */}
-                <div className="relative h-44 overflow-hidden">
-                  {img ? (
-                    <img
-                      src={img}
-                      alt={course.track}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className={`w-full h-full bg-gradient-to-br ${gradient}`} />
-                  )}
-                  {/* Overlay */}
-                  <div className={`absolute inset-0 bg-gradient-to-t ${gradient} opacity-60`} />
-                  {/* Tag */}
-                  <span className="absolute top-4 left-4 bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-white/20">
-                    {tag}
-                  </span>
-                  {/* Cohort badge */}
-                  {course.openCohorts > 0 && (
-                    <span className="absolute top-4 right-4 bg-white text-gray-800 text-[10px] font-bold px-2.5 py-1 rounded-full">
-                      {course.openCohorts} cohort{course.openCohorts !== 1 ? 's' : ''} open
-                    </span>
-                  )}
-                </div>
-
-                {/* Card body */}
-                <div className="flex-1 flex flex-col p-6">
-                  <h3 className="text-lg font-extrabold text-gray-900 mb-2 leading-snug">{course.track}</h3>
-
-                  {course.description ? (
-                    <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 mb-4">{course.description}</p>
-                  ) : (
-                    <p className="text-sm text-gray-400 italic mb-4">Live cohort · Weekly projects · Verifiable certificate</p>
-                  )}
-
-                  {/* Meta chips */}
-                  <div className="flex flex-wrap gap-2 mb-5">
-                    {course.totalSeats > 0 && (
-                      <span className="flex items-center gap-1.5 text-xs text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
-                        <Users size={11} className="text-gray-400" /> {course.totalSeats} seats
-                      </span>
-                    )}
-                    <span className="flex items-center gap-1.5 text-xs text-[#FF6A00] bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-100">
-                      <Video size={11} /> Live classes
-                    </span>
-                  </div>
-
-                  {/* Price */}
-                  {course.minPrice !== null && (
-                    <div className="mb-5">
-                      <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-0.5">Starting from</p>
-                      <p className="text-2xl font-extrabold text-gray-900">₦{Number(course.minPrice).toLocaleString()}</p>
-                      <p className="text-[10px] text-gray-400">Instalment plan available</p>
-                    </div>
-                  )}
-
-                  {/* CTAs */}
-                  <div className="mt-auto flex gap-3">
-                    <Link
-                      to={`/public/tracks/${course.slug}?cohort=${course.sampleCohortId}&program=${course.sampleProgramId}`}
-                      className="flex-1 border border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 py-2.5 rounded-xl text-sm font-semibold text-center transition-colors"
-                    >
-                      Learn More
-                    </Link>
-                    <Link
-                      to="/register"
-                      className={`flex-1 bg-gradient-to-r ${gradient} text-white py-2.5 rounded-xl text-sm font-semibold text-center flex items-center justify-center gap-1.5 group-hover:shadow-md transition-all`}
-                    >
-                      Enroll <ArrowRight size={13} />
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
+      <section className="relative z-10 mx-auto -mt-24 max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {programs === null
+            ? [0, 1, 2].map((i) => <div key={i} className="h-[380px] animate-pulse rounded-[28px] bg-qore-dark/20" />)
+            : cards.map((c, i) => <TiltCard key={c.key} card={c} index={i} />)}
         </div>
-      </div>
+      </section>
+
+      {/* Compare */}
+      {rows.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+          <div className="mb-10 text-center">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-qore-medium">Side by side</p>
+            <h2 className="font-display text-3xl font-extrabold tracking-tight text-qore-dark sm:text-4xl">Compare tracks</h2>
+          </div>
+          <div className="overflow-x-auto rounded-3xl border border-gray-100 bg-white shadow-sm">
+            <table className="w-full min-w-[720px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400">
+                  <th className="px-6 py-4 font-semibold">Track</th>
+                  <th className="px-6 py-4 font-semibold">Duration</th>
+                  <th className="px-6 py-4 font-semibold">Level</th>
+                  <th className="px-6 py-4 font-semibold">Next cohort</th>
+                  <th className="px-6 py-4 font-semibold">Tuition</th>
+                  <th className="px-6 py-4" />
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => {
+                  const Icon = trackIcon(r.track);
+                  return (
+                    <tr key={r.slug} className="border-b border-gray-50 last:border-0 hover:bg-[#F5F8FF]">
+                      <td className="px-6 py-5">
+                        <span className="flex items-center gap-3 font-semibold text-qore-dark">
+                          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-qore-light"><Icon size={16} className="text-qore-medium" /></span>
+                          {r.track}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 text-gray-600">{r.duration || '—'}</td>
+                      <td className="px-6 py-5 text-gray-600">{r.level || '—'}</td>
+                      <td className="px-6 py-5 text-gray-600">
+                        {r.next ? (
+                          <span className="flex items-center gap-1.5"><CalendarDays size={14} className="text-[#FF6A00]" /> {shortDate(r.next.startDate)}</span>
+                        ) : (
+                          <span className="text-gray-400">Announced soon</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-5 font-display font-bold text-qore-dark">{r.fromPrice ? `from ${naira(r.fromPrice)}` : <span className="font-sans font-normal text-gray-400">When enrolling opens</span>}</td>
+                      <td className="px-6 py-5 text-right">
+                        <Link to={`/public/tracks/${r.slug}`} className="inline-flex items-center gap-1 font-semibold text-qore-medium hover:underline">
+                          Details <ArrowRight size={14} />
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {/* How a cohort works */}
+      <section className="bg-white py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <h2 className="mb-12 text-center font-display text-3xl font-extrabold tracking-tight text-qore-dark sm:text-4xl">
+            How a cohort <span className="text-qore-medium">works</span>
+          </h2>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
+            {[
+              ['01', 'Enroll', 'Pick a track and pay in full or half now, half later.'],
+              ['02', 'Learn live', 'Join classes from your browser — attendance is automatic.'],
+              ['03', 'Build weekly', 'Submit projects and get graded feedback from your tutor.'],
+              ['04', 'Graduate', 'Earn a certificate with a number anyone can verify.'],
+            ].map(([n, t, d], i) => (
+              <motion.div
+                key={n}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+                className="relative overflow-hidden rounded-3xl border border-gray-100 bg-[#F5F8FF] p-7"
+              >
+                <span className="pointer-events-none absolute -bottom-6 right-3 font-display text-8xl font-extrabold text-qore-light">{n}</span>
+                <p className="relative font-display text-lg font-bold text-qore-dark">{t}</p>
+                <p className="relative mt-2 text-sm leading-relaxed text-gray-500">{d}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="px-4 pb-24 pt-4 sm:px-6 lg:px-8">
+        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[36px] bg-qore-dark px-6 py-16 text-center">
+          <div className="nn-stars pointer-events-none absolute inset-0 opacity-50" />
+          <div className="relative">
+            <h2 className="font-display text-3xl font-extrabold text-white sm:text-4xl">Not sure which track is right?</h2>
+            <p className="mx-auto mt-3 max-w-md text-white/60">Create a free account — you'll be emailed the moment a new cohort opens, and you can decide then.</p>
+            <Link to="/register" className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#FFB020] to-[#FF6A00] px-7 py-4 text-sm font-bold text-white shadow-lg shadow-orange-500/30">
+              Create free account <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { Search, CheckCircle, XCircle, Award, User, Calendar, BookOpen } from 'lucide-react';
+import { Search, XCircle, BadgeCheck, GraduationCap, ShieldCheck, Hash, Globe2 } from 'lucide-react';
 import api from '../../lib/api';
+
+const longDate = (d?: string) =>
+  d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
 
 export function PublicVerify() {
   const { certificateNumber: paramCertNumber } = useParams<{ certificateNumber?: string }>();
@@ -11,7 +14,6 @@ export function PublicVerify() {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [searched, setSearched] = useState(!!paramCertNumber);
 
   const handleVerify = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -20,171 +22,146 @@ export function PublicVerify() {
     setLoading(true);
     setError('');
     setResult(null);
-    setSearched(true);
     try {
       const { data } = await api.get(`/certificates/verify/${encodeURIComponent(certNum)}`);
       setResult(data);
       navigate(`/public/verify/${encodeURIComponent(certNum)}`, { replace: true });
     } catch (err: any) {
-      if (err.response?.status === 404) {
-        setError('No certificate found with that number. Please check and try again.');
-      } else {
-        setError('Verification service unavailable. Please try again later.');
-      }
+      setError(
+        err.response?.status === 404
+          ? 'No certificate found with that number. Check for typos — numbers look like NN-1234567890123-ABCDE.'
+          : 'Verification service unavailable. Please try again in a moment.',
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  // Auto-verify if cert number came from URL param
-  React.useEffect(() => {
+  useEffect(() => {
     if (paramCertNumber) handleVerify();
+    document.title = 'Verify a certificate · NetraNova';
+    return () => { document.title = 'NetraNova Live Learning Platform'; };
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-
-      {/* Header */}
-      <section className="bg-[#eef3ff] pt-14 pb-20">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <div className="min-h-screen bg-[#F5F8FF]">
+      {/* Hero + search */}
+      <section className="relative overflow-hidden bg-qore-dark pb-32 pt-16 text-white">
+        <div className="nn-stars pointer-events-none absolute inset-0 opacity-60" />
+        <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-qore-medium/30 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-40 right-0 h-96 w-96 rounded-full bg-[#FF6A00]/10 blur-3xl" />
+        <div className="relative mx-auto max-w-3xl px-4 text-center sm:px-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="w-16 h-16 bg-qore-light rounded-2xl flex items-center justify-center mx-auto mb-5">
-              <Award size={32} className="text-qore-medium" />
-            </div>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3">
-              Verify a <span className="text-qore-medium">NetraNova Certificate</span>
+            <span className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/15">
+              <ShieldCheck size={30} className="text-qore-highlight" />
+            </span>
+            <h1 className="font-display text-4xl font-extrabold tracking-tight sm:text-6xl">
+              Verify a <span className="bg-gradient-to-r from-[#FFB020] to-[#FF6A00] bg-clip-text text-transparent">NetraNova Certificate</span>
             </h1>
-            <p className="text-gray-500 text-base max-w-xl mx-auto">
-              Enter a certificate number to confirm its authenticity. All NetraNova certificates are uniquely numbered and permanently verifiable.
+            <p className="mx-auto mt-5 max-w-xl text-white/60">
+              Every certificate carries a unique number. Enter it below to confirm it's genuine — no account needed.
             </p>
           </motion.div>
-        </div>
-      </section>
 
-      {/* Search */}
-      <div className="max-w-xl mx-auto px-4 -mt-8 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="bg-white rounded-2xl shadow-md border border-gray-100 p-6"
-        >
-          <form onSubmit={handleVerify} className="flex gap-3">
+          <motion.form
+            onSubmit={handleVerify}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12 }}
+            className="mx-auto mt-10 flex max-w-xl flex-col gap-2 rounded-2xl bg-white/10 p-2 backdrop-blur sm:flex-row"
+          >
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="e.g. QP-1234567890-ABC12"
-                className="w-full border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-qore-medium"
+                placeholder="e.g. NN-1793701087721-9QGEC"
+                aria-label="Certificate number"
+                className="w-full rounded-xl bg-white py-4 pl-11 pr-4 font-mono text-sm text-qore-dark focus:outline-none focus:ring-2 focus:ring-[#FFB020]"
               />
             </div>
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="bg-qore-medium hover:bg-qore-dark text-white px-6 py-3 rounded-xl text-sm font-semibold transition-colors disabled:opacity-60 whitespace-nowrap"
+              className="whitespace-nowrap rounded-xl bg-gradient-to-r from-[#FFB020] to-[#FF6A00] px-7 py-4 text-sm font-bold text-white shadow-lg shadow-orange-500/30 disabled:opacity-60"
             >
               {loading ? 'Checking…' : 'Verify'}
             </button>
-          </form>
-        </motion.div>
-      </div>
+          </motion.form>
+        </div>
+      </section>
 
-      {/* Results */}
-      <div className="max-w-xl mx-auto px-4 mt-6 pb-20">
-        {searched && !loading && error && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl shadow-sm border border-red-100 p-6 flex items-start gap-4"
-          >
-            <div className="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center shrink-0">
-              <XCircle size={24} className="text-red-500" />
-            </div>
-            <div>
-              <h3 className="font-bold text-gray-900 mb-1">Certificate Not Found</h3>
-              <p className="text-sm text-gray-500">{error}</p>
-            </div>
-          </motion.div>
-        )}
-
-        {result && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
-            {/* Valid banner */}
-            <div className="bg-green-50 border border-green-200 rounded-2xl p-5 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-                <CheckCircle size={26} className="text-green-600" />
-              </div>
+      {/* Result */}
+      <div className="relative z-10 mx-auto -mt-20 max-w-2xl px-4 pb-16">
+        <AnimatePresence mode="wait">
+          {error && !loading && (
+            <motion.div key="err" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex items-start gap-4 rounded-3xl border border-red-100 bg-white p-7 shadow-xl">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-50"><XCircle size={24} className="text-red-500" /></span>
               <div>
-                <h3 className="font-bold text-green-800 text-lg">Certificate Verified ✓</h3>
-                <p className="text-sm text-green-700">This is a valid, authentic NetraNova certificate.</p>
+                <h3 className="font-display text-lg font-bold text-qore-dark">Certificate not found</h3>
+                <p className="mt-1 text-sm text-gray-500">{error}</p>
               </div>
-            </div>
+            </motion.div>
+          )}
 
-            {/* Details card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <div className="flex items-center gap-3 mb-6 pb-5 border-b border-gray-100">
-                <div className="w-12 h-12 rounded-xl bg-qore-light flex items-center justify-center shrink-0">
-                  <Award size={24} className="text-qore-medium" />
+          {result && (
+            <motion.div key="ok" initial={{ opacity: 0, y: 20, rotate: -1 }} animate={{ opacity: 1, y: 0, rotate: 0 }} transition={{ type: 'spring', stiffness: 120, damping: 16 }}>
+              <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-qore-dark via-[#0E2B78] to-qore-medium p-8 text-white shadow-2xl shadow-qore-dark/30 sm:p-10">
+                <div className="pointer-events-none absolute inset-3 rounded-[22px] border border-white/15" />
+                <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[#FFB020]/20 blur-3xl" />
+                <div className="relative flex items-start justify-between">
+                  <img src="/netranova-icon.webp" alt="" className="h-12 w-12 rounded-xl bg-white p-1.5" />
+                  <motion.span
+                    initial={{ scale: 0, rotate: -30 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ delay: 0.25, type: 'spring', stiffness: 260, damping: 14 }}
+                    className="flex items-center gap-1.5 rounded-full bg-green-400/15 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-green-300 ring-1 ring-green-300/30"
+                  >
+                    <BadgeCheck size={14} /> Verified
+                  </motion.span>
                 </div>
-                <div>
-                  <p className="font-bold text-gray-900">Certificate of Completion</p>
-                  <p className="text-xs text-gray-400 font-mono mt-0.5">{result.certificateNumber}</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <User size={16} className="text-gray-400 shrink-0" />
-                  <div>
-                    <p className="text-xs text-gray-400">Awarded To</p>
-                    <p className="font-semibold text-gray-900 text-sm">
-                      {result.user?.firstName} {result.user?.lastName}
-                    </p>
+                <p className="relative mt-10 text-[11px] uppercase tracking-[0.3em] text-white/50">Certificate of completion</p>
+                <p className="relative mt-2 font-display text-3xl font-extrabold sm:text-4xl">
+                  {result.user?.firstName} {result.user?.lastName}
+                </p>
+                {result.cohort?.name && <p className="relative mt-1 text-white/70">{result.cohort.name}</p>}
+                <div className="relative mt-10 flex flex-wrap items-end justify-between gap-6">
+                  <div className="space-y-1 text-sm">
+                    <p className="text-white/50">Issued <span className="font-semibold text-white">{longDate(result.issuedDate)}</span></p>
+                    <p className="font-mono text-xs text-qore-highlight">{result.certificateNumber}</p>
                   </div>
-                </div>
-                {result.cohort && (
-                  <div className="flex items-center gap-3">
-                    <BookOpen size={16} className="text-gray-400 shrink-0" />
-                    <div>
-                      <p className="text-xs text-gray-400">Programme</p>
-                      <p className="font-semibold text-gray-900 text-sm">
-                        {result.cohort?.track ?? result.cohort?.name}
-                      </p>
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-center gap-3">
-                  <Calendar size={16} className="text-gray-400 shrink-0" />
-                  <div>
-                    <p className="text-xs text-gray-400">Date Issued</p>
-                    <p className="font-semibold text-gray-900 text-sm">
-                      {new Date(result.issuedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                    </p>
-                  </div>
+                  <GraduationCap size={40} className="text-[#FFB020]" />
                 </div>
               </div>
-            </div>
+              <p className="mt-5 text-center text-sm font-medium text-green-700">This is a valid, authentic NetraNova certificate.</p>
+              <p className="mt-1 text-center text-xs text-gray-400">Checked {longDate(new Date().toISOString())} · NetraNova certificate registry</p>
+            </motion.div>
+          )}
 
-            <p className="text-xs text-center text-gray-400">
-              Verified on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} · NetraNova Certificate Registry
-            </p>
-          </motion.div>
-        )}
-
-        {!searched && (
-          <div className="mt-8 text-center">
-            <p className="text-sm text-gray-400 mb-2">Looking for your own certificate?</p>
-            <Link to="/login" className="text-qore-medium font-semibold text-sm hover:underline">
-              Log in to your learner dashboard →
-            </Link>
-          </div>
-        )}
+          {!result && !error && (
+            <motion.div key="how" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl border border-gray-100 bg-white p-8 shadow-xl">
+              <h2 className="font-display text-xl font-bold text-qore-dark">How verification works</h2>
+              <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-3">
+                {[
+                  { icon: Hash, title: 'Unique number', desc: 'Each certificate gets its own number when it is issued.' },
+                  { icon: Globe2, title: 'Public check', desc: 'Anyone can look it up here — employers included.' },
+                  { icon: ShieldCheck, title: 'Private by design', desc: 'We confirm the name, cohort and date — nothing else.' },
+                ].map(({ icon: I, title, desc }) => (
+                  <div key={title}>
+                    <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-qore-light"><I size={18} className="text-qore-medium" /></span>
+                    <p className="text-sm font-bold text-qore-dark">{title}</p>
+                    <p className="mt-1 text-sm text-gray-500">{desc}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-8 border-t border-gray-100 pt-5 text-sm text-gray-500">
+                Looking for your own certificate?{' '}
+                <Link to="/login" className="font-semibold text-qore-medium hover:underline">Log in to your dashboard →</Link>
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
