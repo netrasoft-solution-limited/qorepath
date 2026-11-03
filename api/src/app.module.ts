@@ -19,6 +19,7 @@ import { MailModule } from './mail/mail.module';
 import { AccessModule } from './access/access.module';
 import { IntegrationsModule } from './integrations/integrations.module';
 import { InboxModule } from './inbox/inbox.module';
+import { AuditModule } from './audit/audit.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { InboxModule } from './inbox/inbox.module';
       }),
     }),
     IntegrationsModule,
+    AuditModule,
     MailModule,
     AccessModule,
     AuthModule,

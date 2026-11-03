@@ -7,6 +7,8 @@ import { RequirePermission } from '../auth/permissions';
 import { UserRole } from '../users/user.entity';
 import { EnrollmentStatus } from './enrollment.entity';
 import { AccessService } from '../access/access.service';
+import { Audit, fullName, naira } from '../audit/audit.decorator';
+import { Enrollment } from './enrollment.entity';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('enrollments')
@@ -16,6 +18,10 @@ export class EnrollmentsController {
   // Admin-only manual enrollment. Learners are enrolled automatically once payment settles.
   @Roles(UserRole.ADMIN)
   @RequirePermission('enrollments')
+  @Audit({
+    action: 'ENROLLMENT_CREATED', entity: 'Enrollment', load: Enrollment,
+    summary: ({ after }) => `Enrolled ${fullName(after?.learner)} in ${after?.program?.track ?? 'a program'} (${after?.status})`,
+  })
   @Post()
   create(@Body() body: any) {
     return this.enrollmentsService.create(body);
@@ -49,6 +55,10 @@ export class EnrollmentsController {
 
   @Roles(UserRole.ADMIN)
   @RequirePermission('enrollments')
+  @Audit({
+    action: 'ENROLLMENT_STATUS_CHANGED', entity: 'Enrollment', load: Enrollment, track: ['status'], skipIfUnchanged: true,
+    summary: ({ before, after }) => `Changed enrollment of ${fullName(after?.learner)} in ${after?.program?.track ?? 'program'} from ${before?.status} to ${after?.status}`,
+  })
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body('status') status: EnrollmentStatus) {
     return this.enrollmentsService.updateStatus(id, status);
@@ -56,6 +66,10 @@ export class EnrollmentsController {
 
   @Roles(UserRole.ADMIN)
   @RequirePermission('enrollments')
+  @Audit({
+    action: 'ENROLLMENT_REINSTATED', entity: 'Enrollment', load: Enrollment, track: ['status'], skipIfUnchanged: true,
+    summary: ({ after }) => `Reinstated ${fullName(after?.learner)} in ${after?.program?.track ?? 'program'}`,
+  })
   @Patch(':id/reinstate')
   reinstate(@Param('id') id: string) {
     return this.enrollmentsService.reinstate(id);

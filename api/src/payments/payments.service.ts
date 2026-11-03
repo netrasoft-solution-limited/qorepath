@@ -15,6 +15,7 @@ import { Enrollment, EnrollmentStatus } from '../enrollments/enrollment.entity';
 import { Program } from '../programs/program.entity';
 import { PaystackService } from './paystack.service';
 import { NotificationsService } from '../mail/notifications.service';
+import { AuditService } from '../audit/audit.service';
 
 // A checkout Paystack reports as "abandoned" is only closed once it's this old,
 // so a learner who is still on the payment screen isn't cut off.
@@ -33,6 +34,7 @@ export class PaymentsService implements OnModuleInit, OnModuleDestroy {
     private paystack: PaystackService,
     private config: ConfigService,
     private notifications: NotificationsService,
+    private audit: AuditService,
   ) {}
 
   create(data: Partial<Payment>) {
@@ -479,7 +481,18 @@ export class PaymentsService implements OnModuleInit, OnModuleDestroy {
     });
 
     // Only after the transaction commits, and only for the call that actually settled it.
-    if (justPaid) this.notifications.paymentSettled(settled.id);
+    if (justPaid) {
+      this.notifications.paymentSettled(settled.id);
+      const who = `${settled.user?.firstName ?? ''} ${settled.user?.lastName ?? ''}`.trim() || settled.user?.email;
+      void this.audit.record({
+        action: 'PAYMENT_CONFIRMED',
+        entity: 'Payment',
+        entityId: settled.id,
+        summary: `Paystack confirmed ₦${Number(settled.amount).toLocaleString('en-NG')} from ${who} for ${settled.program?.track ?? 'a program'}` +
+          (settled.totalInstallments ? ` (instalment ${settled.installmentNumber} of ${settled.totalInstallments})` : '') +
+          ` — enrollment approved`,
+      });
+    }
     return settled;
   }
 }

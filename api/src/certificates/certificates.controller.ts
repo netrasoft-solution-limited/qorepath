@@ -5,6 +5,8 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RequirePermission } from '../auth/permissions';
 import { UserRole } from '../users/user.entity';
+import { Audit, fullName, naira } from '../audit/audit.decorator';
+import { Certificate } from './certificate.entity';
 
 @Controller('certificates')
 export class CertificatesController {
@@ -13,6 +15,10 @@ export class CertificatesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @RequirePermission('certificates')
+  @Audit({
+    action: 'CERTIFICATE_ISSUED', entity: 'Certificate', load: Certificate,
+    summary: ({ after }) => `Issued certificate ${after?.certificateNumber} to ${fullName(after?.user)} (${after?.cohort?.name ?? 'cohort'})`,
+  })
   @Post()
   issue(@Body() body: any) {
     return this.certificatesService.issue(body);

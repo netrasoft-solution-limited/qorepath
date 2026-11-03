@@ -6,6 +6,8 @@ import { Roles } from '../auth/roles.decorator';
 import { RequirePermission } from '../auth/permissions';
 import { UserRole } from '../users/user.entity';
 import { AccessService } from '../access/access.service';
+import { Audit, fullName, naira } from '../audit/audit.decorator';
+import { Program } from './program.entity';
 
 // Course-content fields teaching staff may edit; price, capacity, cohort and staffing are admin-only.
 const STAFF_EDITABLE = ['description', 'duration', 'format', 'schedule', 'outcomes', 'curriculum'];
@@ -17,6 +19,10 @@ export class ProgramsController {
 
   @Roles(UserRole.ADMIN)
   @RequirePermission('cohorts')
+  @Audit({
+    action: 'PROGRAM_CREATED', entity: 'Program', load: Program,
+    summary: ({ after }) => `Added ${after?.track} track at ${naira(after?.price)}`,
+  })
   @Post()
   create(@Body() body: any) {
     return this.service.create(body);
@@ -39,6 +45,16 @@ export class ProgramsController {
 
   // Admins can change anything; a program's own instructor/assistant may only edit its course content.
   @Roles(UserRole.ADMIN, UserRole.INSTRUCTOR, UserRole.ASSISTANT)
+  @Audit({
+    action: 'PROGRAM_UPDATED', entity: 'Program', load: Program,
+    track: ['track', 'price', 'maxLearners', 'description', 'duration', 'format', 'schedule', 'outcomes', 'curriculum'],
+    skipIfUnchanged: true,
+    actionFor: ({ before, after }) => (Number(before?.price) !== Number(after?.price) ? 'PRICE_CHANGED' : 'PROGRAM_UPDATED'),
+    summary: ({ before, after }) =>
+      Number(before?.price) !== Number(after?.price)
+        ? `Changed ${after?.track} price from ${naira(before?.price)} to ${naira(after?.price)}`
+        : `Edited ${after?.track} track details`,
+  })
   @Patch(':id')
   async update(@Param('id') id: string, @Body() body: any, @Request() req: any) {
     if (req.user.role === UserRole.ADMIN) {
@@ -55,6 +71,7 @@ export class ProgramsController {
 
   @Roles(UserRole.ADMIN)
   @RequirePermission('cohorts')
+  @Audit({ action: 'PROGRAM_DELETED', entity: 'Program', load: Program, summary: ({ before, params }) => `Deleted ${before?.track ?? params.id} track` })
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.service.remove(id);

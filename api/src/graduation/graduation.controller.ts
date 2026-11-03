@@ -7,6 +7,8 @@ import { RequirePermission } from '../auth/permissions';
 import { UserRole } from '../users/user.entity';
 import { GraduationStatus } from './graduation.entity';
 import { AccessService } from '../access/access.service';
+import { Audit, fullName, naira } from '../audit/audit.decorator';
+import { GraduationRecord } from './graduation.entity';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('graduation')
@@ -44,6 +46,11 @@ export class GraduationController {
 
   @Roles(UserRole.ADMIN)
   @RequirePermission('graduation')
+  @Audit({
+    action: 'GRADUATION_DECIDED', entity: 'Graduation', load: GraduationRecord, track: ['status'],
+    actionFor: ({ after }) => (after?.status === 'approved' ? 'GRADUATION_APPROVED' : after?.status === 'rejected' ? 'GRADUATION_REJECTED' : 'GRADUATION_DECIDED'),
+    summary: ({ before, after }) => `Set graduation for ${fullName(after?.enrollment?.learner)} from ${before?.status} to ${after?.status} (${after?.recommendation} recommendation)`,
+  })
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body('status') status: GraduationStatus) {
     return this.service.updateStatus(id, status);

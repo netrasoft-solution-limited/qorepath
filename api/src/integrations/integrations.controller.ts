@@ -3,6 +3,10 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SuperAdminGuard } from '../auth/super-admin.guard';
 import { IntegrationsService } from './integrations.service';
 import { MailService } from '../mail/mail.service';
+import { Audit } from '../audit/audit.decorator';
+
+// Summaries describe what changed, never the key values themselves.
+const mode = (k?: string) => (k?.includes('_live_') ? 'live' : k?.includes('_test_') ? 'test' : '');
 
 @UseGuards(JwtAuthGuard, SuperAdminGuard)
 @Controller('integrations')
@@ -14,17 +18,38 @@ export class IntegrationsController {
     return this.integrations.status();
   }
 
+  @Audit({
+    action: 'PAYSTACK_KEYS_CHANGED',
+    entity: 'Integration',
+    summary: ({ body }) => {
+      const parts = [body?.secretKey && 'secret key', body?.publicKey && 'public key'].filter(Boolean).join(' and ');
+      const m = mode(body?.secretKey || body?.publicKey);
+      return `Saved Paystack ${parts || 'settings'}${m ? ` (${m} mode)` : ''}`;
+    },
+  })
   @Put('paystack')
   savePaystack(@Body() body: { secretKey?: string; publicKey?: string }, @Request() req: any) {
     return this.integrations.savePaystack(body ?? {}, req.user.email);
   }
 
+  @Audit({
+    action: 'RESEND_SETTINGS_CHANGED',
+    entity: 'Integration',
+    summary: ({ body }) =>
+      [body?.apiKey && 'Saved a new Resend API key', body?.mailFrom && `Set email sender to ${body.mailFrom}`].filter(Boolean).join('; ') ||
+      'Saved Resend settings',
+  })
   @Put('resend')
   saveResend(@Body() body: { apiKey?: string; mailFrom?: string }, @Request() req: any) {
     return this.integrations.saveResend(body ?? {}, req.user.email);
   }
 
   /** Revert to the server's environment values. */
+  @Audit({
+    action: 'INTEGRATION_RESET',
+    entity: 'Integration',
+    summary: ({ params }) => `Removed saved ${params.provider === 'paystack' ? 'Paystack' : 'Resend'} keys (back to server defaults)`,
+  })
   @Delete(':provider')
   async clear(@Param('provider') provider: string) {
     if (provider !== 'paystack' && provider !== 'resend') throw new BadRequestException('Unknown provider');
@@ -32,6 +57,7 @@ export class IntegrationsController {
     return this.integrations.status();
   }
 
+  @Audit({ action: 'TEST_EMAIL_SENT', entity: 'Integration', summary: ({ result }) => `Sent a test email to ${result?.to}` })
   @Post('resend/test')
   @HttpCode(200)
   async testEmail(@Body('to') to: string, @Request() req: any) {

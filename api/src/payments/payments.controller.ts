@@ -21,6 +21,8 @@ import { Roles } from '../auth/roles.decorator';
 import { RequirePermission } from '../auth/permissions';
 import { UserRole } from '../users/user.entity';
 import { PaymentStatus } from './payment.entity';
+import { Audit, fullName, naira } from '../audit/audit.decorator';
+import { Payment } from './payment.entity';
 
 @Controller('payments')
 export class PaymentsController {
@@ -64,6 +66,10 @@ export class PaymentsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @RequirePermission('payments')
+  @Audit({
+    action: 'PAYMENT_REFUNDED', entity: 'Payment', load: Payment,
+    summary: ({ after }) => `Refunded ${naira(after?.amount)} to ${fullName(after?.user)} (${after?.program?.track ?? 'program'}) via Paystack`,
+  })
   @Post(':id/refund')
   refund(@Param('id') id: string) {
     return this.paymentsService.refundPayment(id);
@@ -88,6 +94,10 @@ export class PaymentsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @RequirePermission('payments')
+  @Audit({
+    action: 'PAYMENTS_RECHECKED', entity: 'Payment',
+    summary: ({ result: r }) => `Re-checked ${r?.checked ?? 0} pending payments with Paystack: ${r?.confirmed ?? 0} confirmed, ${r?.closed ?? 0} closed, ${r?.stillPending ?? 0} still pending`,
+  })
   @Post('reconcile-all')
   @HttpCode(200)
   reconcileAll() {
@@ -98,6 +108,10 @@ export class PaymentsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @RequirePermission('payments')
+  @Audit({
+    action: 'PAYMENT_RECORDED', entity: 'Payment', load: Payment,
+    summary: ({ after }) => `Manually recorded a ${after?.status} payment of ${naira(after?.amount)} for ${fullName(after?.user)}`,
+  })
   @Post()
   create(@Body() body: any) {
     return this.paymentsService.create(body);
@@ -128,6 +142,10 @@ export class PaymentsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @RequirePermission('payments')
+  @Audit({
+    action: 'PAYMENT_STATUS_CHANGED', entity: 'Payment', load: Payment, track: ['status', 'paystackReference'],
+    summary: ({ before, after }) => `Changed ${naira(after?.amount)} payment by ${fullName(after?.user)} from ${before?.status} to ${after?.status}`,
+  })
   @Patch(':id/status')
   updateStatus(
     @Param('id') id: string,

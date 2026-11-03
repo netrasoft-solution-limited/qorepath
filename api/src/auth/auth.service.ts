@@ -6,6 +6,8 @@ import { NotificationsService } from '../mail/notifications.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ROLE_DEFAULT_PERMISSIONS } from './permissions';
+import { AuditService } from '../audit/audit.service';
+import { UserRole } from '../users/user.entity';
 
 const HOUR = 60 * 60 * 1000;
 const RESET_TOKEN_TTL = 1 * HOUR;
@@ -19,7 +21,14 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private notifications: NotificationsService,
+    private audit: AuditService,
   ) {}
+
+  // Sign-ins and password changes are logged for staff and admins (learners would drown out the log).
+  private auditStaff(user: { id: string; email: string; role: string }, action: string, summary: string, ip?: string | null) {
+    if (user.role === UserRole.LEARNER) return;
+    void this.audit.record({ actor: user, action, entity: 'User', entityId: user.id, summary, ip });
+  }
 
   async register(dto: RegisterDto) {
     const existing = await this.usersService.findByEmail(dto.email);
@@ -31,15 +40,22 @@ export class AuthService {
     return this.signToken(user.id, user.email, user.role);
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, ip?: string | null) {
     const user = await this.usersService.findByEmailWithPassword(dto.email);
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const valid = await bcrypt.compare(dto.password, user.password);
-    if (!valid) throw new UnauthorizedException('Invalid credentials');
+    if (!valid) {
+      this.auditStaff(user, 'LOGIN_FAILED', `Failed sign-in (wrong password) for ${user.email}`, ip);
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
-    if (!user.isActive) throw new UnauthorizedException('Your account has been suspended. Contact an administrator.');
+    if (!user.isActive) {
+      this.auditStaff(user, 'LOGIN_FAILED', `Sign-in refused for suspended account ${user.email}`, ip);
+      throw new UnauthorizedException('Your account has been suspended. Contact an administrator.');
+    }
 
+    this.auditStaff(user, 'LOGIN', `Signed in`, ip);
     return this.signToken(user.id, user.email, user.role);
   }
 
@@ -53,10 +69,11 @@ export class AuthService {
     return { ok: true };
   }
 
-  async resetPassword(token: string, password: string) {
+  async resetPassword(token: string, password: string, ip?: string | null) {
     const hashed = await bcrypt.hash(password, 10);
-    const ok = await this.usersService.consumeResetToken(token, hashed);
-    if (!ok) throw new BadRequestException('This reset link is invalid or has expired. Please request a new one.');
+    const user = await this.usersService.consumeResetToken(token, hashed);
+    if (user) this.auditStaff(user, 'PASSWORD_CHANGED', `Set a new password using an emailed link`, ip);
+    if (!user) throw new BadRequestException('This reset link is invalid or has expired. Please request a new one.');
     return { ok: true };
   }
 

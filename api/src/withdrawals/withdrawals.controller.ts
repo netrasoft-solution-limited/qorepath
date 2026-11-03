@@ -5,6 +5,8 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RequirePermission } from '../auth/permissions';
 import { UserRole } from '../users/user.entity';
+import { Audit, fullName, naira } from '../audit/audit.decorator';
+import { WithdrawalRequest } from './withdrawal-request.entity';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('withdrawals')
@@ -31,6 +33,13 @@ export class WithdrawalsController {
 
   @Roles(UserRole.ADMIN)
   @RequirePermission('payments')
+  @Audit({
+    action: 'WITHDRAWAL_RESOLVED', entity: 'Withdrawal', load: WithdrawalRequest, track: ['status', 'approvedRefund'],
+    actionFor: ({ after }) => (after?.status === 'approved' ? 'WITHDRAWAL_APPROVED' : 'WITHDRAWAL_DENIED'),
+    summary: ({ after }) =>
+      `${after?.status === 'approved' ? 'Approved' : 'Denied'} withdrawal of ${fullName(after?.learner)} from ${after?.program?.track ?? 'program'}` +
+      (after?.status === 'approved' ? ` with a ${naira(after?.approvedRefund)} refund` : ''),
+  })
   @Patch(':id/resolve')
   resolve(
     @Param('id') id: string,

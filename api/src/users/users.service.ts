@@ -63,20 +63,20 @@ export class UsersService {
     return token;
   }
 
-  /** Sets a new (already hashed) password if the token is valid, then invalidates the token. */
-  async consumeResetToken(token: string, passwordHash: string): Promise<boolean> {
+  /** Sets a new (already hashed) password if the token is valid, then invalidates the token. Returns the user, or null. */
+  async consumeResetToken(token: string, passwordHash: string): Promise<User | null> {
     const user = await this.repo
       .createQueryBuilder('user')
       .addSelect('user.resetTokenExpires')
       .where('user.resetTokenHash = :hash', { hash: sha256(token) })
       .getOne();
-    if (!user?.resetTokenExpires || user.resetTokenExpires < new Date()) return false;
+    if (!user?.resetTokenExpires || user.resetTokenExpires < new Date()) return null;
     await this.repo.update(user.id, {
       password: passwordHash,
       resetTokenHash: null,
       resetTokenExpires: null,
     });
-    return true;
+    return user;
   }
 
   update(id: string, data: Partial<User>) {

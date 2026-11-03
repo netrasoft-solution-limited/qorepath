@@ -5,6 +5,8 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RequirePermission } from '../auth/permissions';
 import { UserRole } from '../users/user.entity';
+import { Audit, fullName, naira } from '../audit/audit.decorator';
+import { Cohort } from './cohort.entity';
 
 @Controller('cohorts')
 export class CohortsController {
@@ -13,6 +15,7 @@ export class CohortsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @RequirePermission('cohorts')
+  @Audit({ action: 'COHORT_CREATED', entity: 'Cohort', summary: ({ result }) => `Created cohort ${result?.name}` })
   @Post()
   create(@Body() body: any) {
     return this.cohortsService.create(body);
@@ -35,6 +38,11 @@ export class CohortsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @RequirePermission('cohorts')
+  @Audit({
+    action: 'COHORT_UPDATED', entity: 'Cohort', load: Cohort, track: ['name', 'status', 'startDate', 'endDate', 'description'], skipIfUnchanged: true,
+    summary: ({ before, after }) =>
+      before?.status !== after?.status ? `Changed cohort ${after?.name} from ${before?.status} to ${after?.status}` : `Edited cohort ${after?.name}`,
+  })
   @Patch(':id')
   update(@Param('id') id: string, @Body() body: any) {
     return this.cohortsService.update(id, body);
@@ -43,6 +51,7 @@ export class CohortsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @RequirePermission('cohorts')
+  @Audit({ action: 'COHORT_DELETED', entity: 'Cohort', load: Cohort, summary: ({ before, params }) => `Deleted cohort ${before?.name ?? params.id}` })
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.cohortsService.remove(id);

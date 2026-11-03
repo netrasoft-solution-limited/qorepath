@@ -7,13 +7,25 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RequirePermission } from '../auth/permissions';
-import { UserRole } from './user.entity';
+import { User, UserRole } from './user.entity';
 import { AccessService } from '../access/access.service';
+import { Audit, fullName } from '../audit/audit.decorator';
 
 // Fields a non-admin user is allowed to change on their own profile.
 const SELF_EDITABLE = ['firstName', 'lastName', 'phone', 'avatarUrl'];
 // Fields an admin may change on any (non-super-admin) account.
 const ADMIN_EDITABLE = [...SELF_EDITABLE, 'email', 'role', 'permissions', 'isActive'];
+// Changes worth a line in the audit log (never passwords or tokens).
+const AUDITED_FIELDS = ['email', 'role', 'permissions', 'isActive', 'isSuperAdmin', 'firstName', 'lastName', 'phone'];
+
+const describeUserChange = (before: any, after: any) => {
+  const who = `${fullName(after ?? before)} (${(after ?? before)?.email})`;
+  if (before?.isActive !== after?.isActive) return `${after?.isActive ? 'Reactivated' : 'Suspended'} ${who}`;
+  if (before?.isSuperAdmin !== after?.isSuperAdmin) return `${after?.isSuperAdmin ? 'Made' : 'Removed'} ${who} ${after?.isSuperAdmin ? 'a super admin' : 'as super admin'}`;
+  if (before?.role !== after?.role) return `Changed ${who} from ${before?.role} to ${after?.role}`;
+  if (JSON.stringify(before?.permissions) !== JSON.stringify(after?.permissions)) return `Changed admin permissions for ${who}`;
+  return `Updated account details for ${who}`;
+};
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('users')
@@ -30,9 +42,24 @@ export class UsersController {
 
   @Roles(UserRole.ADMIN)
   @RequirePermission('users', 'instructors')
+  @Audit({
+    action: 'USER_CREATED',
+    entity: 'User',
+    summary: ({ result }) => `Created ${result?.role} account for ${fullName(result)} (${result?.email})`,
+  })
   @Post()
-  async create(@Body() body: { firstName: string; lastName: string; email: string; password: string; role: string; phone?: string }) {
+  async create(
+    @Body() body: { firstName: string; lastName: string; email: string; password: string; role: string; phone?: string },
+    @Request() req: any,
+  ) {
     const { firstName, lastName, email, password, role, phone } = body ?? ({} as any);
+    // "Teaching Staff" alone may only create instructors and assistants.
+    if (
+      role !== UserRole.INSTRUCTOR && role !== UserRole.ASSISTANT &&
+      !(await this.access.adminHas(req.user.id, 'users'))
+    ) {
+      throw new ForbiddenException('You can only create instructor and assistant accounts');
+    }
     await this.authService.register({ firstName, lastName, email, password, role, phone } as any);
     await this.authService.sendAccountSetup(body.email);
     return this.usersService.findByEmail(body.email);
@@ -53,6 +80,22 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
+  @Audit({
+    action: 'USER_UPDATED',
+    entity: 'User',
+    load: User,
+    track: AUDITED_FIELDS,
+    skipIfUnchanged: true,
+    // Staff and learners editing their own name aren't logged.
+    when: ({ user }) => user?.role === UserRole.ADMIN,
+    actionFor: ({ before, after }) =>
+      before?.isActive !== after?.isActive ? (after?.isActive ? 'USER_REACTIVATED' : 'USER_SUSPENDED')
+      : before?.isSuperAdmin !== after?.isSuperAdmin ? 'SUPER_ADMIN_CHANGED'
+      : before?.role !== after?.role ? 'ROLE_CHANGED'
+      : JSON.stringify(before?.permissions) !== JSON.stringify(after?.permissions) ? 'PERMISSIONS_CHANGED'
+      : 'USER_UPDATED',
+    summary: ({ before, after }) => describeUserChange(before, after),
+  })
   @Patch(':id')
   async update(@Param('id') id: string, @Body() body: Partial<any>, @Request() req: any) {
     const isAdmin = req.user.role === UserRole.ADMIN;
@@ -95,6 +138,12 @@ export class UsersController {
 
   @Roles(UserRole.ADMIN)
   @RequirePermission('users')
+  @Audit({
+    action: 'USER_DELETED',
+    entity: 'User',
+    load: User,
+    summary: ({ before, params }) => before ? `Deleted ${before.role} account ${fullName(before)} (${before.email})` : `Deleted user ${params.id}`,
+  })
   @Delete(':id')
   async remove(@Param('id') id: string, @Request() req: any) {
     if (id === req.user.id) throw new ForbiddenException("You can't delete your own account");

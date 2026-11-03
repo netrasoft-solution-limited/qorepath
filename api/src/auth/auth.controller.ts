@@ -7,6 +7,7 @@ import { NotificationsService } from '../mail/notifications.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { UsersService } from '../users/users.service';
 import { UserRole } from '../users/user.entity';
+import { clientIp } from '../audit/audit.interceptor';
 
 @Controller('auth')
 export class AuthController {
@@ -30,13 +31,13 @@ export class AuthController {
   }
 
   @Post('reset-password')
-  resetPassword(@Body() dto: ResetPasswordDto) {
-    return this.authService.resetPassword(dto.token, dto.password);
+  resetPassword(@Body() dto: ResetPasswordDto, @Request() req: any) {
+    return this.authService.resetPassword(dto.token, dto.password, clientIp(req));
   }
 
   @Post('login')
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  login(@Body() dto: LoginDto, @Request() req: any) {
+    return this.authService.login(dto, clientIp(req));
   }
 
   @UseGuards(JwtAuthGuard)
