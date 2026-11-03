@@ -123,6 +123,8 @@ export class SessionsService {
 
   /** Idempotently mark the learner present when they actually join the room. */
   async selfAttend(sessionId: string, userId: string) {
+    // Same gate as entering the room: only approved learners of this program.
+    await this.getAccess(sessionId, { id: userId, role: 'learner' });
     const existing = await this.attendanceRepo.findOne({
       where: { session: { id: sessionId }, learner: { id: userId } },
     });

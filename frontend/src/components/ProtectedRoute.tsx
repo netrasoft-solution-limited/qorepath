@@ -18,7 +18,11 @@ export default function ProtectedRoute({ children, roles }: Props) {
   }
 
   if (!user) return <Navigate to="/login" replace />;
-  if (roles && !roles.includes(user.role)) return <Navigate to="/login" replace />;
+  // Signed in but wrong portal: send them to their own dashboard, not the login page.
+  if (roles && !roles.includes(user.role)) {
+    const home = user.role === 'admin' ? '/admin/dashboard' : user.role === 'learner' ? '/learner/dashboard' : '/instructor/dashboard';
+    return <Navigate to={home} replace />;
+  }
 
   return <>{children}</>;
 }

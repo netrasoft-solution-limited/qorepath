@@ -151,7 +151,7 @@ export function OrbitHero({ programs }: { programs: OpenProgram[] | null }) {
       <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-6 px-4 pb-10 pt-16 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-0 lg:px-8 lg:pb-20 lg:pt-20">
         {/* Copy */}
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="relative z-10 min-w-0">
-          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 py-1.5 pl-1.5 pr-4 text-xs font-semibold text-white/80 backdrop-blur">
+          <div className={`mb-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 py-1.5 pl-1.5 pr-4 text-xs font-semibold text-white/80 backdrop-blur transition-opacity ${programs === null ? 'opacity-0' : 'opacity-100'}`}>
             <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-[#FFB020] to-[#FF6A00] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
               <Radio size={11} /> {next ? 'Enrolling' : 'Soon'}
             </span>

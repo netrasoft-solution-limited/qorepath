@@ -129,7 +129,9 @@ export function TrackShowcase({ programs }: { programs: OpenProgram[] | null }) 
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {cards.map((c, i) => <TiltCard key={c.key} card={c} index={i} />)}
+          {programs === null
+            ? [0, 1, 2].map((i) => <div key={i} className="h-[380px] animate-pulse rounded-[28px] bg-qore-dark/10" />)
+            : cards.map((c, i) => <TiltCard key={c.key} card={c} index={i} />)}
         </div>
 
         <p className="mt-10 text-center text-sm text-gray-500">
