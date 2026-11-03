@@ -163,7 +163,7 @@ export function PublicHome() {
         />
         {/* Gradient blobs */}
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-qore-medium/20 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#52b788]/10 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#1AA3F0]/10 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl pointer-events-none" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
@@ -182,7 +182,7 @@ export function PublicHome() {
 
               <h1 className="text-5xl md:text-[60px] font-extrabold text-white leading-[1.08] mb-6 tracking-tight">
                 Launch Your<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-qore-highlight to-[#52b788]">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFB020] to-[#FF6A00]">
                   Tech Career
                 </span>
                 <br />from Nigeria.
@@ -212,7 +212,7 @@ export function PublicHome() {
               <div className="flex items-center gap-4">
                 <div className="flex -space-x-2.5">
                   {['CO', 'AY', 'EN', 'SP'].map((init, i) => (
-                    <div key={i} className="w-9 h-9 rounded-full border-2 border-qore-dark bg-gradient-to-br from-qore-medium to-[#52b788] flex items-center justify-center text-white text-[10px] font-bold">
+                    <div key={i} className="w-9 h-9 rounded-full border-2 border-qore-dark bg-gradient-to-br from-qore-medium to-[#1AA3F0] flex items-center justify-center text-white text-[10px] font-bold">
                       {init}
                     </div>
                   ))}
@@ -235,7 +235,7 @@ export function PublicHome() {
             >
               <div className="relative w-[420px] h-[480px]">
                 {/* Main card */}
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-qore-medium/80 to-[#1B4332] border border-white/10 backdrop-blur-sm flex flex-col items-center justify-center gap-5 p-8">
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-qore-medium/80 to-[#0A1F5C] border border-white/10 backdrop-blur-sm flex flex-col items-center justify-center gap-5 p-8">
                   <div className="w-20 h-20 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center">
                     <GraduationCap size={38} className="text-white" />
                   </div>
@@ -259,7 +259,7 @@ export function PublicHome() {
                         initial={{ width: 0 }}
                         animate={{ width: '68%' }}
                         transition={{ delay: 0.8, duration: 1 }}
-                        className="h-full bg-gradient-to-r from-qore-highlight to-[#52b788] rounded-full"
+                        className="h-full bg-gradient-to-r from-qore-highlight to-[#1AA3F0] rounded-full"
                       />
                     </div>
                   </div>
@@ -688,7 +688,7 @@ export function PublicHome() {
           />
           {/* Blobs */}
           <div className="absolute top-0 right-0 w-80 h-80 bg-qore-medium/30 rounded-full -translate-y-1/3 translate-x-1/3 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-60 h-60 bg-[#52b788]/15 rounded-full translate-y-1/3 -translate-x-1/4 blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-60 h-60 bg-[#1AA3F0]/15 rounded-full translate-y-1/3 -translate-x-1/4 blur-3xl pointer-events-none" />
 
           <div className="relative z-10 max-w-5xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-10">
             <div className="text-center lg:text-left">

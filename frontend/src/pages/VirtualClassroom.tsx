@@ -114,7 +114,7 @@ export function VirtualClassroom() {
         SHOW_JITSI_WATERMARK: false,
         SHOW_WATERMARK_FOR_GUESTS: false,
         TOOLBAR_ALWAYS_VISIBLE: false,
-        DEFAULT_BACKGROUND: '#1B4332',
+        DEFAULT_BACKGROUND: '#0A1F5C',
         DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
         MOBILE_APP_PROMO: false,
         HIDE_INVITE_MORE_HEADER: false,

@@ -7,11 +7,13 @@ export default {
   theme: {
     extend: {
       colors: {
+        // NetraNova brand, sampled from the logo (navy wordmark, royal/sky blue "N").
+        // Token names kept from the original theme so every existing class picks these up.
         qore: {
-          dark: '#1B4332',
-          medium: '#2D6A4F',
-          light: '#D8F3DC',
-          highlight: '#B7E4C7',
+          dark: '#0A1F5C',
+          medium: '#0B5CF0',
+          light: '#E6F0FF',
+          highlight: '#8CCBFF',
           text: '#1A1A2E',
         }
       },

@@ -6,8 +6,8 @@ export interface EmailContent {
   html: string;
 }
 
-const BRAND = '#1B4332';
-const ACCENT = '#2D6A4F';
+const BRAND = '#0A1F5C';
+const ACCENT = '#0B5CF0';
 // PNG, not WebP: several email clients (notably older Outlook) can't display WebP.
 const LOGO_URL = `${(process.env.FRONTEND_URL ?? 'https://netranova.netrasoft.co').replace(/\/$/, '')}/netranova-logo.png`;
 

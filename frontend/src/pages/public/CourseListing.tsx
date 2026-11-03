@@ -98,17 +98,17 @@ export function CourseListing() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero */}
-      <div className="bg-[#1B4332] pt-20 pb-28 px-4 text-center relative overflow-hidden">
+      <div className="bg-[#0A1F5C] pt-20 pb-28 px-4 text-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #B7E4C7 0%, transparent 50%), radial-gradient(circle at 80% 20%, #52B788 0%, transparent 40%)' }} />
+          style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #8CCBFF 0%, transparent 50%), radial-gradient(circle at 80% 20%, #52B788 0%, transparent 40%)' }} />
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative max-w-3xl mx-auto">
-          <span className="inline-flex items-center gap-2 bg-white/10 text-green-200 text-xs font-bold px-4 py-1.5 rounded-full mb-5 backdrop-blur-sm border border-white/10">
+          <span className="inline-flex items-center gap-2 bg-white/10 text-blue-200 text-xs font-bold px-4 py-1.5 rounded-full mb-5 backdrop-blur-sm border border-white/10">
             <Layers size={12} /> Live Cohort Learning
           </span>
           <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-5 leading-tight">
-            Build Skills That<br /><span className="text-[#B7E4C7]">Get You Hired</span>
+            Build Skills That<br /><span className="text-[#8CCBFF]">Get You Hired</span>
           </h1>
-          <p className="text-lg text-green-100/80 max-w-xl mx-auto">
+          <p className="text-lg text-blue-100/80 max-w-xl mx-auto">
             Industry-led courses delivered live. Every track comes with real projects, mentorship, and career support.
           </p>
         </motion.div>
@@ -118,11 +118,11 @@ export function CourseListing() {
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
             className="relative mt-10 inline-flex flex-wrap justify-center gap-8 bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl px-8 py-4 text-white"
           >
-            <span><strong className="text-xl font-extrabold">{courses.length}</strong><br /><span className="text-green-200/70 text-xs">Tracks</span></span>
+            <span><strong className="text-xl font-extrabold">{courses.length}</strong><br /><span className="text-blue-200/70 text-xs">Tracks</span></span>
             <div className="w-px bg-white/10 self-stretch" />
-            <span><strong className="text-xl font-extrabold">{courses.reduce((s, c) => s + c.openCohorts, 0)}</strong><br /><span className="text-green-200/70 text-xs">Open Cohorts</span></span>
+            <span><strong className="text-xl font-extrabold">{courses.reduce((s, c) => s + c.openCohorts, 0)}</strong><br /><span className="text-blue-200/70 text-xs">Open Cohorts</span></span>
             <div className="w-px bg-white/10 self-stretch" />
-            <span><strong className="text-xl font-extrabold">{courses.reduce((s, c) => s + c.totalSeats, 0)}</strong><br /><span className="text-green-200/70 text-xs">Seats Available</span></span>
+            <span><strong className="text-xl font-extrabold">{courses.reduce((s, c) => s + c.totalSeats, 0)}</strong><br /><span className="text-blue-200/70 text-xs">Seats Available</span></span>
           </motion.div>
         )}
 

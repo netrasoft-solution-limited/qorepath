@@ -102,14 +102,14 @@ export function PaymentModal({
         className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
       >
         {/* Header bar */}
-        <div className="bg-[#1B4332] px-6 py-4 flex items-center justify-between">
+        <div className="bg-[#0A1F5C] px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
               <Lock size={14} className="text-white" />
             </div>
             <div>
               <p className="text-white font-bold text-sm">{isBalance ? 'Pay Balance' : 'Secure Checkout'}</p>
-              <p className="text-green-200/70 text-xs">Powered by Paystack</p>
+              <p className="text-blue-200/70 text-xs">Powered by Paystack</p>
             </div>
           </div>
           {!busy && (
@@ -181,7 +181,7 @@ export function PaymentModal({
 
               <button
                 onClick={handlePay}
-                className="w-full bg-[#1B4332] hover:bg-[#2D6A4F] text-white py-3.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-[#0A1F5C] hover:bg-[#0B5CF0] text-white py-3.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
               >
                 <Lock size={14} /> {step === 'error' ? 'Try Again' : `Pay ${naira(chargeNow)} with Paystack`}
               </button>

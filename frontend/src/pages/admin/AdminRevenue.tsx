@@ -50,7 +50,7 @@ export function AdminRevenue() {
     { name: 'Instalment', value: Math.round((instalment / total) * 100) },
   ];
 
-  const PIE_COLORS = ['#2D6A4F', '#F59E0B'];
+  const PIE_COLORS = ['#0B5CF0', '#F59E0B'];
 
   const exportPayments = () => {
     exportCSV(
@@ -140,7 +140,7 @@ export function AdminRevenue() {
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 11 }}
                     tickFormatter={(v) => `₦${(v / 1000).toFixed(0)}k`} />
                   <Tooltip cursor={{ fill: '#F3F4F6' }} formatter={(v: number) => [`₦${v.toLocaleString()}`, 'Revenue']} />
-                  <Bar dataKey="Revenue" fill="#2D6A4F" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="Revenue" fill="#0B5CF0" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

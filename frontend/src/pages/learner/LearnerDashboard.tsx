@@ -160,7 +160,7 @@ export function LearnerDashboard() {
                           initial={{ opacity: 0, y: 4 }}
                           animate={{ opacity: 1, y: 0 }}
                           onClick={() => { setPayingFor(selectedProgram); setShowProgramPicker(false); }}
-                          className="w-full mt-2 bg-[#1B4332] hover:bg-[#2D6A4F] text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors"
+                          className="w-full mt-2 bg-[#0A1F5C] hover:bg-[#0B5CF0] text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors"
                         >
                           <CreditCard size={15} />
                           Pay ₦{Number(selectedProgram.price).toLocaleString()} &amp; Enroll
