@@ -1,0 +1,63 @@
+import {
+  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,
+  UpdateDateColumn, OneToMany,
+} from 'typeorm';
+import { Enrollment } from '../enrollments/enrollment.entity';
+import { Payment } from '../payments/payment.entity';
+import { Certificate } from '../certificates/certificate.entity';
+
+export enum UserRole {
+  LEARNER = 'learner',
+  INSTRUCTOR = 'instructor',
+  ASSISTANT = 'assistant',
+  ADMIN = 'admin',
+}
+
+@Entity('users')
+export class User {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column()
+  firstName: string;
+
+  @Column()
+  lastName: string;
+
+  @Column({ unique: true })
+  email: string;
+
+  // Never selected by default (including via eager relations); use findByEmailWithPassword.
+  @Column({ select: false })
+  password: string;
+
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.LEARNER })
+  role: UserRole;
+
+  @Column({ nullable: true })
+  phone: string;
+
+  @Column({ nullable: true })
+  avatarUrl: string;
+
+  @Column({ default: true })
+  isActive: boolean;
+
+  @Column({ type: 'simple-array', nullable: true })
+  permissions: string[];
+
+  @OneToMany(() => Enrollment, (e) => e.learner)
+  enrollments: Enrollment[];
+
+  @OneToMany(() => Payment, (p) => p.user)
+  payments: Payment[];
+
+  @OneToMany(() => Certificate, (c) => c.user)
+  certificates: Certificate[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+}

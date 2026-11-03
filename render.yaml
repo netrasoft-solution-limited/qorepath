@@ -1,0 +1,36 @@
+# Render Blueprint for the QorePath API (free web service).
+# Values marked sync: false are entered in the Render dashboard, never committed.
+services:
+  - type: web
+    name: qorepath-api
+    runtime: node
+    plan: free
+    rootDir: api
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /api/cohorts
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: CORS_ORIGINS
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: PAYSTACK_PUBLIC_KEY
+        sync: false
+      - key: PAYSTACK_CALLBACK_URL
+        sync: false
+      - key: JAAS_APP_ID
+        sync: false
+      - key: JAAS_KID
+        sync: false
+      - key: JAAS_PRIVATE_KEY_PATH
+        value: /etc/secrets/jaas-private-key.pem
+      - key: JAAS_WEBHOOK_SECRET
+        sync: false
