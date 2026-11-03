@@ -3,6 +3,7 @@ import { WithdrawalsService } from './withdrawals.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { RequirePermission } from '../auth/permissions';
 import { UserRole } from '../users/user.entity';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -22,12 +23,14 @@ export class WithdrawalsController {
   }
 
   @Roles(UserRole.ADMIN)
+  @RequirePermission('payments')
   @Get()
   findAll() {
     return this.withdrawals.findAll();
   }
 
   @Roles(UserRole.ADMIN)
+  @RequirePermission('payments')
   @Patch(':id/resolve')
   resolve(
     @Param('id') id: string,

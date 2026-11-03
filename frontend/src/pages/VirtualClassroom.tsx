@@ -43,7 +43,7 @@ export function VirtualClassroom() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
 
-  const isInstructor = user?.role === 'instructor';
+  const isInstructor = user?.role === 'instructor' || user?.role === 'assistant';
   const isAdmin = user?.role === 'admin';
   const canModerate = isInstructor || isAdmin;
 

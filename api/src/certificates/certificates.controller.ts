@@ -3,6 +3,7 @@ import { CertificatesService } from './certificates.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { RequirePermission } from '../auth/permissions';
 import { UserRole } from '../users/user.entity';
 
 @Controller('certificates')
@@ -11,6 +12,7 @@ export class CertificatesController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @RequirePermission('certificates')
   @Post()
   issue(@Body() body: any) {
     return this.certificatesService.issue(body);
@@ -18,6 +20,7 @@ export class CertificatesController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @RequirePermission('certificates', 'reports', 'audit_log')
   @Get()
   findAll() {
     return this.certificatesService.findAll();

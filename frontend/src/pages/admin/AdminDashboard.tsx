@@ -17,14 +17,16 @@ export function AdminDashboard() {
   useEffect(() => {
     async function load() {
       try {
-        const [cohortsRes, enrollmentsRes, paymentsRes] = await Promise.all([
+        // Independent so an admin without e.g. the payments permission still sees the rest.
+        const [cohortsRes, enrollmentsRes, paymentsRes] = await Promise.allSettled([
           api.get('/cohorts'),
           api.get('/enrollments'),
           api.get('/payments'),
         ]);
-        const cohorts = cohortsRes.data;
-        const enrollments = enrollmentsRes.data;
-        const payments = paymentsRes.data;
+        const data = (r: PromiseSettledResult<any>) => (r.status === 'fulfilled' ? r.value.data : []);
+        const cohorts = data(cohortsRes);
+        const enrollments = data(enrollmentsRes);
+        const payments = data(paymentsRes);
 
         setStats({
           activeCohorts: cohorts.filter((c: any) => c.status === 'active').length,

@@ -3,6 +3,7 @@ import { ProgramsService } from './programs.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { RequirePermission } from '../auth/permissions';
 import { UserRole } from '../users/user.entity';
 import { AccessService } from '../access/access.service';
 
@@ -15,6 +16,7 @@ export class ProgramsController {
   constructor(private service: ProgramsService, private access: AccessService) {}
 
   @Roles(UserRole.ADMIN)
+  @RequirePermission('cohorts')
   @Post()
   create(@Body() body: any) {
     return this.service.create(body);
@@ -39,7 +41,11 @@ export class ProgramsController {
   @Roles(UserRole.ADMIN, UserRole.INSTRUCTOR, UserRole.ASSISTANT)
   @Patch(':id')
   async update(@Param('id') id: string, @Body() body: any, @Request() req: any) {
-    if (req.user.role === UserRole.ADMIN) return this.service.update(id, body);
+    if (req.user.role === UserRole.ADMIN) {
+      // Full edit from Cohorts; price/capacity edits from Settings.
+      await this.access.assert(this.access.adminHas(req.user.id, 'cohorts', 'settings'), "Your admin account doesn't have access to this area");
+      return this.service.update(id, body);
+    }
     await this.access.assert(this.access.canStaffProgram(req.user, id), 'You can only edit programs you teach');
     const content = Object.fromEntries(
       Object.entries(body ?? {}).filter(([k]) => STAFF_EDITABLE.includes(k)),
@@ -48,6 +54,7 @@ export class ProgramsController {
   }
 
   @Roles(UserRole.ADMIN)
+  @RequirePermission('cohorts')
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.service.remove(id);

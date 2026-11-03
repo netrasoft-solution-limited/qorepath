@@ -5,18 +5,13 @@ import { UsersService } from '../users/users.service';
 import { NotificationsService } from '../mail/notifications.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ROLE_DEFAULT_PERMISSIONS } from './permissions';
 
 const HOUR = 60 * 60 * 1000;
 const RESET_TOKEN_TTL = 1 * HOUR;
 // Staff accounts created by an admin get longer to set their first password.
 const SETUP_TOKEN_TTL = 72 * HOUR;
 
-const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
-  admin:      ['cohorts','enrollments','payments','at_risk','instructors','graduation','certificates','revenue','reports','settings','users','audit_log'],
-  instructor: ['sessions','calendar','attendance','assignments','roster','announcements','materials','graduation'],
-  assistant:  ['sessions','calendar','attendance','assignments','roster','announcements','materials','graduation'],
-  learner:    ['sessions','calendar','assignments','capstone','progress','payments','certificate','profile'],
-};
 
 @Injectable()
 export class AuthService {

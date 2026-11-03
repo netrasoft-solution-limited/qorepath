@@ -3,6 +3,7 @@ import { GraduationService } from './graduation.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { RequirePermission } from '../auth/permissions';
 import { UserRole } from '../users/user.entity';
 import { GraduationStatus } from './graduation.entity';
 import { AccessService } from '../access/access.service';
@@ -35,12 +36,14 @@ export class GraduationController {
   }
 
   @Roles(UserRole.ADMIN)
+  @RequirePermission('graduation', 'audit_log')
   @Get('all')
   getAll() {
     return this.service.findAll();
   }
 
   @Roles(UserRole.ADMIN)
+  @RequirePermission('graduation')
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body('status') status: GraduationStatus) {
     return this.service.updateStatus(id, status);

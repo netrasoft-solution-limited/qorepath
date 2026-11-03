@@ -6,7 +6,9 @@ import { AuthService } from '../auth/auth.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { RequirePermission } from '../auth/permissions';
 import { UserRole } from './user.entity';
+import { AccessService } from '../access/access.service';
 
 // Fields a non-admin user is allowed to change on their own profile.
 const SELF_EDITABLE = ['firstName', 'lastName', 'phone', 'avatarUrl'];
@@ -19,6 +21,7 @@ export class UsersController {
   constructor(
     private usersService: UsersService,
     private authService: AuthService,
+    private access: AccessService,
   ) {}
 
   private async isSuperAdmin(userId: string) {
@@ -26,6 +29,7 @@ export class UsersController {
   }
 
   @Roles(UserRole.ADMIN)
+  @RequirePermission('users', 'instructors')
   @Post()
   async create(@Body() body: { firstName: string; lastName: string; email: string; password: string; role: string; phone?: string }) {
     const { firstName, lastName, email, password, role, phone } = body ?? ({} as any);
@@ -35,6 +39,7 @@ export class UsersController {
   }
 
   @Roles(UserRole.ADMIN)
+  @RequirePermission('users', 'instructors', 'certificates', 'cohorts')
   @Get()
   findAll() {
     return this.usersService.findAll();
@@ -71,7 +76,16 @@ export class UsersController {
     if (!callerIsSuper && (await this.isSuperAdmin(id))) {
       throw new ForbiddenException('Only a super admin can change a super admin account');
     }
-    const allowed = [...ADMIN_EDITABLE, ...(callerIsSuper ? ['isSuperAdmin'] : [])];
+    // Per-admin permissions: "users" = full edit; "instructors" = suspend/reactivate
+    // teaching staff only; neither = their own profile fields only.
+    let allowed = [...ADMIN_EDITABLE, ...(callerIsSuper ? ['isSuperAdmin'] : [])];
+    if (!(await this.access.adminHas(req.user.id, 'users'))) {
+      const target = await this.usersService.findOne(id);
+      const isStaff = target?.role === UserRole.INSTRUCTOR || target?.role === UserRole.ASSISTANT;
+      if (isStaff && (await this.access.adminHas(req.user.id, 'instructors'))) allowed = ['isActive'];
+      else if (id === req.user.id) allowed = SELF_EDITABLE;
+      else throw new ForbiddenException("Your admin account doesn't have access to this area");
+    }
     body = Object.fromEntries(Object.entries(body).filter(([k]) => allowed.includes(k)));
     if (callerIsSuper && id === req.user.id && body.isSuperAdmin === false) {
       throw new ForbiddenException("You can't remove your own super admin access");
@@ -80,6 +94,7 @@ export class UsersController {
   }
 
   @Roles(UserRole.ADMIN)
+  @RequirePermission('users')
   @Delete(':id')
   async remove(@Param('id') id: string, @Request() req: any) {
     if (id === req.user.id) throw new ForbiddenException("You can't delete your own account");

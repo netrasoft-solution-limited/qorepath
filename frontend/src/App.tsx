@@ -98,7 +98,7 @@ const adminNav = [
   { name: 'Cohorts', path: '/admin/cohorts', icon: BookOpen, permission: 'cohorts' },
   { name: 'Enrollments', path: '/admin/enrollments', icon: Users, permission: 'enrollments' },
   { name: 'Payments', path: '/admin/payments', icon: CreditCard, permission: 'payments' },
-  { name: 'Withdrawals', path: '/admin/withdrawals', icon: Undo2 },
+  { name: 'Withdrawals', path: '/admin/withdrawals', icon: Undo2, permission: 'payments' },
   { name: 'At-Risk', path: '/admin/at-risk', icon: Activity, permission: 'at_risk' },
   { name: 'Instructors', path: '/admin/instructors', icon: User, permission: 'instructors' },
   { name: 'Graduation', path: '/admin/graduation', icon: CheckSquare, permission: 'graduation' },

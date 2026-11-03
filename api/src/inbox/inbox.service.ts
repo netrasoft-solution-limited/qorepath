@@ -10,6 +10,7 @@ import { Session } from '../sessions/session.entity';
 import { Announcement } from '../announcements/announcement.entity';
 import { Certificate } from '../certificates/certificate.entity';
 import { AccessService, Caller } from '../access/access.service';
+import { effectivePermissions } from '../auth/permissions';
 
 export interface InboxItem {
   id: string;
@@ -45,7 +46,7 @@ export class InboxService {
   async feed(caller: Caller) {
     const user = await this.repo(User).findOneBy({ id: caller.id });
     const items =
-      caller.role === UserRole.ADMIN ? await this.forAdmin()
+      caller.role === UserRole.ADMIN ? await this.forAdmin(user)
       : caller.role === UserRole.LEARNER ? await this.forLearner(caller)
       : await this.forStaff(caller);
     const seen = user?.notificationsSeenAt ? +new Date(user.notificationsSeenAt) : 0;
@@ -63,7 +64,10 @@ export class InboxService {
 
   // ── Admin ───────────────────────────────────────────────────────────────────
 
-  private async forAdmin(): Promise<InboxItem[]> {
+  private async forAdmin(user: any): Promise<InboxItem[]> {
+    // Only show what this admin is allowed to act on (super admins see everything).
+    const perms = user?.isSuperAdmin ? null : effectivePermissions(user ?? { role: 'admin', permissions: null });
+    const can = (p: string) => !perms || perms.includes(p);
     const [withdrawals, graduations, enrollments, payments, signups] = await Promise.all([
       this.repo(WithdrawalRequest).find({ where: { status: WithdrawalStatus.PENDING }, order: { createdAt: 'DESC' }, take: 10 }),
       this.repo(GraduationRecord).find({ where: { status: GraduationStatus.PENDING }, order: { createdAt: 'DESC' }, take: 10 }),
@@ -72,31 +76,31 @@ export class InboxService {
       this.repo(User).find({ where: { role: UserRole.LEARNER, createdAt: MoreThan(ago(7)) }, order: { createdAt: 'DESC' }, take: 10 }),
     ]);
     return [
-      ...withdrawals.map((w) => ({
+      ...(can('payments') ? withdrawals : []).map((w) => ({
         id: `wd-${w.id}`, kind: 'action' as const,
         title: 'Withdrawal needs review',
         detail: `${name(w.learner)} left ${w.program?.track ?? 'a program'} — suggested refund ${naira(w.suggestedRefund)}`,
         link: '/admin/withdrawals', at: iso(w.createdAt),
       })),
-      ...graduations.map((g) => ({
+      ...(can('graduation') ? graduations : []).map((g) => ({
         id: `gr-${g.id}`, kind: 'action' as const,
         title: 'Graduation awaiting approval',
         detail: `${name(g.enrollment?.learner)} · ${g.enrollment?.program?.track ?? ''} — recommended "${g.recommendation}"`,
         link: '/admin/graduation', at: iso(g.createdAt),
       })),
-      ...enrollments.map((e) => ({
+      ...(can('enrollments') ? enrollments : []).map((e) => ({
         id: `en-${e.id}`, kind: 'action' as const,
         title: 'Enrollment awaiting review',
         detail: `${name(e.learner)} · ${e.program?.track ?? 'a program'}`,
         link: '/admin/enrollments', at: iso(e.enrolledAt),
       })),
-      ...payments.map((p) => ({
+      ...(can('payments') || can('revenue') ? payments : []).map((p) => ({
         id: `pay-${p.id}`, kind: 'success' as const,
         title: `Payment received — ${naira(p.amount)}`,
         detail: `${name(p.user)} · ${p.program?.track ?? ''}${p.totalInstallments ? ` (instalment ${p.installmentNumber}/${p.totalInstallments})` : ''}`,
         link: '/admin/payments', at: iso(p.updatedAt),
       })),
-      ...signups.map((u) => ({
+      ...(can('users') ? signups : []).map((u) => ({
         id: `su-${u.id}`, kind: 'info' as const,
         title: 'New learner signed up',
         detail: `${name(u)} · ${u.email}`,

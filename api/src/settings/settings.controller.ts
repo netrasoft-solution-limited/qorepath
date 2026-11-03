@@ -3,6 +3,7 @@ import { SettingsService, RefundPolicy } from './settings.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { RequirePermission } from '../auth/permissions';
 import { UserRole } from '../users/user.entity';
 
 @Controller('settings')
@@ -17,6 +18,7 @@ export class SettingsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @RequirePermission('settings')
   @Patch('refund-policy')
   setRefundPolicy(@Body() body: Partial<RefundPolicy>) {
     return this.settings.setRefundPolicy(body);

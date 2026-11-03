@@ -59,6 +59,7 @@ export const ROLE_PERMISSION_DEFS: Record<string, Permission[]> = {
 
 export function hasPermission(user: any, key: string): boolean {
   if (!user) return false;
+  if (user.isSuperAdmin) return true;
   const perms: string[] = user.permissions ?? ROLE_DEFAULT_PERMISSIONS[user.role] ?? [];
   return perms.includes(key);
 }

@@ -18,6 +18,7 @@ import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { RequirePermission } from '../auth/permissions';
 import { UserRole } from '../users/user.entity';
 import { PaymentStatus } from './payment.entity';
 
@@ -62,6 +63,7 @@ export class PaymentsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @RequirePermission('payments')
   @Post(':id/refund')
   refund(@Param('id') id: string) {
     return this.paymentsService.refundPayment(id);
@@ -85,6 +87,7 @@ export class PaymentsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @RequirePermission('payments')
   @Post('reconcile-all')
   @HttpCode(200)
   reconcileAll() {
@@ -94,6 +97,7 @@ export class PaymentsController {
   // Admin-only manual record (e.g. a bank transfer). Learners pay via /initialize.
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @RequirePermission('payments')
   @Post()
   create(@Body() body: any) {
     return this.paymentsService.create(body);
@@ -101,6 +105,7 @@ export class PaymentsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @RequirePermission('payments', 'revenue', 'reports', 'audit_log')
   @Get()
   findAll() {
     return this.paymentsService.findAll();
@@ -114,6 +119,7 @@ export class PaymentsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @RequirePermission('payments', 'revenue', 'reports')
   @Get('cohort/:cohortId')
   findByCohort(@Param('cohortId') cohortId: string) {
     return this.paymentsService.findByCohort(cohortId);
@@ -121,6 +127,7 @@ export class PaymentsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @RequirePermission('payments')
   @Patch(':id/status')
   updateStatus(
     @Param('id') id: string,

@@ -2,6 +2,8 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { Program } from '../programs/program.entity';
 import { Enrollment, EnrollmentStatus } from '../enrollments/enrollment.entity';
+import { User } from '../users/user.entity';
+import { effectivePermissions } from '../auth/permissions';
 
 export interface Caller {
   id: string;
@@ -89,6 +91,15 @@ export class AccessService {
     if (this.isAdmin(user)) return true;
     if (!cohortId) return false;
     return (await this.cohortIdsFor(user, true)).includes(cohortId);
+  }
+
+  /** For admins: does this one hold any of these permission keys? Super admins always do. */
+  async adminHas(userId: string, ...anyOf: string[]): Promise<boolean> {
+    const u = await this.dataSource.getRepository(User).findOneBy({ id: userId });
+    if (!u || u.role !== 'admin' || !u.isActive) return false;
+    if (u.isSuperAdmin) return true;
+    const mine = effectivePermissions(u);
+    return anyOf.some((p) => mine.includes(p));
   }
 
   async assert(allowed: Promise<boolean> | boolean, message = 'You do not have access to this resource') {

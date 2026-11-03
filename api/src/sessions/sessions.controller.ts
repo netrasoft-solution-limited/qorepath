@@ -3,6 +3,7 @@ import { SessionsService } from './sessions.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { RequirePermission } from '../auth/permissions';
 import { UserRole } from '../users/user.entity';
 import { AccessService } from '../access/access.service';
 
@@ -23,12 +24,14 @@ export class SessionsController {
   }
 
   @Roles(UserRole.ADMIN)
+  @RequirePermission('reports')
   @Get()
   findAll() {
     return this.sessionsService.findAll();
   }
 
   @Roles(UserRole.ADMIN)
+  @RequirePermission('reports')
   @Get('cohort/:cohortId')
   findByCohort(@Param('cohortId') cohortId: string) {
     return this.sessionsService.findByCohort(cohortId);
@@ -41,6 +44,7 @@ export class SessionsController {
   }
 
   @Roles(UserRole.ADMIN)
+  @RequirePermission('at_risk', 'reports')
   @Get('at-risk')
   getAtRisk() {
     return this.sessionsService.getAtRiskLearners();

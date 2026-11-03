@@ -3,6 +3,7 @@ import { EnrollmentsService } from './enrollments.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { RequirePermission } from '../auth/permissions';
 import { UserRole } from '../users/user.entity';
 import { EnrollmentStatus } from './enrollment.entity';
 import { AccessService } from '../access/access.service';
@@ -14,12 +15,14 @@ export class EnrollmentsController {
 
   // Admin-only manual enrollment. Learners are enrolled automatically once payment settles.
   @Roles(UserRole.ADMIN)
+  @RequirePermission('enrollments')
   @Post()
   create(@Body() body: any) {
     return this.enrollmentsService.create(body);
   }
 
   @Roles(UserRole.ADMIN)
+  @RequirePermission('enrollments', 'reports', 'audit_log')
   @Get()
   findAll() {
     return this.enrollmentsService.findAll();
@@ -45,12 +48,14 @@ export class EnrollmentsController {
   }
 
   @Roles(UserRole.ADMIN)
+  @RequirePermission('enrollments')
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body('status') status: EnrollmentStatus) {
     return this.enrollmentsService.updateStatus(id, status);
   }
 
   @Roles(UserRole.ADMIN)
+  @RequirePermission('enrollments')
   @Patch(':id/reinstate')
   reinstate(@Param('id') id: string) {
     return this.enrollmentsService.reinstate(id);
