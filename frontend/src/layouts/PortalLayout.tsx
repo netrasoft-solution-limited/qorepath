@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LogOut, Bell, Menu, X } from 'lucide-react';
+import { LogOut, Menu, X } from 'lucide-react';
+import { NotificationBell } from '../components/NotificationBell';
 import { useAuth } from '../contexts/AuthContext';
 
 interface NavItem {
@@ -121,10 +122,7 @@ export function PortalLayout({ children, navItems, portalName }: PortalLayoutPro
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-end px-8 shrink-0 z-10">
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-500">{displayName}</span>
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
-              <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            <NotificationBell />
           </div>
         </header>
 

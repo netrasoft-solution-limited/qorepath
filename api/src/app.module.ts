@@ -18,6 +18,7 @@ import { WithdrawalsModule } from './withdrawals/withdrawals.module';
 import { MailModule } from './mail/mail.module';
 import { AccessModule } from './access/access.module';
 import { IntegrationsModule } from './integrations/integrations.module';
+import { InboxModule } from './inbox/inbox.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { IntegrationsModule } from './integrations/integrations.module';
     ProgramsModule,
     SettingsModule,
     WithdrawalsModule,
+    InboxModule,
   ],
 })
 export class AppModule {}

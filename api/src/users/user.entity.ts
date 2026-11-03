@@ -57,6 +57,10 @@ export class User {
   @Column({ default: false })
   isSuperAdmin: boolean;
 
+  // Last time the user opened the portal bell; feed items newer than this are "unread".
+  @Column({ type: 'timestamp', nullable: true })
+  notificationsSeenAt: Date | null;
+
   @Column({ type: 'simple-array', nullable: true })
   permissions: string[];
 
