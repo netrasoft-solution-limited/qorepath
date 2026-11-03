@@ -16,13 +16,13 @@ export class AuditEntry {
   actorId: string | null;
 
   // Copied at the time of the action, so the log still reads correctly if the account changes or is deleted.
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   actorName: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   actorEmail: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   actorRole: string | null;
 
   @Index()
@@ -32,7 +32,7 @@ export class AuditEntry {
   @Column()
   entity: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   entityId: string | null;
 
   @Column({ type: 'text' })
@@ -42,6 +42,6 @@ export class AuditEntry {
   @Column({ type: 'jsonb', nullable: true })
   changes: Record<string, [unknown, unknown]> | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   ip: string | null;
 }
