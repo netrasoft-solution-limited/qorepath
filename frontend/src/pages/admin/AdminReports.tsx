@@ -62,7 +62,7 @@ export function AdminReports() {
             Status: e.status,
             EnrolledAt: e.createdAt?.slice(0, 10),
           })),
-          'qorepath-enrollments.csv'
+          'netranova-enrollments.csv'
         );
       } else if (id === 'revenue') {
         const { data } = await api.get('/payments');
@@ -77,7 +77,7 @@ export function AdminReports() {
             Status: p.status,
             Date: p.createdAt?.slice(0, 10),
           })),
-          'qorepath-revenue.csv'
+          'netranova-revenue.csv'
         );
       } else if (id === 'performance') {
         const { data } = await api.get('/sessions/at-risk');
@@ -90,7 +90,7 @@ export function AdminReports() {
             SessionsAttended: d.sessionsAttended,
             TotalSessions: d.totalSessions,
           })),
-          'qorepath-performance.csv'
+          'netranova-performance.csv'
         );
       } else if (id === 'certificate') {
         const { data } = await api.get('/certificates');
@@ -104,7 +104,7 @@ export function AdminReports() {
             Track: c.cohort?.track ?? '',
             IssuedAt: c.issuedAt?.slice(0, 10),
           })),
-          'qorepath-certificates.csv'
+          'netranova-certificates.csv'
         );
       }
     } catch {

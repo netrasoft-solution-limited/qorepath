@@ -63,7 +63,7 @@ export function AdminRevenue() {
         Status: p.status,
         Date: p.createdAt?.slice(0, 10),
       })),
-      'qorepath-payments.csv'
+      'netranova-payments.csv'
     );
   };
 

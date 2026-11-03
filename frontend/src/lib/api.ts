@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  // Set VITE_API_URL at build time for deployments (e.g. https://qorepath-api.onrender.com/api).
+  // Set VITE_API_URL at build time for deployments (e.g. https://api.netranova.netrasoft.co/api).
   baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:3005/api',
   headers: { 'Content-Type': 'application/json' },
 });

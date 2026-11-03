@@ -12,7 +12,7 @@ const perks = [
 ];
 
 const testimonial = {
-  quote: '"QorePath gave me more than skills — it gave me a career. I landed my first dev job 3 weeks after graduating."',
+  quote: '"NetraNova gave me more than skills — it gave me a career. I landed my first dev job 3 weeks after graduating."',
   name: 'Chinedu Okafor',
   role: 'Frontend Engineer, Lagos',
 };
@@ -64,7 +64,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="relative z-10">
           <Link to="/public/home">
-            <img src="/qorepath.webp" alt="QorePath" className="h-8 bg-white/10 rounded-lg px-2 py-1" />
+            <span className="flex items-center gap-2"><img src="/netranova-icon.webp" alt="" className="h-9 w-9" /><span className="text-white font-extrabold text-xl tracking-tight">NetraNova</span></span>
           </Link>
         </div>
 
@@ -121,7 +121,7 @@ export default function LoginPage() {
         {/* Mobile logo */}
         <div className="lg:hidden mb-10 text-center">
           <Link to="/public/home">
-            <img src="/qorepath.webp" alt="QorePath" className="h-8 inline" />
+            <img src="/netranova-logo.webp" alt="NetraNova" className="h-8 inline" />
           </Link>
         </div>
 

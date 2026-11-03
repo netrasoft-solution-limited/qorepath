@@ -12,7 +12,7 @@ export class CertificatesService {
   ) {}
 
   async issue(data: Partial<Certificate>) {
-    const certificateNumber = `QP-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    const certificateNumber = `NN-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
     const saved = await this.repo.save(this.repo.create({ ...data, certificateNumber, issuedDate: new Date() }));
     this.notifications.certificateIssued(saved.id);
     return saved;

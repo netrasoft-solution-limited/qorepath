@@ -206,7 +206,7 @@ export class PaymentsService {
   }
 
   private newReference() {
-    return `QP-${this.randomSuffix()}`;
+    return `NN-${this.randomSuffix()}`;
   }
 
   /**

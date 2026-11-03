@@ -37,7 +37,7 @@ export function PortalLayout({ children, navItems, portalName }: PortalLayoutPro
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex flex-col w-64 bg-qore-dark text-white h-full shadow-xl z-20">
         <div className="p-6 flex items-center gap-3 border-b border-white/10">
-          <img src="/qorepath.webp" alt="Logo" className="h-8 bg-white rounded p-1" />
+          <img src="/netranova-icon.webp" alt="NetraNova" className="h-9 w-9" />
           <span className="font-semibold text-lg tracking-wide">{portalName}</span>
         </div>
 
@@ -83,7 +83,7 @@ export function PortalLayout({ children, navItems, portalName }: PortalLayoutPro
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-qore-dark text-white z-30 flex items-center justify-between px-4 shadow-md">
         <div className="flex items-center gap-2">
-          <img src="/qorepath.webp" alt="Logo" className="h-6 bg-white rounded p-0.5" />
+          <img src="/netranova-icon.webp" alt="NetraNova" className="h-7 w-7" />
           <span className="font-semibold text-sm">{portalName}</span>
         </div>
         <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2">

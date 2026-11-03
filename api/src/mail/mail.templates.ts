@@ -8,6 +8,8 @@ export interface EmailContent {
 
 const BRAND = '#1B4332';
 const ACCENT = '#2D6A4F';
+// PNG, not WebP: several email clients (notably older Outlook) can't display WebP.
+const LOGO_URL = `${(process.env.FRONTEND_URL ?? 'https://netranova.netrasoft.co').replace(/\/$/, '')}/netranova-logo.png`;
 
 export function esc(value: unknown): string {
   return String(value ?? '')
@@ -64,14 +66,14 @@ function layout(opts: { heading: string; body: string; cta?: { label: string; ur
   return `<!doctype html><html><body style="margin:0;padding:0;background:#f3f4f6;font-family:Inter,Segoe UI,Helvetica,Arial,sans-serif;color:#1A1A2E">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3f4f6;padding:32px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden">
-<tr><td style="background:${BRAND};padding:20px 28px;color:#ffffff;font-size:18px;font-weight:800;letter-spacing:.2px">QorePath</td></tr>
+<tr><td style="background:#ffffff;padding:20px 28px;border-bottom:3px solid ${BRAND}"><img src="${esc(LOGO_URL)}" alt="NetraNova" height="36" style="display:block;height:36px;width:auto;border:0;font-size:20px;font-weight:800;color:${BRAND}"></td></tr>
 <tr><td style="padding:28px;font-size:15px;line-height:1.6">
 <h1 style="margin:0 0 16px;font-size:20px;line-height:1.3;color:${BRAND}">${esc(opts.heading)}</h1>
 ${opts.body}
 ${opts.cta ? button(opts.cta.label, opts.cta.url) : ''}
 ${opts.footnote ? `<p style="margin:20px 0 0;font-size:12px;color:#6b7280">${opts.footnote}</p>` : ''}
 </td></tr>
-<tr><td style="padding:16px 28px;background:#f9fafb;color:#9ca3af;font-size:12px">You're receiving this because you have a QorePath account.</td></tr>
+<tr><td style="padding:16px 28px;background:#f9fafb;color:#9ca3af;font-size:12px">You're receiving this because you have a NetraNova account.</td></tr>
 </table></td></tr></table></body></html>`;
 }
 
@@ -81,9 +83,9 @@ const hi = (name?: string) => `<p style="margin:0 0 14px">Hi ${esc(name || 'ther
 
 export function welcomeEmail(p: { firstName?: string; appUrl: string }): EmailContent {
   return {
-    subject: 'Welcome to QorePath',
+    subject: 'Welcome to NetraNova',
     html: layout({
-      heading: 'Welcome to QorePath 🎉',
+      heading: 'Welcome to NetraNova 🎉',
       body: `${hi(p.firstName)}<p style="margin:0 0 14px">Your account is ready. Browse the open programs, pick a track, and join live, expert-led sessions with your cohort.</p>`,
       cta: { label: 'Browse programs', url: `${p.appUrl}/public/courses` },
     }),
@@ -92,7 +94,7 @@ export function welcomeEmail(p: { firstName?: string; appUrl: string }): EmailCo
 
 export function passwordResetEmail(p: { firstName?: string; link: string }): EmailContent {
   return {
-    subject: 'Reset your QorePath password',
+    subject: 'Reset your NetraNova password',
     html: layout({
       heading: 'Reset your password',
       body: `${hi(p.firstName)}<p style="margin:0 0 14px">We received a request to reset your password. Click the button below to choose a new one. The link expires in 1 hour.</p>`,
@@ -105,10 +107,10 @@ export function passwordResetEmail(p: { firstName?: string; link: string }): Ema
 export function staffAccountEmail(p: { firstName?: string; role: string; email: string; link: string }): EmailContent {
   const role = p.role === 'assistant' ? 'teaching assistant' : p.role;
   return {
-    subject: 'Your QorePath account has been created',
+    subject: 'Your NetraNova account has been created',
     html: layout({
-      heading: 'Your QorePath account is ready',
-      body: `${hi(p.firstName)}<p style="margin:0 0 14px">An administrator has created a QorePath <b>${esc(role)}</b> account for you.</p>${details([['Login email', esc(p.email)]])}<p style="margin:0 0 14px">Set your own password to sign in. This link expires in 72 hours.</p>`,
+      heading: 'Your NetraNova account is ready',
+      body: `${hi(p.firstName)}<p style="margin:0 0 14px">An administrator has created a NetraNova <b>${esc(role)}</b> account for you.</p>${details([['Login email', esc(p.email)]])}<p style="margin:0 0 14px">Set your own password to sign in. This link expires in 72 hours.</p>`,
       cta: { label: 'Set your password', url: p.link },
     }),
   };
@@ -170,7 +172,7 @@ export function enrollmentStatusEmail(p: {
         subject: `Update on your ${p.track} enrollment`,
         html: layout({
           heading: 'Enrollment not approved',
-          body: `${hi(p.firstName)}<p style="margin:0 0 14px">Your enrollment in <b>${esc(p.track)}</b>${p.cohort ? ` (${esc(p.cohort)})` : ''} was not approved. If you think this is a mistake, please reply to this email or contact the QorePath team.</p>`,
+          body: `${hi(p.firstName)}<p style="margin:0 0 14px">Your enrollment in <b>${esc(p.track)}</b>${p.cohort ? ` (${esc(p.cohort)})` : ''} was not approved. If you think this is a mistake, please reply to this email or contact the NetraNova team.</p>`,
         }),
       };
 }
@@ -229,7 +231,7 @@ export function announcementEmail(p: {
     html: layout({
       heading: p.title,
       body: `${hi(p.firstName)}${paragraphs(p.body)}${p.author ? `<p style="margin:0;color:#6b7280;font-size:13px">— ${esc(p.author)}</p>` : ''}`,
-      cta: { label: 'Open QorePath', url: `${p.appUrl}/learner/dashboard` },
+      cta: { label: 'Open NetraNova', url: `${p.appUrl}/learner/dashboard` },
     }),
   };
 }
@@ -287,7 +289,7 @@ export function certificateIssuedEmail(p: {
 }): EmailContent {
   const verifyUrl = `${p.appUrl}/public/verify/${encodeURIComponent(p.certificateNumber)}`;
   return {
-    subject: 'Your QorePath certificate is ready 🎓',
+    subject: 'Your NetraNova certificate is ready 🎓',
     html: layout({
       heading: 'Congratulations — your certificate is ready!',
       body: `${hi(p.firstName)}<p style="margin:0 0 14px">Your certificate has been issued. Anyone, including employers, can verify it using the certificate number below.</p>${details([
@@ -316,12 +318,12 @@ export function graduationDecisionEmail(p: {
     held: {
       subject: `Your ${p.track} graduation is on hold`,
       heading: 'Graduation on hold',
-      text: `Your graduation from <b>${esc(p.track)}</b> is on hold while a few outstanding items are completed. Your instructor or the QorePath team will be in touch about next steps.`,
+      text: `Your graduation from <b>${esc(p.track)}</b> is on hold while a few outstanding items are completed. Your instructor or the NetraNova team will be in touch about next steps.`,
     },
     rejected: {
       subject: `Update on your ${p.track} graduation`,
       heading: 'Graduation update',
-      text: `Unfortunately your graduation from <b>${esc(p.track)}</b> was not approved this time. Please reach out to your instructor or the QorePath team to discuss your options.`,
+      text: `Unfortunately your graduation from <b>${esc(p.track)}</b> was not approved this time. Please reach out to your instructor or the NetraNova team to discuss your options.`,
     },
   }[p.status];
   return {
@@ -349,7 +351,7 @@ export function programOpenEmail(p: {
     subject: `Now enrolling: ${p.track}${p.cohort ? ` — ${p.cohort}` : ''}`,
     html: layout({
       heading: `Now enrolling: ${p.track}`,
-      body: `${hi(p.firstName)}<p style="margin:0 0 14px">A new program is open for enrollment on QorePath. Seats are limited.</p>${details([
+      body: `${hi(p.firstName)}<p style="margin:0 0 14px">A new program is open for enrollment on NetraNova. Seats are limited.</p>${details([
         ['Program', esc(p.track)],
         ['Cohort', esc(p.cohort)],
         ['Starts', p.startDate ? esc(lagosDate(p.startDate)) : ''],

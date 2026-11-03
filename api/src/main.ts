@@ -12,6 +12,6 @@ async function bootstrap() {
     : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'];
   app.enableCors({ origin: origins, credentials: true });
   await app.listen(process.env.PORT ?? 3001);
-  console.log(`QorePath API running on http://localhost:${process.env.PORT ?? 3001}/api`);
+  console.log(`NetraNova API running on http://localhost:${process.env.PORT ?? 3001}/api`);
 }
 bootstrap();

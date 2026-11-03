@@ -75,7 +75,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link to="/public/home" className="flex items-center gap-2">
-              <img src="/qorepath.webp" alt="QorePath" className="h-7" />
+              <img src="/netranova-logo.webp" alt="NetraNova" className="h-10" />
             </Link>
 
             <nav className="hidden md:flex items-center gap-1">
@@ -176,7 +176,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
           {/* Top row: logo + social */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
             <Link to="/public/home">
-              <img src="/qorepath.webp" alt="QorePath" className="h-7" />
+              <img src="/netranova-logo.webp" alt="NetraNova" className="h-10" />
             </Link>
             <div className="flex items-center gap-3">
               {[
@@ -220,7 +220,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
 
           {/* Bottom bar */}
           <div className="border-t border-gray-100 pt-6 flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-gray-400">
-            <p>© All rights reserved <span className="font-semibold text-gray-600">QorePath</span> 2026.</p>
+            <p>© All rights reserved <span className="font-semibold text-gray-600">NetraNova</span> 2026.</p>
             <div className="flex items-center gap-4">
               <a href="#" className="hover:text-gray-600 transition-colors">Terms & Conditions</a>
               <a href="#" className="hover:text-gray-600 transition-colors">Privacy Policy</a>

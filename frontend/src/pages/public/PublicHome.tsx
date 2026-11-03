@@ -71,16 +71,16 @@ const benefits = [
   { title: 'Verifiable Certificates', desc: 'Every certificate has a unique ID that any employer can verify instantly at our public verification portal.', icon: Shield, color: 'text-blue-600', bg: 'bg-blue-50' },
   { title: 'Career Placement Support', desc: 'We don\'t just train you — we help you land. Resume reviews, mock interviews, and direct referrals to hiring partners.', icon: Briefcase, color: 'text-purple-600', bg: 'bg-purple-50' },
   { title: 'Flexible Payment Plans', desc: 'Instalment plans available for every track. No financial barrier should stop you from starting your tech career.', icon: Globe, color: 'text-green-600', bg: 'bg-green-50' },
-  { title: 'Lifetime Community Access', desc: 'Join alumni Slack, attend community events, and stay connected with 500+ QorePath graduates building in tech.', icon: MessageCircle, color: 'text-pink-600', bg: 'bg-pink-50' },
+  { title: 'Lifetime Community Access', desc: 'Join alumni Slack, attend community events, and stay connected with 500+ NetraNova graduates building in tech.', icon: MessageCircle, color: 'text-pink-600', bg: 'bg-pink-50' },
 ];
 
 const testimonials = [
-  { name: 'Chinedu Okafor', role: 'Frontend Engineer at Paystack', rating: 5, text: 'QorePath completely transformed my career. The live sessions and real-world projects gave me the confidence to land my first dev role within 3 months of graduating.' },
+  { name: 'Chinedu Okafor', role: 'Frontend Engineer at Paystack', rating: 5, text: 'NetraNova completely transformed my career. The live sessions and real-world projects gave me the confidence to land my first dev role within 3 months of graduating.' },
   { name: 'Amina Yusuf', role: 'UI/UX Designer at Flutterwave', rating: 5, text: "The curriculum is industry-aligned and the instructors genuinely care. I went from zero design experience to getting hired at a product company in Lagos." },
   { name: 'Emeka Nwachukwu', role: 'Backend Engineer at Kuda', rating: 5, text: "Best investment I made this year. The cohort model keeps you accountable and the community is incredibly supportive throughout the entire journey." },
-  { name: 'Sarah Peters', role: 'Fullstack Developer at Interswitch', rating: 5, text: "I tried many online courses before QorePath. None came close to the live interaction, project-based learning, and mentorship you get here." },
-  { name: 'Michael Obi', role: 'Product Manager at PiggyVest', rating: 5, text: "The structured curriculum and career guidance set QorePath apart. My instructors pushed me to build a strong portfolio that spoke for itself." },
-  { name: 'Fatima Aliyu', role: 'React Developer at Cowrywise', rating: 5, text: "From the first session to graduation, QorePath delivers a world-class learning experience right here in Nigeria. Highly recommend." },
+  { name: 'Sarah Peters', role: 'Fullstack Developer at Interswitch', rating: 5, text: "I tried many online courses before NetraNova. None came close to the live interaction, project-based learning, and mentorship you get here." },
+  { name: 'Michael Obi', role: 'Product Manager at PiggyVest', rating: 5, text: "The structured curriculum and career guidance set NetraNova apart. My instructors pushed me to build a strong portfolio that spoke for itself." },
+  { name: 'Fatima Aliyu', role: 'React Developer at Cowrywise', rating: 5, text: "From the first session to graduation, NetraNova delivers a world-class learning experience right here in Nigeria. Highly recommend." },
 ];
 
 const faqs = [
@@ -89,7 +89,7 @@ const faqs = [
   { q: 'What if I miss a live session?', a: 'All live sessions are recorded and made available to enrolled learners within 24 hours so you can catch up. However, attendance is still tracked for your graduation record.' },
   { q: 'Is the certificate recognised by employers?', a: 'Yes. Our certificates are verifiable via a public portal and are recognised by our hiring partners. We also provide transcripts and project portfolios to strengthen your applications.' },
   { q: 'Can I pay in instalments?', a: 'Absolutely. We offer flexible instalment plans for all tracks. Contact us after registering to set up a payment schedule that works for you.' },
-  { q: 'What happens after I graduate?', a: 'You get lifetime access to the QorePath alumni community, career support, referrals to hiring partners, and your verified certificate to share on LinkedIn and job applications.' },
+  { q: 'What happens after I graduate?', a: 'You get lifetime access to the NetraNova alumni community, career support, referrals to hiring partners, and your verified certificate to share on LinkedIn and job applications.' },
 ];
 
 const companies = ['Paystack', 'Flutterwave', 'Kuda', 'PiggyVest', 'Interswitch', 'Cowrywise', 'Andela', 'Moniepoint'];
@@ -346,7 +346,7 @@ export function PublicHome() {
               The Process
             </span>
             <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900">
-              How QorePath <span className="text-qore-medium">Works</span>
+              How NetraNova <span className="text-qore-medium">Works</span>
             </h2>
             <p className="text-gray-400 mt-3 text-base max-w-lg mx-auto">
               From your first session to your first job offer — a clear, proven path.
@@ -413,7 +413,7 @@ export function PublicHome() {
               className="lg:col-span-2 lg:sticky lg:top-24"
             >
               <span className="inline-block bg-qore-light text-qore-medium text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider mb-4">
-                Why QorePath
+                Why NetraNova
               </span>
               <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-5 leading-tight">
                 Everything you need to{' '}
@@ -697,7 +697,7 @@ export function PublicHome() {
                 Your tech career<br />starts with one step.
               </h2>
               <p className="text-white/50 text-base max-w-sm">
-                Join 500+ graduates who chose to level up with QorePath. Enrollment closes when seats fill.
+                Join 500+ graduates who chose to level up with NetraNova. Enrollment closes when seats fill.
               </p>
             </div>
             <form onSubmit={handleCTASubmit} className="flex flex-col sm:flex-row gap-3 w-full max-w-md shrink-0">

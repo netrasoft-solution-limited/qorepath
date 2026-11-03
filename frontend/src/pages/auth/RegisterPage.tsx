@@ -18,7 +18,7 @@ const steps = [
 ];
 
 const testimonial = {
-  quote: '"I was hesitant at first, but from day one QorePath felt different. The live classes, the community, the mentorship — it all clicked. I got hired before I even graduated."',
+  quote: '"I was hesitant at first, but from day one NetraNova felt different. The live classes, the community, the mentorship — it all clicked. I got hired before I even graduated."',
   name: 'Amina Yusuf',
   role: 'UI/UX Designer · Graduated Cohort 11',
 };
@@ -96,7 +96,7 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="relative z-10">
           <Link to="/public/home">
-            <img src="/qorepath.webp" alt="QorePath" className="h-8 bg-white/10 rounded-lg px-2 py-1" />
+            <span className="flex items-center gap-2"><img src="/netranova-icon.webp" alt="" className="h-9 w-9" /><span className="text-white font-extrabold text-xl tracking-tight">NetraNova</span></span>
           </Link>
         </div>
 
@@ -160,7 +160,7 @@ export default function RegisterPage() {
         {/* Mobile logo */}
         <div className="lg:hidden mb-8 text-center">
           <Link to="/public/home">
-            <img src="/qorepath.webp" alt="QorePath" className="h-8 inline" />
+            <img src="/netranova-logo.webp" alt="NetraNova" className="h-8 inline" />
           </Link>
         </div>
 
@@ -172,7 +172,7 @@ export default function RegisterPage() {
         >
           <div className="mb-7">
             <h1 className="text-3xl font-extrabold text-gray-900 mb-1.5">Create your account</h1>
-            <p className="text-gray-400 text-sm">Join QorePath — it's free to get started.</p>
+            <p className="text-gray-400 text-sm">Join NetraNova — it's free to get started.</p>
           </div>
 
           {error && (

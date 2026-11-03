@@ -18,7 +18,7 @@ const team = [
 ];
 
 const milestones = [
-  { year: '2022', text: 'QorePath founded in Lagos, Nigeria with first cohort of 20 learners.' },
+  { year: '2022', text: 'NetraNova founded in Lagos, Nigeria with first cohort of 20 learners.' },
   { year: '2023', text: 'Expanded to 3 tracks. 200+ graduates. First partnerships with Nigerian tech companies.' },
   { year: '2024', text: '85% placement rate achieved. Introduced flexible instalment payment plans.' },
   { year: '2025', text: '500+ learners trained. Launched Backend Engineering and Product Design tracks.' },
@@ -34,14 +34,14 @@ export function PublicAbout() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <span className="inline-block bg-qore-light text-qore-medium text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider mb-6">
-              About QorePath
+              About NetraNova
             </span>
             <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-6">
               We're on a mission to launch<br />
               <span className="text-qore-medium">Africa's next tech generation</span>
             </h1>
             <p className="text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
-              QorePath is a live cohort learning academy designed to take you from beginner to job-ready through expert-led sessions, real-world projects, and a community that has your back.
+              NetraNova is a live cohort learning academy designed to take you from beginner to job-ready through expert-led sessions, real-world projects, and a community that has your back.
             </p>
           </motion.div>
         </div>
@@ -74,10 +74,10 @@ export function PublicAbout() {
               <h2 className="text-3xl font-extrabold text-gray-900 mb-6">Our Story</h2>
               <div className="space-y-4 text-gray-600 leading-relaxed">
                 <p>
-                  QorePath was born from a frustration shared by many young Africans: the gap between wanting a tech career and actually getting one. Too many people were spending money on pre-recorded courses, watching videos, and still unable to get a job because they lacked real-world experience and mentorship.
+                  NetraNova was born from a frustration shared by many young Africans: the gap between wanting a tech career and actually getting one. Too many people were spending money on pre-recorded courses, watching videos, and still unable to get a job because they lacked real-world experience and mentorship.
                 </p>
                 <p>
-                  We built QorePath differently. Everything is live. Every session has a real expert on the other end. Every project is something you'd actually ship in a real job. And every graduate has a cohort of peers who grow alongside them.
+                  We built NetraNova differently. Everything is live. Every session has a real expert on the other end. Every project is something you'd actually ship in a real job. And every graduate has a cohort of peers who grow alongside them.
                 </p>
                 <p>
                   Since our first cohort in 2022, we've helped over 500 learners break into tech — as frontend engineers, backend engineers, and product designers — at companies across Nigeria and beyond.
@@ -140,7 +140,7 @@ export function PublicAbout() {
               Meet the <span className="text-qore-medium">Team</span>
             </h2>
             <p className="text-gray-400 mt-3 text-sm max-w-md mx-auto">
-              We're practitioners, not just teachers. Everyone on the QorePath team has built real products and wants to help you do the same.
+              We're practitioners, not just teachers. Everyone on the NetraNova team has built real products and wants to help you do the same.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

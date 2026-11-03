@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen flex flex-col justify-center bg-white px-6 sm:px-12 py-12">
       <div className="mb-10 text-center">
         <Link to="/public/home">
-          <img src="/qorepath.webp" alt="QorePath" className="h-8 inline" />
+          <img src="/netranova-logo.webp" alt="NetraNova" className="h-8 inline" />
         </Link>
       </div>
 

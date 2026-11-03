@@ -52,10 +52,10 @@ export function PublicVerify() {
               <Award size={32} className="text-qore-medium" />
             </div>
             <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3">
-              Verify a <span className="text-qore-medium">QorePath Certificate</span>
+              Verify a <span className="text-qore-medium">NetraNova Certificate</span>
             </h1>
             <p className="text-gray-500 text-base max-w-xl mx-auto">
-              Enter a certificate number to confirm its authenticity. All QorePath certificates are uniquely numbered and permanently verifiable.
+              Enter a certificate number to confirm its authenticity. All NetraNova certificates are uniquely numbered and permanently verifiable.
             </p>
           </motion.div>
         </div>
@@ -122,7 +122,7 @@ export function PublicVerify() {
               </div>
               <div>
                 <h3 className="font-bold text-green-800 text-lg">Certificate Verified ✓</h3>
-                <p className="text-sm text-green-700">This is a valid, authentic QorePath certificate.</p>
+                <p className="text-sm text-green-700">This is a valid, authentic NetraNova certificate.</p>
               </div>
             </div>
 
@@ -172,7 +172,7 @@ export function PublicVerify() {
             </div>
 
             <p className="text-xs text-center text-gray-400">
-              Verified on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} · QorePath Certificate Registry
+              Verified on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} · NetraNova Certificate Registry
             </p>
           </motion.div>
         )}

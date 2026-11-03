@@ -47,12 +47,12 @@ export function PortalSelector() {
         className="text-center mb-12">
         
         <img
-          src="/qorepath.webp"
-          alt="QorePath Logo"
+          src="/netranova-logo.webp"
+          alt="NetraNova"
           className="h-16 mx-auto mb-6" />
         
         <h1 className="text-3xl font-bold text-qore-text mb-2">
-          Welcome to QorePath Platform
+          Welcome to NetraNova Platform
         </h1>
         <p className="text-gray-600 max-w-md mx-auto">
           Select a portal to explore the different user experiences within the
