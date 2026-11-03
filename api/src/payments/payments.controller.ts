@@ -74,6 +74,23 @@ export class PaymentsController {
     return this.paymentsService.verifyAndSettle(reference);
   }
 
+  // Re-checks the caller's unconfirmed payments with Paystack, so a payment still
+  // settles if the browser closed before the popup's verify call ran.
+  @UseGuards(JwtAuthGuard)
+  @Post('reconcile')
+  @HttpCode(200)
+  reconcileMine(@Request() req: any) {
+    return this.paymentsService.reconcileForUser(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Post('reconcile-all')
+  @HttpCode(200)
+  reconcileAll() {
+    return this.paymentsService.reconcileAll();
+  }
+
   // Admin-only manual record (e.g. a bank transfer). Learners pay via /initialize.
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)

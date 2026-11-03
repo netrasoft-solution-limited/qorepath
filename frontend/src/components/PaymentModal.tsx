@@ -44,20 +44,30 @@ export function PaymentModal({
   const naira = (n: number) => `₦${n.toLocaleString()}`;
   const busy = step === 'opening' || step === 'paying' || step === 'verifying';
 
+  // Confirms with our server, which checks the reference directly with Paystack.
+  // Some methods (e.g. bank transfer) take a moment, so "pending" is retried a few times.
   const verify = async (reference: string) => {
     setStep('verifying');
     try {
-      const { data } = await api.get('/payments/verify', { params: { reference } });
-      if (data.status === 'success') {
-        setStep('success');
-        setTimeout(onSuccess, 1800);
-      } else {
-        setStep('error');
-        setError('Your payment could not be confirmed. If you were charged, contact support.');
+      for (let attempt = 0; attempt < 4; attempt++) {
+        const { data } = await api.get('/payments/verify', { params: { reference } });
+        if (data.status === 'success') {
+          setStep('success');
+          setTimeout(onSuccess, 1800);
+          return;
+        }
+        if (data.status === 'failed') {
+          setStep('error');
+          setError('Paystack reports this payment did not go through. No money was taken — please try again.');
+          return;
+        }
+        await new Promise((r) => setTimeout(r, 3000));
       }
+      setStep('error');
+      setError("Paystack hasn't confirmed this payment yet. If you were charged, it will be confirmed automatically — check your Payments page in a few minutes.");
     } catch (err: any) {
       setStep('error');
-      setError(err.response?.data?.message || 'We could not confirm your payment. Please try again.');
+      setError(err.response?.data?.message || "We couldn't reach the server to confirm. If you were charged, it will be confirmed automatically when you next open your dashboard.");
     }
   };
 

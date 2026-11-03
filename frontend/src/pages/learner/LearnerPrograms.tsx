@@ -5,6 +5,7 @@ import {
   BookOpen, Users, Clock, CalendarDays, CheckCircle, Lock, Info, GraduationCap,
 } from 'lucide-react';
 import api from '../../lib/api';
+import { reconcilePayments } from '../../lib/payments';
 import { PaymentModal } from '../../components/PaymentModal';
 import { useConfirm, useToast } from '../../components/feedback';
 
@@ -26,6 +27,7 @@ export function LearnerPrograms() {
 
   const load = async () => {
     try {
+      await reconcilePayments();
       const [cRes, eRes] = await Promise.all([
         api.get('/cohorts'),
         api.get('/enrollments/my'),

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Clock, AlertCircle, ArrowRight } from 'lucide-react';
 import api from '../../lib/api';
+import { reconcilePayments } from '../../lib/payments';
 import { PaymentModal } from '../../components/PaymentModal';
 
 export function LearnerPayments() {
@@ -12,7 +13,10 @@ export function LearnerPayments() {
   const [payingBalance, setPayingBalance] = useState<any | null>(null);
 
   const load = () =>
-    api.get('/payments/my').then(({ data }) => setPayments(data)).finally(() => setLoading(false));
+    reconcilePayments()
+      .then(() => api.get('/payments/my'))
+      .then(({ data }) => setPayments(data))
+      .finally(() => setLoading(false));
 
   useEffect(() => { load(); }, []);
 

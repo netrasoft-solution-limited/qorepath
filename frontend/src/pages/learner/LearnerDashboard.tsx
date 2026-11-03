@@ -6,6 +6,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../lib/api';
+import { reconcilePayments } from '../../lib/payments';
 import { PaymentModal } from '../../components/PaymentModal';
 
 // ── LearnerDashboard ────────────────────────────────────────────────────────
@@ -25,6 +26,7 @@ export function LearnerDashboard() {
 
   const load = async () => {
     try {
+      await reconcilePayments();
       const [eRes, aRes, cRes] = await Promise.all([
         api.get('/enrollments/my'),
         api.get('/announcements'),

@@ -4,9 +4,11 @@ import {
   BadRequestException,
   ForbiddenException,
   Logger,
+  OnModuleInit,
+  OnModuleDestroy,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, EntityManager } from 'typeorm';
+import { Repository, DataSource, EntityManager, Not, IsNull } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Payment, PaymentStatus, PaymentMethod } from './payment.entity';
 import { Enrollment, EnrollmentStatus } from '../enrollments/enrollment.entity';
@@ -14,8 +16,13 @@ import { Program } from '../programs/program.entity';
 import { PaystackService } from './paystack.service';
 import { NotificationsService } from '../mail/notifications.service';
 
+// A checkout Paystack reports as "abandoned" is only closed once it's this old,
+// so a learner who is still on the payment screen isn't cut off.
+const ABANDON_AFTER_MS = 60 * 60 * 1000;
+const SWEEP_EVERY_MS = 10 * 60 * 1000;
+
 @Injectable()
-export class PaymentsService {
+export class PaymentsService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PaymentsService.name);
 
   constructor(
@@ -272,20 +279,104 @@ export class PaymentsService {
 
   // ── Paystack: verify (called on return from checkout) ────────────────────────
   async verifyAndSettle(reference: string) {
+    return this.checkReference(reference);
+  }
+
+  /**
+   * Asks Paystack for the truth about one reference and applies it. This is the
+   * primary confirmation path — webhooks are only a backup.
+   *  - success            → settle (mark paid, enroll, email receipt)
+   *  - failed / reversed  → mark failed
+   *  - abandoned (> 1h)   → cancel
+   *  - anything else      → leave pending (e.g. a bank transfer still in flight)
+   */
+  private async checkReference(reference: string): Promise<{ status: 'success' | 'pending' | 'failed'; payment?: Payment }> {
     const result = await this.paystack.verify(reference);
 
-    if (result.status !== 'success') {
-      await this.repo.update(
-        { paystackReference: reference },
-        { status: PaymentStatus.FAILED },
-      );
-      return { status: 'failed' as const };
+    if (result.status === 'success') {
+      const settled = await this.settlePaidTransaction(reference, { expectedAmountKobo: result.amount });
+      return { status: 'success', payment: settled };
     }
 
-    const settled = await this.settlePaidTransaction(reference, {
-      expectedAmountKobo: result.amount,
+    const payment = await this.repo.findOne({ where: { paystackReference: reference } });
+    if (!payment || payment.status !== PaymentStatus.PENDING) return { status: 'pending' };
+
+    if (result.status === 'failed' || result.status === 'reversed') {
+      await this.closePending(payment, PaymentStatus.FAILED);
+      return { status: 'failed' };
+    }
+    const ageMs = Date.now() - new Date(payment.updatedAt ?? payment.createdAt).getTime();
+    if (result.status === 'abandoned' && ageMs > ABANDON_AFTER_MS) {
+      await this.closePending(payment, PaymentStatus.CANCELLED);
+      return { status: 'failed' };
+    }
+    return { status: 'pending' };
+  }
+
+  /** Close a pending payment; a dead first instalment also cancels its unpaid balance. */
+  private async closePending(payment: Payment, status: PaymentStatus) {
+    await this.repo.update(payment.id, { status });
+    if (payment.planReference && payment.installmentNumber === 1) {
+      await this.repo.update(
+        { planReference: payment.planReference, status: PaymentStatus.PENDING },
+        { status: PaymentStatus.CANCELLED },
+      );
+    }
+  }
+
+  /** Re-checks pending payments that have a Paystack reference. Errors on one don't stop the rest. */
+  private async reconcile(payments: Payment[]) {
+    const out = { checked: 0, confirmed: 0, closed: 0, stillPending: 0 };
+    for (const p of payments) {
+      if (!p.paystackReference) continue;
+      out.checked++;
+      try {
+        const r = await this.checkReference(p.paystackReference);
+        if (r.status === 'success') out.confirmed++;
+        else if (r.status === 'failed') out.closed++;
+        else out.stillPending++;
+      } catch (err) {
+        out.stillPending++;
+        this.logger.warn(`Reconcile ${p.paystackReference} failed: ${(err as Error).message}`);
+      }
+    }
+    return out;
+  }
+
+  /** The caller's own unconfirmed payments — run whenever a learner opens their pages. */
+  async reconcileForUser(userId: string) {
+    const pending = await this.repo.find({
+      where: { user: { id: userId }, status: PaymentStatus.PENDING, paystackReference: Not(IsNull()) },
+      order: { createdAt: 'DESC' },
+      take: 10,
     });
-    return { status: 'success' as const, payment: settled };
+    return this.reconcile(pending);
+  }
+
+  /** Every unconfirmed payment (oldest first, capped per run) — background sweep and admin button. */
+  async reconcileAll() {
+    const pending = await this.repo.find({
+      where: { status: PaymentStatus.PENDING, paystackReference: Not(IsNull()) },
+      order: { createdAt: 'ASC' },
+      take: 50,
+    });
+    return this.reconcile(pending);
+  }
+
+  // Background sweep while the server is awake (free hosting sleeps when idle,
+  // so learners' page loads also trigger reconcileForUser).
+  private sweep?: NodeJS.Timeout;
+
+  onModuleInit() {
+    this.sweep = setInterval(() => {
+      this.reconcileAll()
+        .then((r) => r.checked && this.logger.log(`Payment sweep: ${JSON.stringify(r)}`))
+        .catch((err) => this.logger.error('Payment sweep failed', err as Error));
+    }, SWEEP_EVERY_MS);
+  }
+
+  onModuleDestroy() {
+    if (this.sweep) clearInterval(this.sweep);
   }
 
   // ── Paystack: webhook (server-to-server, source of truth) ────────────────────

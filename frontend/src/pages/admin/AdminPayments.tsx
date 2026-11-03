@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Search, CheckCircle, Clock, XCircle, RefreshCw } from 'lucide-react';
 import api from '../../lib/api';
 import { useConfirm } from '../../components/feedback';
 
@@ -10,6 +10,26 @@ export function AdminPayments() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [error, setError] = useState('');
+
+  const [rechecking, setRechecking] = useState(false);
+  const [recheckMsg, setRecheckMsg] = useState('');
+  const recheck = async () => {
+    setRechecking(true);
+    setRecheckMsg('');
+    try {
+      const { data } = await api.post('/payments/reconcile-all');
+      setRecheckMsg(
+        data.checked
+          ? `Checked ${data.checked} with Paystack: ${data.confirmed} confirmed, ${data.closed} closed, ${data.stillPending} still pending.`
+          : 'No unconfirmed payments to check.',
+      );
+      await load();
+    } catch {
+      setRecheckMsg('Could not reach Paystack. Try again in a moment.');
+    } finally {
+      setRechecking(false);
+    }
+  };
 
   const load = async () => {
     try {
@@ -78,7 +98,16 @@ export function AdminPayments() {
           <h1 className="text-2xl font-bold text-qore-text">Payments</h1>
           <p className="text-gray-500">Total paid: ₦{total.toLocaleString()}</p>
         </div>
+        <button
+          onClick={recheck}
+          disabled={rechecking}
+          title="Ask Paystack for the latest status of every unconfirmed payment"
+          className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-qore-dark hover:border-qore-medium disabled:opacity-60"
+        >
+          <RefreshCw size={15} className={rechecking ? 'animate-spin' : ''} /> {rechecking ? 'Checking…' : 'Re-check pending'}
+        </button>
       </div>
+      {recheckMsg && <div className="p-3 bg-blue-50 text-blue-800 rounded-lg text-sm">{recheckMsg}</div>}
 
       {error && <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}
 
