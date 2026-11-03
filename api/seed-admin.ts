@@ -16,7 +16,7 @@ const ds = new DataSource({
 });
 
 async function main() {
-  const email = process.env.ADMIN_EMAIL ?? 'admin@qorepath.com';
+  const email = process.env.ADMIN_EMAIL ?? 'admin@netrasoft.co';
   const plain = process.env.ADMIN_PASSWORD;
   if (!plain || plain.length < 8) {
     throw new Error('Set ADMIN_PASSWORD (at least 8 characters) to create the admin account.');
