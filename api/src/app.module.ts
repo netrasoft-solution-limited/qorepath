@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { databaseOptions } from './database.config';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CohortsModule } from './cohorts/cohorts.module';
@@ -25,19 +26,12 @@ import { AuditModule } from './audit/audit.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        // DATABASE_URL (e.g. from Neon) takes precedence over the individual DB_* settings.
-        url: config.get('DATABASE_URL'),
-        ssl: config.get('DB_SSL') === 'true' || !!config.get('DATABASE_URL'),
-        host: config.get('DB_HOST'),
-        port: config.get<number>('DB_PORT'),
-        username: config.get('DB_USERNAME'),
-        password: config.get('DB_PASSWORD'),
-        database: config.get('DB_NAME'),
+      useFactory: () => ({
+        ...databaseOptions(process.env),
+        // Nest registers entities per module; migrations run before the app starts serving.
+        entities: [],
         autoLoadEntities: true,
-        synchronize: true,
+        migrationsRun: true,
       }),
     }),
     IntegrationsModule,
