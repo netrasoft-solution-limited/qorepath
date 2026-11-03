@@ -53,6 +53,10 @@ export class User {
   @Column({ default: true })
   isActive: boolean;
 
+  // Super admins can manage platform credentials (Paystack, Resend) and other super admins.
+  @Column({ default: false })
+  isSuperAdmin: boolean;
+
   @Column({ type: 'simple-array', nullable: true })
   permissions: string[];
 

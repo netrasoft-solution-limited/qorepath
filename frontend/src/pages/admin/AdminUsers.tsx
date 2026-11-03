@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, UserCheck, UserX, Plus, X,
-  ChevronDown, Mail, Phone, CheckCircle, Info, Settings2,
+  ChevronDown, Mail, Phone, CheckCircle, Info, Settings2, Crown,
 } from 'lucide-react';
 import api from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -94,8 +94,19 @@ export function AdminUsers() {
       await api.patch(`/users/${userId}`, { isActive: !current });
       flash(current ? 'User suspended' : 'User activated');
       load();
-    } catch {
-      setError('Failed to update user');
+    } catch (e: any) {
+      setError(e?.response?.data?.message || 'Failed to update user');
+    }
+  };
+
+  // ── Super admin (only visible to super admins; enforced by the API) ────
+  const toggleSuper = async (u: any) => {
+    try {
+      await api.patch(`/users/${u.id}`, { isSuperAdmin: !u.isSuperAdmin });
+      flash(u.isSuperAdmin ? 'Super admin access removed' : `${u.firstName} is now a super admin`);
+      load();
+    } catch (e: any) {
+      setError(e?.response?.data?.message || 'Failed to update super admin access');
     }
   };
 
@@ -448,6 +459,11 @@ export function AdminUsers() {
                         <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${ROLE_META[u.role]?.color ?? 'bg-gray-100 text-gray-600'}`}>
                           {ROLE_META[u.role]?.label ?? u.role}
                         </span>
+                        {u.isSuperAdmin && (
+                          <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-700">
+                            <Crown size={10} /> Super
+                          </span>
+                        )}
                         {u.id !== (me as any)?.id && (
                           <ChevronDown size={12} className="text-gray-300 group-hover:text-gray-500 transition-colors" />
                         )}
@@ -474,6 +490,15 @@ export function AdminUsers() {
                       >
                         <Settings2 size={16} />
                       </button>
+                      {(me as any)?.isSuperAdmin && u.role === 'admin' && u.id !== (me as any)?.id && (
+                        <button
+                          onClick={() => toggleSuper(u)}
+                          title={u.isSuperAdmin ? 'Remove super admin access' : 'Make super admin (can manage API keys)'}
+                          className={`p-1.5 rounded-lg transition-colors ${u.isSuperAdmin ? 'text-amber-500 hover:bg-amber-50' : 'text-gray-300 hover:bg-amber-50 hover:text-amber-500'}`}
+                        >
+                          <Crown size={16} />
+                        </button>
+                      )}
                       <button
                         onClick={() => toggleActive(u.id, u.isActive)}
                         disabled={u.id === (me as any)?.id}

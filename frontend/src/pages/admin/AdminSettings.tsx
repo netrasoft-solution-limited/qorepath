@@ -2,9 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Settings, Save, CheckCircle } from 'lucide-react';
 import api from '../../lib/api';
+import { useAuth } from '../../contexts/AuthContext';
+import { AdminIntegrations } from './AdminIntegrations';
 
 export function AdminSettings() {
+  const { user, refreshUser } = useAuth();
   const [activeTab, setActiveTab] = useState('tracks');
+  // Pick up role/flag changes (e.g. newly granted super admin) without a re-login.
+  useEffect(() => { refreshUser().catch(() => {}); }, []);
   const [cohorts, setCohorts] = useState<any[]>([]);
   const [edits, setEdits] = useState<Record<string, { price: string; maxLearners: string }>>({});
   const [loading, setLoading] = useState(true);
@@ -46,6 +51,8 @@ export function AdminSettings() {
     { id: 'cohorts', label: 'Cohort Rules' },
     { id: 'payments', label: 'Payment Rules' },
     { id: 'notifications', label: 'Notification Templates' },
+    // Credentials screen — super admins only (also enforced by the API).
+    ...(user?.isSuperAdmin ? [{ id: 'integrations', label: 'Integrations' }] : []),
   ];
 
   useEffect(() => {
@@ -262,7 +269,9 @@ export function AdminSettings() {
             </motion.div>
           )}
 
-          {activeTab !== 'tracks' && activeTab !== 'payments' && (
+          {activeTab === 'integrations' && user?.isSuperAdmin && <AdminIntegrations />}
+
+          {activeTab !== 'tracks' && activeTab !== 'payments' && activeTab !== 'integrations' && (
             <div className="py-12 flex flex-col items-center justify-center text-gray-400">
               <Settings size={48} className="mb-4 text-gray-300" />
               <p>Settings panel for {tabs.find((t) => t.id === activeTab)?.label} will be added here.</p>

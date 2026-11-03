@@ -17,6 +17,7 @@ import { SettingsModule } from './settings/settings.module';
 import { WithdrawalsModule } from './withdrawals/withdrawals.module';
 import { MailModule } from './mail/mail.module';
 import { AccessModule } from './access/access.module';
+import { IntegrationsModule } from './integrations/integrations.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { AccessModule } from './access/access.module';
         synchronize: true,
       }),
     }),
+    IntegrationsModule,
     MailModule,
     AccessModule,
     AuthModule,

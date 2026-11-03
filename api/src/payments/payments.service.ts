@@ -174,7 +174,7 @@ export class PaymentsService implements OnModuleInit, OnModuleDestroy {
         reference: init.reference,
         accessCode: init.accessCode,
         authorizationUrl: init.authorizationUrl,
-        publicKey: this.paystack.publicKey,
+        publicKey: await this.paystack.getPublicKey(),
         amount: firstAmount,
       };
     }
@@ -203,7 +203,7 @@ export class PaymentsService implements OnModuleInit, OnModuleDestroy {
       reference: init.reference,
       accessCode: init.accessCode,
       authorizationUrl: init.authorizationUrl,
-      publicKey: this.paystack.publicKey,
+      publicKey: await this.paystack.getPublicKey(),
       amount,
     };
   }
@@ -255,7 +255,7 @@ export class PaymentsService implements OnModuleInit, OnModuleDestroy {
       reference: init.reference,
       accessCode: init.accessCode,
       authorizationUrl: init.authorizationUrl,
-      publicKey: this.paystack.publicKey,
+      publicKey: await this.paystack.getPublicKey(),
       amount,
     };
   }
@@ -381,7 +381,7 @@ export class PaymentsService implements OnModuleInit, OnModuleDestroy {
 
   // ── Paystack: webhook (server-to-server, source of truth) ────────────────────
   async handleWebhook(rawBody: Buffer | string, signature?: string) {
-    if (!this.paystack.verifySignature(rawBody, signature)) {
+    if (!(await this.paystack.verifySignature(rawBody, signature))) {
       throw new BadRequestException('Invalid signature');
     }
 

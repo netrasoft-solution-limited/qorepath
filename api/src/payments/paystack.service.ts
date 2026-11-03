@@ -1,5 +1,5 @@
 import { Injectable, BadGatewayException, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { IntegrationsService } from '../integrations/integrations.service';
 import * as crypto from 'crypto';
 
 const PAYSTACK_BASE = 'https://api.paystack.co';
@@ -22,23 +22,29 @@ export interface VerifyResult {
 @Injectable()
 export class PaystackService {
   private readonly logger = new Logger(PaystackService.name);
-  private readonly secretKey: string;
 
-  constructor(private config: ConfigService) {
-    this.secretKey = this.config.getOrThrow<string>('PAYSTACK_SECRET_KEY');
+  // Keys come from IntegrationsService (dashboard-managed, else server env) on every call,
+  // so a super admin's change takes effect without a redeploy.
+  constructor(private integrations: IntegrationsService) {}
+
+  private async secretKey(): Promise<string> {
+    const { secretKey } = await this.integrations.paystack();
+    if (!secretKey) throw new BadGatewayException('Payments are not configured yet');
+    return secretKey;
   }
 
-  get publicKey(): string {
-    return this.config.getOrThrow<string>('PAYSTACK_PUBLIC_KEY');
+  async getPublicKey(): Promise<string> {
+    return (await this.integrations.paystack()).publicKey;
   }
 
   private async request<T>(path: string, init?: RequestInit): Promise<T> {
+    const secretKey = await this.secretKey();
     let res: Response;
     try {
       res = await fetch(`${PAYSTACK_BASE}${path}`, {
         ...init,
         headers: {
-          Authorization: `Bearer ${this.secretKey}`,
+          Authorization: `Bearer ${secretKey}`,
           'Content-Type': 'application/json',
           ...(init?.headers ?? {}),
         },
@@ -125,10 +131,12 @@ export class PaystackService {
   }
 
   /** Validates the x-paystack-signature header against the raw request body. */
-  verifySignature(rawBody: Buffer | string, signature?: string): boolean {
+  async verifySignature(rawBody: Buffer | string, signature?: string): Promise<boolean> {
     if (!signature) return false;
+    const { secretKey } = await this.integrations.paystack();
+    if (!secretKey) return false;
     const hash = crypto
-      .createHmac('sha512', this.secretKey)
+      .createHmac('sha512', secretKey)
       .update(rawBody)
       .digest('hex');
     // timing-safe compare

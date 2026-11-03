@@ -34,12 +34,12 @@ async function main() {
   const password = await bcrypt.hash(plain, 10);
   const adminPerms = 'cohorts,enrollments,payments,at_risk,instructors,graduation,certificates,revenue,reports,settings,users,audit_log';
   await ds.query(
-    `INSERT INTO users ("firstName", "lastName", email, password, role, permissions)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
+    `INSERT INTO users ("firstName", "lastName", email, password, role, permissions, "isSuperAdmin")
+     VALUES ($1, $2, $3, $4, $5, $6, true)`,
     ['Super', 'Admin', email, password, 'admin', adminPerms],
   );
 
-  console.log('✅ Admin created:', email);
+  console.log('✅ Super admin created:', email);
   await ds.destroy();
 }
 

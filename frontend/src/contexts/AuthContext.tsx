@@ -6,6 +6,7 @@ interface AuthUser {
   email: string;
   role: 'learner' | 'instructor' | 'assistant' | 'admin';
   permissions?: string[];
+  isSuperAdmin?: boolean;
   firstName?: string;
   lastName?: string;
 }

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { IntegrationsService } from '../integrations/integrations.service';
 
 const RESEND_BASE = 'https://api.resend.com';
 // Resend's batch endpoint accepts at most 100 emails per request.
@@ -15,14 +15,25 @@ export interface OutgoingEmail {
 export class MailService {
   private readonly logger = new Logger(MailService.name);
 
-  constructor(private config: ConfigService) {}
+  // Credentials come from IntegrationsService: dashboard-managed values, else server env.
+  constructor(private integrations: IntegrationsService) {}
 
-  private get apiKey() {
-    return this.config.get<string>('RESEND_API_KEY');
-  }
-
-  private get from() {
-    return this.config.get<string>('MAIL_FROM');
+  /** Sends one email and reports the outcome (used by the admin "send test email" button). */
+  async sendOne(email: OutgoingEmail): Promise<{ ok: boolean; error?: string }> {
+    const { apiKey, mailFrom } = await this.integrations.resend();
+    if (!apiKey || !mailFrom) return { ok: false, error: 'Email is not configured yet — save a Resend API key and sender first.' };
+    try {
+      const res = await fetch(`${RESEND_BASE}/emails`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: mailFrom, to: [email.to], subject: email.subject, html: email.html }),
+      });
+      if (res.ok) return { ok: true };
+      const body = (await res.json().catch(() => null)) as any;
+      return { ok: false, error: `Resend ${res.status}: ${body?.message ?? 'send failed'}` };
+    } catch {
+      return { ok: false, error: 'Could not reach Resend' };
+    }
   }
 
   /**
@@ -34,16 +45,15 @@ export class MailService {
     const list = emails.filter((e) => e.to);
     if (!list.length) return;
 
-    if (!this.apiKey || !this.from) {
-      this.logger.warn(
-        `Email disabled (RESEND_API_KEY / MAIL_FROM not set) — skipped ${list.length} × "${list[0].subject}"`,
-      );
+    const { apiKey, mailFrom } = await this.integrations.resend();
+    if (!apiKey || !mailFrom) {
+      this.logger.warn(`Email disabled (no Resend API key / sender configured) — skipped ${list.length} × "${list[0].subject}"`);
       return;
     }
 
     for (let i = 0; i < list.length; i += BATCH_SIZE) {
       const chunk = list.slice(i, i + BATCH_SIZE).map((e) => ({
-        from: this.from,
+        from: mailFrom,
         to: [e.to],
         subject: e.subject,
         html: e.html,
@@ -52,7 +62,7 @@ export class MailService {
         const res = await fetch(`${RESEND_BASE}/emails/batch`, {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${this.apiKey}`,
+            Authorization: `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(chunk),
