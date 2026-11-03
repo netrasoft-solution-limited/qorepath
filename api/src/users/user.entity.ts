@@ -31,6 +31,16 @@ export class User {
   @Column({ select: false })
   password: string;
 
+  // Password reset / first-login set-password token. Only the SHA-256 hash is stored.
+  @Column({ type: 'varchar', nullable: true, select: false })
+  resetTokenHash: string | null;
+
+  @Column({ type: 'timestamp', nullable: true, select: false })
+  resetTokenExpires: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true, select: false })
+  resetTokenIssuedAt: Date | null;
+
   @Column({ type: 'enum', enum: UserRole, default: UserRole.LEARNER })
   role: UserRole;
 

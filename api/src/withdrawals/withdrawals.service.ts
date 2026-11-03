@@ -8,6 +8,7 @@ import { Enrollment, EnrollmentStatus } from '../enrollments/enrollment.entity';
 import { Payment, PaymentStatus } from '../payments/payment.entity';
 import { SettingsService, RefundPolicy } from '../settings/settings.service';
 import { PaystackService } from '../payments/paystack.service';
+import { NotificationsService } from '../mail/notifications.service';
 
 const DAY = 24 * 60 * 60 * 1000;
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -22,6 +23,7 @@ export class WithdrawalsService {
     @InjectRepository(Payment) private paymentRepo: Repository<Payment>,
     private settings: SettingsService,
     private paystack: PaystackService,
+    private notifications: NotificationsService,
   ) {}
 
   // ── Learner (or admin) withdraws from a program ──────────────────────────────
@@ -67,7 +69,7 @@ export class WithdrawalsService {
     const progress = this.cohortProgress(cohort);
     const suggestedRefund = this.suggestRefund(amountPaid, cohort, policy);
 
-    return this.repo.save(
+    const saved = await this.repo.save(
       this.repo.create({
         enrollment: { id: enrollmentId } as any,
         learner: learnerId ? ({ id: learnerId } as any) : undefined,
@@ -80,6 +82,8 @@ export class WithdrawalsService {
         reason: reason ?? undefined,
       }),
     );
+    this.notifications.withdrawalRequested(saved.id);
+    return saved;
   }
 
   // ── Admin queue ──────────────────────────────────────────────────────────────
@@ -112,6 +116,7 @@ export class WithdrawalsService {
         adminNote: adminNote ?? undefined,
         resolvedAt: new Date(),
       });
+      this.notifications.withdrawalResolved(id);
       return this.findOne(id);
     }
 
@@ -127,6 +132,7 @@ export class WithdrawalsService {
       adminNote: adminNote ?? undefined,
       resolvedAt: new Date(),
     });
+    this.notifications.withdrawalResolved(id);
     return this.findOne(id);
   }
 

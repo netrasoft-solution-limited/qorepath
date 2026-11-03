@@ -12,6 +12,7 @@ import { Payment, PaymentStatus, PaymentMethod } from './payment.entity';
 import { Enrollment, EnrollmentStatus } from '../enrollments/enrollment.entity';
 import { Program } from '../programs/program.entity';
 import { PaystackService } from './paystack.service';
+import { NotificationsService } from '../mail/notifications.service';
 
 @Injectable()
 export class PaymentsService {
@@ -24,6 +25,7 @@ export class PaymentsService {
     private dataSource: DataSource,
     private paystack: PaystackService,
     private config: ConfigService,
+    private notifications: NotificationsService,
   ) {}
 
   create(data: Partial<Payment>) {
@@ -315,7 +317,17 @@ export class PaymentsService {
     reference: string,
     opts: { expectedAmountKobo?: number } = {},
   ) {
-    return this.dataSource.transaction(async (manager: EntityManager) => {
+    let justPaid = false;
+    const settled = await this.dataSource.transaction(async (manager: EntityManager) => {
+      // Lock the row first: the webhook and the verify endpoint often arrive together,
+      // and without the lock both could settle (and send a receipt) at once. Plain
+      // query builder, because FOR UPDATE can't be combined with eager outer joins.
+      await manager
+        .createQueryBuilder(Payment, 'p')
+        .setLock('pessimistic_write')
+        .where('p.paystackReference = :reference', { reference })
+        .getOne();
+
       const payment = await manager.findOne(Payment, {
         where: { paystackReference: reference },
         relations: { user: true, program: true },
@@ -343,6 +355,7 @@ export class PaymentsService {
       payment.status = PaymentStatus.PAID;
       payment.method = PaymentMethod.PAYSTACK;
       await manager.save(payment);
+      justPaid = true;
 
       const userId = payment.user?.id;
       const programId = payment.program?.id;
@@ -373,5 +386,9 @@ export class PaymentsService {
 
       return payment;
     });
+
+    // Only after the transaction commits, and only for the call that actually settled it.
+    if (justPaid) this.notifications.paymentSettled(settled.id);
+    return settled;
   }
 }

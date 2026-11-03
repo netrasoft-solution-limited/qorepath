@@ -2,12 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GraduationRecord, GraduationStatus } from './graduation.entity';
+import { NotificationsService } from '../mail/notifications.service';
 
 @Injectable()
 export class GraduationService {
   constructor(
     @InjectRepository(GraduationRecord)
     private repo: Repository<GraduationRecord>,
+    private notifications: NotificationsService,
   ) {}
 
   async upsert(enrollmentId: string, submittedById: string, recommendation: string, notes: string) {
@@ -39,7 +41,9 @@ export class GraduationService {
   }
 
   async updateStatus(id: string, status: GraduationStatus) {
+    const before = await this.repo.findOne({ where: { id } });
     await this.repo.update(id, { status });
+    if (before && before.status !== status) this.notifications.graduationDecided(id);
     return this.repo.findOne({ where: { id } });
   }
 

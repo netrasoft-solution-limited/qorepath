@@ -3,12 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Assignment } from './assignment.entity';
 import { Submission } from './submission.entity';
+import { NotificationsService } from '../mail/notifications.service';
 
 @Injectable()
 export class AssignmentsService {
   constructor(
     @InjectRepository(Assignment) private assignmentRepo: Repository<Assignment>,
     @InjectRepository(Submission) private submissionRepo: Repository<Submission>,
+    private notifications: NotificationsService,
   ) {}
 
   createAssignment(data: Partial<Assignment>) {
@@ -40,6 +42,8 @@ export class AssignmentsService {
   async gradeSubmission(submissionId: string, score: number, feedback: string) {
     const submission = await this.submissionRepo.findOneBy({ id: submissionId });
     if (!submission) throw new NotFoundException('Submission not found');
-    return this.submissionRepo.save({ ...submission, score, feedback, status: 'graded' as any });
+    const graded = await this.submissionRepo.save({ ...submission, score, feedback, status: 'graded' as any });
+    this.notifications.submissionGraded(submissionId);
+    return graded;
   }
 }

@@ -1,9 +1,15 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service';
+import { NotificationsService } from '../mail/notifications.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+
+const HOUR = 60 * 60 * 1000;
+const RESET_TOKEN_TTL = 1 * HOUR;
+// Staff accounts created by an admin get longer to set their first password.
+const SETUP_TOKEN_TTL = 72 * HOUR;
 
 const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
   admin:      ['cohorts','enrollments','payments','at_risk','instructors','graduation','certificates','revenue','reports','settings','users','audit_log'],
@@ -17,6 +23,7 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private notifications: NotificationsService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -39,6 +46,31 @@ export class AuthService {
     if (!user.isActive) throw new UnauthorizedException('Your account has been suspended. Contact an administrator.');
 
     return this.signToken(user.id, user.email, user.role);
+  }
+
+  /** Always returns the same response, so it can't be used to discover which emails have accounts. */
+  async forgotPassword(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (user?.isActive) {
+      const token = await this.usersService.issueResetToken(user.id, RESET_TOKEN_TTL);
+      if (token) this.notifications.passwordReset(user, token);
+    }
+    return { ok: true };
+  }
+
+  async resetPassword(token: string, password: string) {
+    const hashed = await bcrypt.hash(password, 10);
+    const ok = await this.usersService.consumeResetToken(token, hashed);
+    if (!ok) throw new BadRequestException('This reset link is invalid or has expired. Please request a new one.');
+    return { ok: true };
+  }
+
+  /** Emails a newly admin-created account a link to set their own password. */
+  async sendAccountSetup(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) return;
+    const token = await this.usersService.issueResetToken(user.id, SETUP_TOKEN_TTL);
+    if (token) this.notifications.staffAccountCreated(user, token);
   }
 
   private signToken(sub: string, email: string, role: string) {

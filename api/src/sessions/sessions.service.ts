@@ -7,6 +7,7 @@ import { Attendance, AttendanceStatus } from './attendance.entity';
 import { Enrollment, EnrollmentStatus } from '../enrollments/enrollment.entity';
 import { User } from '../users/user.entity';
 import { JaasService } from './jaas.service';
+import { NotificationsService } from '../mail/notifications.service';
 
 @Injectable()
 export class SessionsService {
@@ -19,6 +20,7 @@ export class SessionsService {
     @InjectRepository(User) private userRepo: Repository<User>,
     private jaas: JaasService,
     private config: ConfigService,
+    private notifications: NotificationsService,
   ) {}
 
   private roomName(sessionId: string) {
@@ -134,8 +136,10 @@ export class SessionsService {
     );
   }
 
-  create(data: any) {
-    return this.sessionRepo.save(this.sessionRepo.create(data));
+  async create(data: any) {
+    const saved: Session = await this.sessionRepo.save(this.sessionRepo.create(data as Partial<Session>));
+    this.notifications.sessionScheduled(saved.id);
+    return saved;
   }
 
   findAll() {

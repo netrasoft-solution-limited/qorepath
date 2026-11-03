@@ -2,12 +2,16 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Program } from './program.entity';
+import { NotificationsService } from '../mail/notifications.service';
 
 @Injectable()
 export class ProgramsService {
-  constructor(@InjectRepository(Program) private repo: Repository<Program>) {}
+  constructor(
+    @InjectRepository(Program) private repo: Repository<Program>,
+    private notifications: NotificationsService,
+  ) {}
 
-  create(data: any) {
+  async create(data: any) {
     const program = this.repo.create({
       track: data.track,
       description: data.description,
@@ -17,7 +21,10 @@ export class ProgramsService {
       instructor: data.instructorId ? ({ id: data.instructorId } as any) : null,
       assistants: [],
     });
-    return this.repo.save(program);
+    const saved = await this.repo.save(program);
+    // New track = new seats open for enrollment → alert learners.
+    this.notifications.programOpened(saved.id);
+    return saved;
   }
 
   findByCohort(cohortId: string) {

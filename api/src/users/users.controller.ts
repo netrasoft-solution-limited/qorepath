@@ -23,6 +23,7 @@ export class UsersController {
   @Post()
   async create(@Body() body: { firstName: string; lastName: string; email: string; password: string; role: string; phone?: string }) {
     await this.authService.register(body as any);
+    await this.authService.sendAccountSetup(body.email);
     return this.usersService.findByEmail(body.email);
   }
 

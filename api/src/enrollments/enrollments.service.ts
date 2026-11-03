@@ -2,10 +2,14 @@ import { Injectable, NotFoundException, ForbiddenException, BadRequestException 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Enrollment, EnrollmentStatus } from './enrollment.entity';
+import { NotificationsService } from '../mail/notifications.service';
 
 @Injectable()
 export class EnrollmentsService {
-  constructor(@InjectRepository(Enrollment) private repo: Repository<Enrollment>) {}
+  constructor(
+    @InjectRepository(Enrollment) private repo: Repository<Enrollment>,
+    private notifications: NotificationsService,
+  ) {}
 
   create(data: Partial<Enrollment>) {
     return this.repo.save(this.repo.create(data));
@@ -58,7 +62,9 @@ export class EnrollmentsService {
   }
 
   async updateStatus(id: string, status: EnrollmentStatus) {
+    const before = await this.findOne(id);
     await this.repo.update(id, { status });
+    if (before.status !== status) this.notifications.enrollmentStatusChanged(id);
     return this.findOne(id);
   }
 
@@ -78,6 +84,7 @@ export class EnrollmentsService {
       }
     }
     await this.repo.update(id, { status: EnrollmentStatus.APPROVED });
+    this.notifications.enrollmentStatusChanged(id);
     return this.findOne(id);
   }
 

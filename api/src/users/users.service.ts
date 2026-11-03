@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as crypto from 'crypto';
 import { User } from './user.entity';
+
+const sha256 = (value: string) => crypto.createHash('sha256').update(value).digest('hex');
+// Minimum gap between password emails for one account, so the endpoint can't be used to spam an inbox.
+const RESET_THROTTLE_MS = 60 * 1000;
 
 @Injectable()
 export class UsersService {
@@ -34,6 +39,44 @@ export class UsersService {
       .addSelect('user.password')
       .where('user.email = :email', { email })
       .getOne();
+  }
+
+  /**
+   * Issues a single-use password token valid for `ttlMs` and returns it (only its
+   * hash is stored). Returns null if one was issued for this user in the last minute.
+   */
+  async issueResetToken(userId: string, ttlMs: number): Promise<string | null> {
+    const current = await this.repo
+      .createQueryBuilder('user')
+      .addSelect('user.resetTokenIssuedAt')
+      .where('user.id = :userId', { userId })
+      .getOne();
+    if (current?.resetTokenIssuedAt && Date.now() - +current.resetTokenIssuedAt < RESET_THROTTLE_MS) {
+      return null;
+    }
+    const token = crypto.randomBytes(32).toString('hex');
+    await this.repo.update(userId, {
+      resetTokenHash: sha256(token),
+      resetTokenExpires: new Date(Date.now() + ttlMs),
+      resetTokenIssuedAt: new Date(),
+    });
+    return token;
+  }
+
+  /** Sets a new (already hashed) password if the token is valid, then invalidates the token. */
+  async consumeResetToken(token: string, passwordHash: string): Promise<boolean> {
+    const user = await this.repo
+      .createQueryBuilder('user')
+      .addSelect('user.resetTokenExpires')
+      .where('user.resetTokenHash = :hash', { hash: sha256(token) })
+      .getOne();
+    if (!user?.resetTokenExpires || user.resetTokenExpires < new Date()) return false;
+    await this.repo.update(user.id, {
+      password: passwordHash,
+      resetTokenHash: null,
+      resetTokenExpires: null,
+    });
+    return true;
   }
 
   update(id: string, data: Partial<User>) {

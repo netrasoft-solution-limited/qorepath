@@ -15,6 +15,7 @@ import { MaterialsModule } from './materials/materials.module';
 import { ProgramsModule } from './programs/programs.module';
 import { SettingsModule } from './settings/settings.module';
 import { WithdrawalsModule } from './withdrawals/withdrawals.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { WithdrawalsModule } from './withdrawals/withdrawals.module';
         synchronize: true,
       }),
     }),
+    MailModule,
     AuthModule,
     UsersModule,
     CohortsModule,

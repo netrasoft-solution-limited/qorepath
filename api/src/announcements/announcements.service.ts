@@ -2,13 +2,19 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Announcement } from './announcement.entity';
+import { NotificationsService } from '../mail/notifications.service';
 
 @Injectable()
 export class AnnouncementsService {
-  constructor(@InjectRepository(Announcement) private repo: Repository<Announcement>) {}
+  constructor(
+    @InjectRepository(Announcement) private repo: Repository<Announcement>,
+    private notifications: NotificationsService,
+  ) {}
 
-  create(data: Partial<Announcement>) {
-    return this.repo.save(this.repo.create(data));
+  async create(data: Partial<Announcement>) {
+    const saved = await this.repo.save(this.repo.create(data));
+    this.notifications.announcementPosted(saved.id);
+    return saved;
   }
 
   findAll() {

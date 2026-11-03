@@ -13,6 +13,8 @@ import { PublicLayout } from './layouts/PublicLayout';
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 // Public Pages
 import { PublicHome } from './pages/public/PublicHome';
 import { PublicAbout } from './pages/public/PublicAbout';
@@ -193,6 +195,8 @@ export function App() {
           <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Public Website */}
           <Route path="/public/home" element={<PublicLayout><PublicHome /></PublicLayout>} />

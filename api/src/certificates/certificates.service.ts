@@ -2,14 +2,20 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Certificate } from './certificate.entity';
+import { NotificationsService } from '../mail/notifications.service';
 
 @Injectable()
 export class CertificatesService {
-  constructor(@InjectRepository(Certificate) private repo: Repository<Certificate>) {}
+  constructor(
+    @InjectRepository(Certificate) private repo: Repository<Certificate>,
+    private notifications: NotificationsService,
+  ) {}
 
-  issue(data: Partial<Certificate>) {
+  async issue(data: Partial<Certificate>) {
     const certificateNumber = `QP-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
-    return this.repo.save(this.repo.create({ ...data, certificateNumber, issuedDate: new Date() }));
+    const saved = await this.repo.save(this.repo.create({ ...data, certificateNumber, issuedDate: new Date() }));
+    this.notifications.certificateIssued(saved.id);
+    return saved;
   }
 
   findAll() {
