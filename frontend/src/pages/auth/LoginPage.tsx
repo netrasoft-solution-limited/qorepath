@@ -1,25 +1,22 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { safeNext } from './RegisterPage';
 
 const perks = [
   'Live expert-led cohort sessions',
-  'Real-world project portfolio',
+  'Weekly projects with tutor feedback',
+  'Every class recorded for replay',
   'Verifiable certificate of completion',
-  'Lifetime community access',
 ];
-
-const testimonial = {
-  quote: '"NetraNova gave me more than skills — it gave me a career. I landed my first dev job 3 weeks after graduating."',
-  name: 'Chinedu Okafor',
-  role: 'Frontend Engineer, Lagos',
-};
 
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const next = safeNext(searchParams.get('next'));
   const [form, setForm] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -33,8 +30,8 @@ export default function LoginPage() {
       await login(form.email, form.password);
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       if (user.role === 'admin') navigate('/admin/dashboard');
-      else if (user.role === 'instructor') navigate('/instructor/dashboard');
-      else navigate('/learner/dashboard');
+      else if (user.role === 'instructor' || user.role === 'assistant') navigate('/instructor/dashboard');
+      else navigate(next ?? '/learner/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Invalid email or password');
     } finally {
@@ -75,7 +72,7 @@ export default function LoginPage() {
               Your next chapter<br />starts here.
             </h2>
             <p className="text-white/60 text-base leading-relaxed max-w-xs">
-              Join hundreds of learners who've transformed their careers through live, expert-led cohort learning.
+              Pick up where you left off — your classes, projects and progress are waiting.
             </p>
           </div>
 
@@ -90,24 +87,18 @@ export default function LoginPage() {
             ))}
           </ul>
 
-          {/* Testimonial */}
+          {/* Founding cohort */}
           <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-            <p className="text-white/80 text-sm leading-relaxed italic mb-4">{testimonial.quote}</p>
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-qore-medium flex items-center justify-center text-white font-bold text-sm shrink-0">
-                {testimonial.name.charAt(0)}
-              </div>
-              <div>
-                <p className="text-white text-sm font-semibold leading-none">{testimonial.name}</p>
-                <p className="text-white/50 text-xs mt-0.5">{testimonial.role}</p>
-              </div>
-            </div>
+            <p className="text-[#FFB020] text-xs font-bold uppercase tracking-wider mb-2">Founding cohort</p>
+            <p className="text-white/80 text-sm leading-relaxed">
+              Be among the first NetraNova graduates — learn live with a small cohort and help shape the program as it grows.
+            </p>
           </div>
         </div>
 
         {/* Bottom stats */}
         <div className="relative z-10 flex items-center gap-8 pt-8 border-t border-white/10">
-          {[{ value: '500+', label: 'Learners' }, { value: '85%', label: 'Placement' }, { value: '4.8★', label: 'Rating' }].map((s) => (
+          {[{ value: 'Live', label: 'Expert-led classes' }, { value: '50 / 50', label: 'Instalment option' }, { value: 'Verified', label: 'Certificates' }].map((s) => (
             <div key={s.label}>
               <p className="text-white font-extrabold text-lg leading-none">{s.value}</p>
               <p className="text-white/50 text-xs mt-1">{s.label}</p>
@@ -220,7 +211,10 @@ export default function LoginPage() {
 
           <p className="mt-8 text-center text-sm text-gray-400">
             Don't have an account?{' '}
-            <Link to="/register" className="text-qore-dark font-bold hover:text-qore-medium transition-colors">
+            <Link
+              to={next ? `/register?next=${encodeURIComponent(next)}` : '/register'}
+              className="text-qore-dark font-bold hover:text-qore-medium transition-colors"
+            >
               Create one free →
             </Link>
           </p>

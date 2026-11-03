@@ -5,11 +5,12 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { UserRole } from '../users/user.entity';
 import { EnrollmentStatus } from './enrollment.entity';
+import { AccessService } from '../access/access.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('enrollments')
 export class EnrollmentsController {
-  constructor(private enrollmentsService: EnrollmentsService) {}
+  constructor(private enrollmentsService: EnrollmentsService, private access: AccessService) {}
 
   // Admin-only manual enrollment. Learners are enrolled automatically once payment settles.
   @Roles(UserRole.ADMIN)
@@ -31,13 +32,15 @@ export class EnrollmentsController {
 
   @Roles(UserRole.ADMIN, UserRole.INSTRUCTOR, UserRole.ASSISTANT)
   @Get('cohort/:cohortId')
-  findByCohort(@Param('cohortId') cohortId: string) {
+  async findByCohort(@Param('cohortId') cohortId: string, @Request() req: any) {
+    await this.access.assert(this.access.canStaffCohort(req.user, cohortId));
     return this.enrollmentsService.findByCohort(cohortId);
   }
 
   @Roles(UserRole.ADMIN, UserRole.INSTRUCTOR, UserRole.ASSISTANT)
   @Get('program/:programId')
-  findByProgram(@Param('programId') programId: string) {
+  async findByProgram(@Param('programId') programId: string, @Request() req: any) {
+    await this.access.assert(this.access.canStaffProgram(req.user, programId));
     return this.enrollmentsService.findByProgram(programId);
   }
 

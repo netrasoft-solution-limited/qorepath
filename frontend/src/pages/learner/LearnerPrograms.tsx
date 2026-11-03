@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   BookOpen, Users, Clock, CalendarDays, CheckCircle, Lock, Info, GraduationCap,
 } from 'lucide-react';
@@ -38,6 +38,23 @@ export function LearnerPrograms() {
   };
 
   useEffect(() => { load(); }, []);
+
+  // Deep link from a public track page: /learner/programs?enroll=<programId> opens checkout.
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const wanted = searchParams.get('enroll');
+    if (loading || !wanted) return;
+    setSearchParams({}, { replace: true });
+    const mine = enrollments.find((e) => e.program?.id === wanted);
+    const busy = enrollments.some((e) => e.status === 'approved' && ONGOING.includes(e.program?.cohort?.status));
+    if (mine?.status === 'approved') { toast({ message: "You're already enrolled in this program.", variant: 'info' }); return; }
+    if (busy) { toast({ message: 'Finish your current program before enrolling in another.', variant: 'info' }); return; }
+    for (const c of cohorts) {
+      const prog = (c.programs ?? []).find((p: any) => p.id === wanted);
+      if (prog) { setPayingFor({ ...prog, cohortName: c.name }); return; }
+    }
+    toast({ message: 'That cohort is no longer open for enrollment.', variant: 'info' });
+  }, [loading]);
 
   // Per-program enrollment for this learner (status + id for withdrawal).
   const enrollmentByProgram: Record<string, any> = {};

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards, Request, ForbiddenException } from '@nestjs/common';
 import { CertificatesService } from './certificates.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -37,7 +37,11 @@ export class CertificatesController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.certificatesService.findOne(id);
+  async findOne(@Param('id') id: string, @Request() req: any) {
+    const cert = await this.certificatesService.findOne(id);
+    if (req.user.role !== UserRole.ADMIN && cert.user?.id !== req.user.id) {
+      throw new ForbiddenException('You can only view your own certificates');
+    }
+    return cert;
   }
 }

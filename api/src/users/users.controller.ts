@@ -34,7 +34,10 @@ export class UsersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: string, @Request() req: any) {
+    if (req.user.role !== UserRole.ADMIN && req.user.id !== id) {
+      throw new ForbiddenException('You can only view your own profile');
+    }
     return this.usersService.findOne(id);
   }
 

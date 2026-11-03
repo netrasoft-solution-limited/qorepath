@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Users, Star, BookOpen, Layers } from 'lucide-react';
+import { ArrowRight, Users, BookOpen, Layers, Video } from 'lucide-react';
 import api from '../../lib/api';
 
 const TRACK_SLUGS: Record<string, string> = {
@@ -197,7 +197,7 @@ export function CourseListing() {
                   {course.description ? (
                     <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 mb-4">{course.description}</p>
                   ) : (
-                    <p className="text-sm text-gray-400 italic mb-4">Live cohort · Hands-on projects · Career support</p>
+                    <p className="text-sm text-gray-400 italic mb-4">Live cohort · Weekly projects · Verifiable certificate</p>
                   )}
 
                   {/* Meta chips */}
@@ -207,9 +207,8 @@ export function CourseListing() {
                         <Users size={11} className="text-gray-400" /> {course.totalSeats} seats
                       </span>
                     )}
-                    <span className="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100">
-                      {[1,2,3,4,5].map(s => <Star key={s} size={9} className="fill-amber-400 text-amber-400" />)}
-                      <span className="ml-1">5.0</span>
+                    <span className="flex items-center gap-1.5 text-xs text-[#FF6A00] bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-100">
+                      <Video size={11} /> Live classes
                     </span>
                   </div>
 

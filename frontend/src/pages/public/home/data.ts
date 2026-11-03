@@ -24,22 +24,25 @@ export const JOURNEY = [
   { step: '04', title: 'Graduate & launch', desc: 'Earn a certificate with a unique number anyone can verify — then take your portfolio into the job market.' },
 ];
 
-// NOTE: placeholder social proof carried over from the original template. Replace these
-// with real numbers and real learners' words (with their permission) before relying on them.
-export const STATS = [
-  { value: 500, suffix: '+', label: 'Learners trained' },
-  { value: 85, suffix: '%', label: 'Placement rate' },
-  { value: 12, suffix: '', label: 'Cohorts completed' },
-  { value: 3, suffix: '', label: 'Learning tracks' },
+// Facts about how the program works (shown as counters) — no marketing numbers.
+export const FACTS = [
+  { value: 100, suffix: '%', label: 'Live, expert-led classes' },
+  { value: 50, suffix: '%', label: 'Is all you pay to start' },
+  { value: 1, suffix: '', label: 'Click from dashboard to class' },
+  { value: 24, suffix: '/7', label: 'Access to class recordings' },
 ];
 
-export const TESTIMONIALS = [
-  { name: 'Chinedu Okafor', role: 'Frontend Engineer at Paystack', text: 'NetraNova completely transformed my career. The live sessions and real-world projects gave me the confidence to land my first dev role within 3 months of graduating.' },
-  { name: 'Amina Yusuf', role: 'UI/UX Designer at Flutterwave', text: 'The curriculum is industry-aligned and the instructors genuinely care. I went from zero design experience to getting hired at a product company in Lagos.' },
-  { name: 'Emeka Nwachukwu', role: 'Backend Engineer at Kuda', text: 'Best investment I made this year. The cohort model keeps you accountable and the community is incredibly supportive throughout the entire journey.' },
-  { name: 'Sarah Peters', role: 'Fullstack Developer at Interswitch', text: 'I tried many online courses before NetraNova. None came close to the live interaction, project-based learning, and mentorship you get here.' },
-  { name: 'Michael Obi', role: 'Product Manager at PiggyVest', text: 'The structured curriculum and career guidance set NetraNova apart. My instructors pushed me to build a strong portfolio that spoke for itself.' },
-  { name: 'Fatima Aliyu', role: 'React Developer at Cowrywise', text: 'From the first session to graduation, NetraNova delivers a world-class learning experience right here in Nigeria. Highly recommend.' },
+// Example portfolio projects, by track — what learners build during a cohort.
+export const PROJECTS = [
+  { track: 'Frontend', title: 'Responsive landing page', desc: 'Pixel-accurate from a Figma file, fast and accessible on any phone.' },
+  { track: 'Frontend', title: 'React dashboard', desc: 'Charts, filters and state that survives a refresh — wired to a real API.' },
+  { track: 'Frontend', title: 'E-commerce storefront', desc: 'Product listing, cart and checkout flow in React + TypeScript.' },
+  { track: 'Backend', title: 'REST API with auth', desc: 'NestJS + PostgreSQL with sign-up, login, roles and validation.' },
+  { track: 'Backend', title: 'Payments integration', desc: 'Initialise, verify and webhook-settle payments the right way.' },
+  { track: 'Backend', title: 'Deployed service', desc: 'Your API live on the internet with a database and environment config.' },
+  { track: 'Design', title: 'Mobile app case study', desc: 'Research, user flows, wireframes and a tested high-fidelity prototype.' },
+  { track: 'Design', title: 'Design system', desc: 'Type, colour and components documented so a team can build with it.' },
+  { track: 'Design', title: 'Usability test report', desc: 'Plan, run and present findings from real user testing sessions.' },
 ];
 
 export const FAQS = [

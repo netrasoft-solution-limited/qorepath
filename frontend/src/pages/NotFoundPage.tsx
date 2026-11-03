@@ -9,7 +9,7 @@ export default function NotFoundPage() {
     ? '/public/home'
     : user.role === 'admin'
     ? '/admin/dashboard'
-    : user.role === 'instructor'
+    : user.role === 'instructor' || user.role === 'assistant'
     ? '/instructor/dashboard'
     : '/learner/dashboard';
 

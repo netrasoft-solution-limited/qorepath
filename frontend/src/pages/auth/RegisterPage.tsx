@@ -1,27 +1,27 @@
 import { useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, User, Phone, ArrowRight, CheckCircle, Star } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, Phone, ArrowRight, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
+// Product facts (not marketing numbers) for the panel footer.
 const highlights = [
-  { stat: '500+', label: 'Learners trained' },
-  { stat: '85%', label: 'Placement rate' },
-  { stat: '12', label: 'Cohorts completed' },
+  { stat: 'Live', label: 'Expert-led classes' },
+  { stat: '50 / 50', label: 'Instalment option' },
+  { stat: 'Verified', label: 'Certificates' },
 ];
 
 const steps = [
   { title: 'Create your account', desc: 'Takes less than 2 minutes.' },
   { title: 'Choose your track', desc: 'Frontend, Backend, or Product Design.' },
   { title: 'Join your cohort', desc: 'Live sessions, real projects, real mentors.' },
-  { title: 'Graduate & get hired', desc: 'Certificate + career support included.' },
+  { title: 'Graduate', desc: 'Earn a certificate anyone can verify.' },
 ];
 
-const testimonial = {
-  quote: '"I was hesitant at first, but from day one NetraNova felt different. The live classes, the community, the mentorship — it all clicked. I got hired before I even graduated."',
-  name: 'Amina Yusuf',
-  role: 'UI/UX Designer · Graduated Cohort 11',
-};
+/** Only allow same-site relative paths, so ?next= can't send people to another site. */
+export function safeNext(next: string | null): string | null {
+  return next && next.startsWith('/') && !next.startsWith('//') ? next : null;
+}
 
 function PasswordStrength({ password }: { password: string }) {
   const checks = [
@@ -63,7 +63,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register({ ...form, role: 'learner' });
-      navigate('/learner/dashboard');
+      navigate(safeNext(searchParams.get('next')) ?? '/learner/dashboard');
     } catch (err: any) {
       const msg = err.response?.data?.message;
       setError(Array.isArray(msg) ? msg.join(', ') : msg || 'Registration failed. Please try again.');
@@ -126,21 +126,12 @@ export default function RegisterPage() {
             ))}
           </div>
 
-          {/* Testimonial */}
+          {/* Founding cohort */}
           <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-            <div className="flex gap-0.5 mb-3">
-              {[1,2,3,4,5].map((s) => <Star key={s} size={12} className="text-yellow-400 fill-current" />)}
-            </div>
-            <p className="text-white/80 text-sm leading-relaxed italic mb-4">{testimonial.quote}</p>
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-qore-medium flex items-center justify-center text-white font-bold text-sm shrink-0">
-                {testimonial.name.charAt(0)}
-              </div>
-              <div>
-                <p className="text-white text-sm font-semibold leading-none">{testimonial.name}</p>
-                <p className="text-white/50 text-xs mt-0.5">{testimonial.role}</p>
-              </div>
-            </div>
+            <p className="text-[#FFB020] text-xs font-bold uppercase tracking-wider mb-2">Founding cohort</p>
+            <p className="text-white/80 text-sm leading-relaxed">
+              Be among the first NetraNova graduates — learn live with a small cohort and help shape the program as it grows.
+            </p>
           </div>
         </div>
 
@@ -316,7 +307,10 @@ export default function RegisterPage() {
 
           <p className="mt-7 text-center text-sm text-gray-400">
             Already have an account?{' '}
-            <Link to="/login" className="text-qore-dark font-bold hover:text-qore-medium transition-colors">
+            <Link
+              to={safeNext(searchParams.get('next')) ? `/login?next=${encodeURIComponent(searchParams.get('next')!)}` : '/login'}
+              className="text-qore-dark font-bold hover:text-qore-medium transition-colors"
+            >
               Sign in →
             </Link>
           </p>

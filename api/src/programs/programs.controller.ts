@@ -4,11 +4,15 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { UserRole } from '../users/user.entity';
+import { AccessService } from '../access/access.service';
+
+// Course-content fields teaching staff may edit; price, capacity, cohort and staffing are admin-only.
+const STAFF_EDITABLE = ['description', 'duration', 'format', 'schedule', 'outcomes', 'curriculum'];
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('programs')
 export class ProgramsController {
-  constructor(private service: ProgramsService) {}
+  constructor(private service: ProgramsService, private access: AccessService) {}
 
   @Roles(UserRole.ADMIN)
   @Post()
@@ -31,10 +35,16 @@ export class ProgramsController {
     return this.service.findOne(id);
   }
 
+  // Admins can change anything; a program's own instructor/assistant may only edit its course content.
   @Roles(UserRole.ADMIN, UserRole.INSTRUCTOR, UserRole.ASSISTANT)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: any) {
-    return this.service.update(id, body);
+  async update(@Param('id') id: string, @Body() body: any, @Request() req: any) {
+    if (req.user.role === UserRole.ADMIN) return this.service.update(id, body);
+    await this.access.assert(this.access.canStaffProgram(req.user, id), 'You can only edit programs you teach');
+    const content = Object.fromEntries(
+      Object.entries(body ?? {}).filter(([k]) => STAFF_EDITABLE.includes(k)),
+    );
+    return this.service.update(id, content);
   }
 
   @Roles(UserRole.ADMIN)

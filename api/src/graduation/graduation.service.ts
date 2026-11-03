@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GraduationRecord, GraduationStatus } from './graduation.entity';
+import { Enrollment } from '../enrollments/enrollment.entity';
 import { NotificationsService } from '../mail/notifications.service';
 
 @Injectable()
@@ -11,6 +12,12 @@ export class GraduationService {
     private repo: Repository<GraduationRecord>,
     private notifications: NotificationsService,
   ) {}
+
+  async programIdOfEnrollment(enrollmentId: string): Promise<string | undefined> {
+    const e = await this.repo.manager.findOne(Enrollment, { where: { id: enrollmentId }, relations: { program: true } });
+    if (!e) throw new NotFoundException('Enrollment not found');
+    return e.program?.id;
+  }
 
   async upsert(enrollmentId: string, submittedById: string, recommendation: string, notes: string) {
     const existing = await this.repo.findOne({

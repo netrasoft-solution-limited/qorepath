@@ -4,30 +4,42 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { UserRole } from '../users/user.entity';
+import { AccessService } from '../access/access.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('assignments')
 export class AssignmentsController {
-  constructor(private assignmentsService: AssignmentsService) {}
+  constructor(private assignmentsService: AssignmentsService, private access: AccessService) {}
 
   @Roles(UserRole.ADMIN, UserRole.INSTRUCTOR, UserRole.ASSISTANT)
   @Post()
-  create(@Body() body: any) {
+  async create(@Body() body: any, @Request() req: any) {
+    await this.access.assert(this.access.canStaffCohort(req.user, body?.cohort?.id), 'You can only create assignments for cohorts you teach');
     return this.assignmentsService.createAssignment(body);
   }
 
   @Get('cohort/:cohortId')
-  findByCohort(@Param('cohortId') cohortId: string) {
+  async findByCohort(@Param('cohortId') cohortId: string, @Request() req: any) {
+    await this.access.assert(this.access.canViewCohort(req.user, cohortId));
     return this.assignmentsService.findByCohort(cohortId);
   }
 
+  @Get('submissions/my')
+  getMySubmissions(@Request() req: any) {
+    return this.assignmentsService.findSubmissionsByLearner(req.user.id);
+  }
+
+  // Includes every learner's submission, so staff only.
+  @Roles(UserRole.INSTRUCTOR, UserRole.ASSISTANT, UserRole.ADMIN)
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string, @Request() req: any) {
+    await this.access.assert(this.access.canStaffCohort(req.user, await this.assignmentsService.cohortIdOfAssignment(id)));
     return this.assignmentsService.findOne(id);
   }
 
   @Post(':id/submit')
-  submit(@Param('id') id: string, @Body() body: any, @Request() req: any) {
+  async submit(@Param('id') id: string, @Body() body: any, @Request() req: any) {
+    await this.access.assert(this.access.canViewCohort(req.user, await this.assignmentsService.cohortIdOfAssignment(id)), 'You are not enrolled in this cohort');
     // Only the submission content — never score/status/feedback, which are set by grading.
     return this.assignmentsService.submit({
       submissionUrl: body.submissionUrl,
@@ -39,18 +51,15 @@ export class AssignmentsController {
 
   @Get(':id/submissions')
   @Roles(UserRole.INSTRUCTOR, UserRole.ASSISTANT, UserRole.ADMIN)
-  getSubmissions(@Param('id') id: string) {
+  async getSubmissions(@Param('id') id: string, @Request() req: any) {
+    await this.access.assert(this.access.canStaffCohort(req.user, await this.assignmentsService.cohortIdOfAssignment(id)));
     return this.assignmentsService.findSubmissionsByAssignment(id);
-  }
-
-  @Get('submissions/my')
-  getMySubmissions(@Request() req: any) {
-    return this.assignmentsService.findSubmissionsByLearner(req.user.id);
   }
 
   @Roles(UserRole.INSTRUCTOR, UserRole.ASSISTANT, UserRole.ADMIN)
   @Patch('submissions/:submissionId/grade')
-  grade(@Param('submissionId') id: string, @Body() body: { score: number; feedback: string }) {
+  async grade(@Param('submissionId') id: string, @Body() body: { score: number; feedback: string }, @Request() req: any) {
+    await this.access.assert(this.access.canStaffCohort(req.user, await this.assignmentsService.cohortIdOfSubmission(id)), 'You can only grade work in cohorts you teach');
     return this.assignmentsService.gradeSubmission(id, body.score, body.feedback);
   }
 }

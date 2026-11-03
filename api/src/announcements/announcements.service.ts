@@ -21,6 +21,17 @@ export class AnnouncementsService {
     return this.repo.find({ order: { createdAt: 'DESC' } });
   }
 
+  /** Platform-wide announcements plus those addressed to any of the given cohorts. */
+  findVisible(cohortIds: string[]) {
+    const qb = this.repo
+      .createQueryBuilder('a')
+      .leftJoinAndSelect('a.author', 'author')
+      .leftJoinAndSelect('a.cohort', 'cohort')
+      .where('cohort.id IS NULL');
+    if (cohortIds.length) qb.orWhere('cohort.id IN (:...cohortIds)', { cohortIds });
+    return qb.orderBy('a.createdAt', 'DESC').getMany();
+  }
+
   findByCohort(cohortId: string) {
     return this.repo.find({ where: { cohort: { id: cohortId } }, order: { createdAt: 'DESC' } });
   }

@@ -27,6 +27,18 @@ export class AssignmentsService {
     return a;
   }
 
+  async cohortIdOfAssignment(id: string): Promise<string | undefined> {
+    const a = await this.assignmentRepo.findOne({ where: { id }, relations: { cohort: true } });
+    if (!a) throw new NotFoundException('Assignment not found');
+    return a.cohort?.id;
+  }
+
+  async cohortIdOfSubmission(id: string): Promise<string | undefined> {
+    const s = await this.submissionRepo.findOne({ where: { id }, relations: { assignment: { cohort: true } } });
+    if (!s) throw new NotFoundException('Submission not found');
+    return s.assignment?.cohort?.id;
+  }
+
   submit(data: Partial<Submission>) {
     return this.submissionRepo.save(this.submissionRepo.create(data));
   }

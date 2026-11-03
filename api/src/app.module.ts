@@ -16,6 +16,7 @@ import { ProgramsModule } from './programs/programs.module';
 import { SettingsModule } from './settings/settings.module';
 import { WithdrawalsModule } from './withdrawals/withdrawals.module';
 import { MailModule } from './mail/mail.module';
+import { AccessModule } from './access/access.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { MailModule } from './mail/mail.module';
       }),
     }),
     MailModule,
+    AccessModule,
     AuthModule,
     UsersModule,
     CohortsModule,

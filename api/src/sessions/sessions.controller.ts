@@ -4,30 +4,39 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { UserRole } from '../users/user.entity';
+import { AccessService } from '../access/access.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('sessions')
 export class SessionsController {
-  constructor(private sessionsService: SessionsService) {}
+  constructor(private sessionsService: SessionsService, private access: AccessService) {}
+
+  private async programOf(sessionId: string): Promise<string | undefined> {
+    return (await this.sessionsService.findOne(sessionId)).program?.id;
+  }
 
   @Roles(UserRole.ADMIN, UserRole.INSTRUCTOR, UserRole.ASSISTANT)
   @Post()
-  create(@Body() body: any) {
+  async create(@Body() body: any, @Request() req: any) {
+    await this.access.assert(this.access.canStaffProgram(req.user, body?.program?.id), 'You can only schedule sessions for programs you teach');
     return this.sessionsService.create(body);
   }
 
+  @Roles(UserRole.ADMIN)
   @Get()
   findAll() {
     return this.sessionsService.findAll();
   }
 
+  @Roles(UserRole.ADMIN)
   @Get('cohort/:cohortId')
   findByCohort(@Param('cohortId') cohortId: string) {
     return this.sessionsService.findByCohort(cohortId);
   }
 
   @Get('program/:programId')
-  findByProgram(@Param('programId') programId: string) {
+  async findByProgram(@Param('programId') programId: string, @Request() req: any) {
+    await this.access.assert(this.access.canViewProgram(req.user, programId));
     return this.sessionsService.findByProgram(programId);
   }
 
@@ -61,25 +70,34 @@ export class SessionsController {
     return this.sessionsService.selfAttend(id, req.user.id);
   }
 
+  // Includes every learner's attendance, so staff only.
+  @Roles(UserRole.ADMIN, UserRole.INSTRUCTOR, UserRole.ASSISTANT)
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string, @Request() req: any) {
+    await this.access.assert(this.access.canStaffProgram(req.user, await this.programOf(id)));
     return this.sessionsService.findOne(id);
   }
 
   @Roles(UserRole.ADMIN, UserRole.INSTRUCTOR, UserRole.ASSISTANT)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: any) {
+  async update(@Param('id') id: string, @Body() body: any, @Request() req: any) {
+    await this.access.assert(this.access.canStaffProgram(req.user, await this.programOf(id)), 'You can only edit sessions for programs you teach');
+    // Only admins may move a session to a different program.
+    if (req.user.role !== UserRole.ADMIN) delete body.program;
     return this.sessionsService.update(id, body);
   }
 
   @Roles(UserRole.INSTRUCTOR, UserRole.ASSISTANT, UserRole.ADMIN)
   @Post(':id/attendance')
-  markAttendance(@Param('id') id: string, @Body() body: any) {
+  async markAttendance(@Param('id') id: string, @Body() body: any, @Request() req: any) {
+    await this.access.assert(this.access.canStaffProgram(req.user, await this.programOf(id)), 'You can only mark attendance for programs you teach');
     return this.sessionsService.markAttendance({ ...body, session: { id } });
   }
 
+  @Roles(UserRole.INSTRUCTOR, UserRole.ASSISTANT, UserRole.ADMIN)
   @Get(':id/attendance')
-  getAttendance(@Param('id') id: string) {
+  async getAttendance(@Param('id') id: string, @Request() req: any) {
+    await this.access.assert(this.access.canStaffProgram(req.user, await this.programOf(id)));
     return this.sessionsService.getAttendance(id);
   }
 }

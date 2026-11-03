@@ -21,6 +21,9 @@ export class CohortsController {
     return this.cohortsService.findAll();
   }
 
+  // Full record (staff contact details included) — admin only; the public listing is GET /cohorts.
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.cohortsService.findOne(id);

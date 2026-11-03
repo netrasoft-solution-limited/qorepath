@@ -5,18 +5,20 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { UserRole } from '../users/user.entity';
 import { GraduationStatus } from './graduation.entity';
+import { AccessService } from '../access/access.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('graduation')
 export class GraduationController {
-  constructor(private service: GraduationService) {}
+  constructor(private service: GraduationService, private access: AccessService) {}
 
   @Roles(UserRole.INSTRUCTOR, UserRole.ASSISTANT)
   @Post('recommend')
-  recommend(
+  async recommend(
     @Body() body: { enrollmentId: string; recommendation: string; notes?: string },
     @Request() req: any,
   ) {
+    await this.access.assert(this.access.canStaffProgram(req.user, await this.service.programIdOfEnrollment(body.enrollmentId)), 'You can only recommend learners in programs you teach');
     return this.service.upsert(body.enrollmentId, req.user.id, body.recommendation, body.notes ?? '');
   }
 
@@ -27,7 +29,8 @@ export class GraduationController {
 
   @Roles(UserRole.INSTRUCTOR, UserRole.ASSISTANT, UserRole.ADMIN)
   @Get('cohort/:cohortId')
-  getByCohort(@Param('cohortId') cohortId: string) {
+  async getByCohort(@Param('cohortId') cohortId: string, @Request() req: any) {
+    await this.access.assert(this.access.canStaffCohort(req.user, cohortId));
     return this.service.findByCohort(cohortId);
   }
 

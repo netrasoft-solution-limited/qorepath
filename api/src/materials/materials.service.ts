@@ -18,6 +18,12 @@ export class MaterialsService {
     });
   }
 
+  async programIdOf(id: string): Promise<string | undefined> {
+    const m = await this.repo.findOneBy({ id });
+    if (!m) throw new NotFoundException('Material not found');
+    return m.program?.id;
+  }
+
   async remove(id: string) {
     const m = await this.repo.findOneBy({ id });
     if (!m) throw new NotFoundException('Material not found');
