@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { FileText, Clock, CheckCircle, AlertCircle, Award } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import api from '../../lib/api';
-import { pickCurrentEnrollment, enrollmentCohortId } from '../../lib/enrollments';
+import { pickCurrentEnrollment } from '../../lib/enrollments';
 
 export function LearnerAssignments() {
   const [assignments, setAssignments] = useState<any[]>([]);
@@ -19,9 +20,9 @@ export function LearnerAssignments() {
         const active = pickCurrentEnrollment(enrollments);
         const subs = await api.get('/assignments/submissions/my');
         setSubmissions(subs.data);
-        const cohortId = enrollmentCohortId(active);
-        if (cohortId) {
-          const { data } = await api.get(`/assignments/cohort/${cohortId}`);
+        // Only an approved enrollment can see its track's work.
+        if (active?.status === 'approved' && active.program?.id) {
+          const { data } = await api.get(`/assignments/program/${active.program.id}`);
           setAssignments(data);
         }
       } catch {
@@ -37,13 +38,14 @@ export function LearnerAssignments() {
     e.preventDefault();
     if (!submitForm) return;
     setSubmitting(true);
+    setError('');
     try {
       await api.post(`/assignments/${submitForm.id}/submit`, { submissionUrl: submitForm.url });
       const { data } = await api.get('/assignments/submissions/my');
       setSubmissions(data);
       setSubmitForm(null);
-    } catch {
-      // silently fallback
+    } catch (err: any) {
+      setError(err?.response?.data?.message ?? 'Submission failed. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -71,8 +73,10 @@ export function LearnerAssignments() {
 
       {submitForm && (
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-qore-highlight">
-          <h2 className="font-bold text-qore-text mb-4">Submit Assignment</h2>
-          <form onSubmit={handleSubmit} className="flex gap-3">
+          <h2 className="font-bold text-qore-text mb-4">
+            {getSubmission(submitForm.id) ? 'Update your submission' : 'Submit Assignment'}
+          </h2>
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
             <input
               required
               type="url"
@@ -110,11 +114,14 @@ export function LearnerAssignments() {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4">
-                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center mt-0.5 ${submission ? 'bg-green-50 text-green-600' : pastDue ? 'bg-red-50 text-red-500' : 'bg-qore-light text-qore-dark'}`}>
-                      {submission ? <CheckCircle size={20} /> : pastDue ? <AlertCircle size={20} /> : <FileText size={20} />}
+                    <div className={`w-11 h-11 shrink-0 rounded-xl flex items-center justify-center mt-0.5 ${submission ? 'bg-green-50 text-green-600' : pastDue ? 'bg-red-50 text-red-500' : a.isCapstone ? 'bg-amber-50 text-amber-600' : 'bg-qore-light text-qore-dark'}`}>
+                      {submission ? <CheckCircle size={20} /> : pastDue ? <AlertCircle size={20} /> : a.isCapstone ? <Award size={20} /> : <FileText size={20} />}
                     </div>
                     <div>
-                      <p className="font-semibold text-qore-text">{a.title}</p>
+                      <p className="font-semibold text-qore-text">
+                        {a.title}
+                        {a.isCapstone && <span className="ml-2 align-middle px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">CAPSTONE</span>}
+                      </p>
                       <p className="text-sm text-gray-500 mt-1">{a.description?.slice(0, 120)}</p>
                       <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
                         <Clock size={12} />
@@ -135,7 +142,20 @@ export function LearnerAssignments() {
                         {submission.feedback && (
                           <p className="text-xs text-gray-500 mt-1 max-w-xs text-right">{submission.feedback}</p>
                         )}
+                        {submission.status !== 'graded' && !a.isCapstone && (
+                          <button onClick={() => setSubmitForm({ id: a.id, url: submission.submissionUrl ?? '' })}
+                            className="block ml-auto mt-1 text-xs text-qore-medium hover:underline"
+                          >
+                            Update submission
+                          </button>
+                        )}
                       </div>
+                    ) : a.isCapstone ? (
+                      <Link to="/learner/capstone"
+                        className="bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-amber-600 transition-colors whitespace-nowrap"
+                      >
+                        Open capstone
+                      </Link>
                     ) : (
                       <button
                         onClick={() => setSubmitForm({ id: a.id, url: '' })}

@@ -6,6 +6,7 @@ import { GraduationRecord, GraduationStatus } from '../graduation/graduation.ent
 import { Enrollment, EnrollmentStatus } from '../enrollments/enrollment.entity';
 import { Payment, PaymentStatus } from '../payments/payment.entity';
 import { Submission, SubmissionStatus } from '../assignments/submission.entity';
+import { Assignment } from '../assignments/assignment.entity';
 import { Session } from '../sessions/session.entity';
 import { Announcement } from '../announcements/announcement.entity';
 import { Certificate } from '../certificates/certificate.entity';
@@ -116,14 +117,21 @@ export class InboxService {
     const cohortIds = await this.access.cohortIdsFor(caller, false);
     if (!programIds.length) return [];
     const [ungraded, sessions, joins] = await Promise.all([
-      cohortIds.length
-        ? this.repo(Submission).find({
-            where: { status: SubmissionStatus.SUBMITTED, assignment: { cohort: { id: In(cohortIds) } } },
-            relations: { assignment: true },
-            order: { submittedAt: 'DESC' },
-            take: 15,
-          })
-        : [],
+      // Work in the tracks they teach (plus older cohort-wide assignments), not other tracks in the cohort.
+      this.repo(Submission)
+        .createQueryBuilder('s')
+        .leftJoinAndSelect('s.learner', 'learner')
+        .leftJoinAndSelect('s.assignment', 'a')
+        .where('s.status = :status', { status: SubmissionStatus.SUBMITTED })
+        .andWhere(
+          cohortIds.length
+            ? '(a.programId IN (:...programIds) OR (a.programId IS NULL AND a.cohortId IN (:...cohortIds)))'
+            : 'a.programId IN (:...programIds)',
+          { programIds, cohortIds },
+        )
+        .orderBy('s.submittedAt', 'DESC')
+        .take(15)
+        .getMany(),
       this.repo(Session).find({
         where: { program: { id: In(programIds) }, scheduledAt: Between(new Date(), new Date(Date.now() + DAY)) },
         order: { scheduledAt: 'ASC' },
@@ -161,7 +169,7 @@ export class InboxService {
   private async forLearner(caller: Caller): Promise<InboxItem[]> {
     const programIds = await this.access.learnerProgramIds(caller.id);
     const cohortIds = await this.access.cohortIdsFor(caller, true);
-    const [announcements, sessions, graded, balances, certs] = await Promise.all([
+    const [announcements, sessions, graded, balances, certs, assignments, mySubs] = await Promise.all([
       this.repo(Announcement)
         .createQueryBuilder('a')
         .leftJoinAndSelect('a.author', 'author')
@@ -185,7 +193,22 @@ export class InboxService {
       }),
       this.repo(Payment).find({ where: { user: { id: caller.id }, status: PaymentStatus.PENDING, installmentNumber: 2 } }),
       this.repo(Certificate).find({ where: { user: { id: caller.id } }, order: { createdAt: 'DESC' }, take: 5 }),
+      programIds.length
+        ? this.repo(Assignment)
+            .createQueryBuilder('a')
+            .where(
+              cohortIds.length
+                ? '(a.programId IN (:...programIds) OR (a.programId IS NULL AND a.cohortId IN (:...cohortIds)))'
+                : 'a.programId IN (:...programIds)',
+              { programIds, cohortIds },
+            )
+            .andWhere('a.dueDate > :now', { now: new Date() })
+            .getMany()
+        : [],
+      this.repo(Submission).find({ where: { learner: { id: caller.id } }, relations: { assignment: true } }),
     ]);
+    const submitted = new Set(mySubs.map((s) => s.assignment?.id));
+    const open = assignments.filter((a) => !submitted.has(a.id));
     return [
       ...announcements.map((a) => ({
         id: `ann-${a.id}`, kind: 'info' as const,
@@ -211,6 +234,24 @@ export class InboxService {
         detail: `${naira(p.amount)} left to pay for ${p.program?.track ?? 'your program'}`,
         link: '/learner/payments', at: iso(p.createdAt),
       })),
+      // New work: shows once when posted, and again as a reminder 2 days before it's due.
+      ...open
+        .filter((a) => +new Date(a.createdAt) > +ago(14))
+        .map((a) => ({
+          id: `asg-${a.id}`, kind: 'info' as const,
+          title: a.isCapstone ? 'Capstone project posted' : 'New assignment',
+          detail: `${a.title} · due ${new Date(a.dueDate).toLocaleDateString('en-GB', { timeZone: 'Africa/Lagos', day: 'numeric', month: 'short' })}`,
+          link: a.isCapstone ? '/learner/capstone' : '/learner/assignments', at: iso(a.createdAt),
+        })),
+      ...open
+        .filter((a) => +new Date(a.dueDate) - Date.now() < 2 * DAY)
+        .map((a) => ({
+          id: `due-${a.id}`, kind: 'reminder' as const,
+          title: 'Assignment due soon',
+          detail: `${a.title} · not submitted yet`,
+          link: a.isCapstone ? '/learner/capstone' : '/learner/assignments',
+          at: iso(Math.max(+new Date(a.createdAt), +new Date(a.dueDate) - 2 * DAY)),
+        })),
       ...certs.map((c) => ({
         id: `cert-${c.id}`, kind: 'success' as const,
         title: 'Your certificate is ready 🎓',

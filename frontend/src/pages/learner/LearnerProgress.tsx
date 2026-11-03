@@ -5,7 +5,7 @@ import {
   Calendar, FileText, Award, CreditCard, UserCheck,
 } from 'lucide-react';
 import api from '../../lib/api';
-import { pickCurrentEnrollment, enrollmentCohortId } from '../../lib/enrollments';
+import { pickCurrentEnrollment } from '../../lib/enrollments';
 
 export function LearnerProgress() {
   const [loading, setLoading] = useState(true);
@@ -38,14 +38,11 @@ export function LearnerProgress() {
           const active = pickCurrentEnrollment(enrollments);
           setEnrollment(active);
 
-          // Fetch capstone (assignments) for the cohort
-          const cohortId = enrollmentCohortId(active);
-          if (cohortId) {
+          if (active?.status === 'approved' && active.program?.id) {
             try {
-              const { data } = await api.get(`/assignments/cohort/${cohortId}`);
+              const { data } = await api.get(`/assignments/program/${active.program.id}`);
               setAssignments(data);
-              const cap = data.find((a: any) => a.isCapstone || a.title?.toLowerCase().includes('capstone'));
-              setCapstone(cap ?? null);
+              setCapstone(data.find((a: any) => a.isCapstone) ?? null);
             } catch {}
           }
         }
@@ -61,11 +58,15 @@ export function LearnerProgress() {
   const attendRecords: any[] = attendance?.records ?? [];
 
   const submittedIds = new Set(submissions.map((s: any) => s.assignment?.id));
-  const regularAssignments = assignments.filter((a: any) => !a.isCapstone && !a.title?.toLowerCase().includes('capstone'));
+  const regularAssignments = assignments.filter((a: any) => !a.isCapstone);
   const submittedCount = regularAssignments.filter((a: any) => submittedIds.has(a.id)).length;
-  const gradedSubs = submissions.filter((s: any) => s.status === 'graded' && s.score != null);
+  const trackIds = new Set(regularAssignments.map((a: any) => a.id));
+  const gradedSubs = submissions.filter((s: any) => s.status === 'graded' && s.score != null && trackIds.has(s.assignment?.id));
   const avgScore = gradedSubs.length
-    ? Math.round(gradedSubs.reduce((acc: number, s: any) => acc + s.score, 0) / gradedSubs.length)
+    ? Math.round(
+        gradedSubs.reduce((acc: number, s: any) => acc + (Number(s.score) / Number(s.assignment?.maxScore || 100)) * 100, 0) /
+          gradedSubs.length,
+      )
     : null;
 
   const paidPayments = payments.filter((p: any) => p.status === 'paid');

@@ -46,7 +46,7 @@ export function LearnerDashboard() {
       if (approved?.program?.id) {
         const [sRes, asRes] = await Promise.all([
           api.get(`/sessions/program/${approved.program.id}`),
-          api.get(`/assignments/cohort/${approved.program.cohort?.id ?? ''}`),
+          api.get(`/assignments/program/${approved.program.id}`),
         ]);
         setSessions(sRes.data);
         setAssignments(asRes.data);

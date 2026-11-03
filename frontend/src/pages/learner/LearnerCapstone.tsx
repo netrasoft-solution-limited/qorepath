@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link as LinkIcon, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import api from '../../lib/api';
-import { pickCurrentEnrollment, enrollmentCohortId } from '../../lib/enrollments';
+import { pickCurrentEnrollment } from '../../lib/enrollments';
 
 export function LearnerCapstone() {
   const [assignments, setAssignments] = useState<any[]>([]);
@@ -20,13 +20,9 @@ export function LearnerCapstone() {
         const active = pickCurrentEnrollment(enrollments);
         const subsRes = await api.get('/assignments/submissions/my');
         setSubmissions(subsRes.data);
-        const cohortId = enrollmentCohortId(active);
-        if (cohortId) {
-          const { data } = await api.get(`/assignments/cohort/${cohortId}`);
-          const capstones = data.filter((a: any) =>
-            a.title?.toLowerCase().includes('capstone') || a.title?.toLowerCase().includes('final')
-          );
-          setAssignments(capstones.length > 0 ? capstones : data.slice(-1));
+        if (active?.status === 'approved' && active.program?.id) {
+          const { data } = await api.get(`/assignments/program/${active.program.id}`);
+          setAssignments(data.filter((a: any) => a.isCapstone));
         }
       } catch {
         setError('Could not load your capstone. Please refresh to try again.');
