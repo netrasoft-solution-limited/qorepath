@@ -14,7 +14,7 @@ const TRACK_SLUGS: Record<string, string> = {
   'Cybersecurity':          'cybersecurity',
 };
 
-function toSlug(track: string) {
+export function toSlug(track: string) {
   return TRACK_SLUGS[track] ?? track.toLowerCase().replace(/\s+/g, '-');
 }
 

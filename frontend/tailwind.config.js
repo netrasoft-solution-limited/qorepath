@@ -19,6 +19,7 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
+        display: ['Sora', 'Inter', 'sans-serif'],
       },
     },
   },

@@ -1,5 +1,5 @@
 /* @import url() FONT IMPORTS MUST ALWAYS BE AT THE VERY TOP OF THIS FILE, ABOVE THE TAILWIND IMPORTS — DO NOT DELETE THIS COMMENT */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Sora:wght@600;700;800&display=swap');
 
 /* CRITICAL: THE FOLLOWING TAILWIND IMPORTS MUST NEVER BE DELETED OR REORDERED — DO NOT DELETE THIS COMMENT */
 @import 'tailwindcss/base';
@@ -12,4 +12,49 @@ body {
   font-family: 'Inter', sans-serif;
   color: #1A1A2E;
   background-color: #F3F4F6;
+}
+
+/* ── Landing page motion (orbits, marquees, starfield) ───────────────────── */
+@keyframes nn-spin { to { transform: rotate(360deg); } }
+@keyframes nn-spin-rev { to { transform: rotate(-360deg); } }
+@keyframes nn-marquee { to { transform: translateX(-50%); } }
+@keyframes nn-twinkle { 0%, 100% { opacity: .25; } 50% { opacity: .9; } }
+@keyframes nn-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes nn-pulse-ring { 0% { transform: scale(.85); opacity: .7; } 100% { transform: scale(1.6); opacity: 0; } }
+
+.nn-spin { animation: nn-spin var(--nn-dur, 40s) linear infinite; }
+.nn-spin-rev { animation: nn-spin-rev var(--nn-dur, 40s) linear infinite; }
+.nn-marquee { animation: nn-marquee var(--nn-dur, 40s) linear infinite; }
+.nn-marquee-rev { animation: nn-marquee var(--nn-dur, 40s) linear infinite reverse; }
+.nn-float { animation: nn-float 6s ease-in-out infinite; }
+.nn-pulse-ring { animation: nn-pulse-ring 2.4s ease-out infinite; }
+.nn-pause-on-hover:hover .nn-marquee,
+.nn-pause-on-hover:hover .nn-marquee-rev { animation-play-state: paused; }
+
+.nn-stars {
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 28% 72%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 44% 34%, #8CCBFF 50%, transparent 51%),
+    radial-gradient(1px 1px at 63% 12%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 76% 58%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 88% 26%, #FFB020 50%, transparent 51%),
+    radial-gradient(1px 1px at 92% 84%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 6% 90%, #8CCBFF 50%, transparent 51%),
+    radial-gradient(1px 1px at 52% 88%, #fff 50%, transparent 51%);
+  background-size: 420px 420px;
+  animation: nn-twinkle 5s ease-in-out infinite;
+}
+
+/* Cursor spotlight used by the bento tiles (position set from JS via --mx/--my). */
+.nn-spotlight { position: relative; isolation: isolate; }
+.nn-spotlight::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; z-index: -1; pointer-events: none;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(11, 92, 240, .10), transparent 45%);
+  opacity: 0; transition: opacity .3s;
+}
+.nn-spotlight:hover::before { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nn-spin, .nn-spin-rev, .nn-marquee, .nn-marquee-rev, .nn-float, .nn-pulse-ring, .nn-stars { animation: none !important; }
 }
