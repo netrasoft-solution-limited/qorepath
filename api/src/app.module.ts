@@ -25,7 +25,8 @@ import { AuditModule } from './audit/audit.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    // Tests never read api/.env (it points at production); they set their own values in test/setup-env.ts.
+    ConfigModule.forRoot({ isGlobal: true, ignoreEnvFile: process.env.NODE_ENV === 'test' }),
     TypeOrmModule.forRootAsync({
       useFactory: () => ({
         ...databaseOptions(process.env),

@@ -20,6 +20,7 @@ Object.assign(process.env, {
   DB_NAME: process.env.TEST_DB_NAME ?? 'netranova_test',
   DB_SSL: 'false',
   JWT_SECRET: 'test-jwt-secret',
+  JWT_EXPIRES_IN: '1h',
   CONFIG_ENCRYPTION_KEY: 'test-encryption-key',
   FRONTEND_URL: 'http://localhost:5173',
   RESEND_API_KEY: '',
