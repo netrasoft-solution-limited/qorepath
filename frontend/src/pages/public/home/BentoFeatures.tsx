@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Bell, BadgeCheck, CalendarPlus, GraduationCap, Megaphone, Search, Users, Wallet } from 'lucide-react';
 import { naira, FALLBACK_TRACKS } from './data';
-import type { OpenProgram } from './useOpenPrograms';
+import { type OpenProgram, usePaymentPlan, firstPayment } from './useOpenPrograms';
 
 function Tile({ className = '', children, delay = 0 }: { className?: string; children: ReactNode; delay?: number }) {
   const onMove = (e: MouseEvent<HTMLDivElement>) => {
@@ -83,15 +83,24 @@ function CertificateTile() {
 }
 
 function PaymentTile({ price }: { price: number }) {
-  const [plan, setPlan] = useState<'full' | 'split'>('split');
-  const now = plan === 'full' ? price : Math.round(price / 2);
+  const payPlan = usePaymentPlan();
+  const pct = payPlan.firstInstallmentPercent;
+  const [choice, setPlan] = useState<'full' | 'split'>('split');
+  const plan = payPlan.allowInstallments ? choice : 'full';
+  const now = plan === 'full' ? price : firstPayment(price, pct);
   return (
     <Tile className="lg:col-span-2" delay={0.08}>
       <Label icon={Wallet}>Pay your way</Label>
-      <h3 className="font-display text-2xl font-extrabold text-qore-dark">Start with half</h3>
-      <p className="mt-2 text-sm text-gray-500">Secure your seat with 50% and settle the rest from your dashboard.</p>
+      <h3 className="font-display text-2xl font-extrabold text-qore-dark">
+        {payPlan.allowInstallments ? (pct === 50 ? 'Start with half' : `Start with ${pct}%`) : 'One simple payment'}
+      </h3>
+      <p className="mt-2 text-sm text-gray-500">
+        {payPlan.allowInstallments
+          ? `Secure your seat with ${pct}% and settle the rest from your dashboard.`
+          : 'Pay once at checkout by card, bank transfer or USSD.'}
+      </p>
 
-      <div className="mt-6 grid grid-cols-2 rounded-2xl bg-gray-100 p-1 text-xs font-bold">
+      {payPlan.allowInstallments && <div className="mt-6 grid grid-cols-2 rounded-2xl bg-gray-100 p-1 text-xs font-bold">
         {(['full', 'split'] as const).map((p) => (
           <button
             key={p}
@@ -102,7 +111,7 @@ function PaymentTile({ price }: { price: number }) {
             <span className="relative">{p === 'full' ? 'Pay in full' : '2 instalments'}</span>
           </button>
         ))}
-      </div>
+      </div>}
       <div className="mt-5">
         <p className="text-xs text-gray-400">Due today</p>
         <motion.p key={now} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="font-display text-4xl font-extrabold text-qore-dark">

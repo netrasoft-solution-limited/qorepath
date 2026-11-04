@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, useMotionTemplate, useMotionValue, useReducedMotion, useSpring, useTransform } from 'framer-motion';
 import { ArrowUpRight, CalendarDays, Clock } from 'lucide-react';
 import { FALLBACK_TRACKS, naira, trackIcon } from './data';
-import { type OpenProgram, shortDate } from './useOpenPrograms';
+import { type OpenProgram, shortDate, usePaymentPlan, firstPayment } from './useOpenPrograms';
 import { toSlug } from '../trackSlug';
 
 export interface Card {
@@ -23,7 +23,7 @@ const ACCENTS = [
   'from-[#1AA3F0] to-[#8CCBFF]',
 ];
 
-export function TiltCard({ card, index }: { card: Card; index: number }) {
+export function TiltCard({ card, index, startPercent }: { card: Card; index: number; startPercent?: number }) {
   const reduce = useReducedMotion();
   const px = useMotionValue(0.5);
   const py = useMotionValue(0.5);
@@ -84,7 +84,7 @@ export function TiltCard({ card, index }: { card: Card; index: number }) {
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Tuition</p>
               <p className="font-display text-3xl font-extrabold">{card.price > 0 ? naira(card.price) : 'TBA'}</p>
-              {card.price > 0 && <p className="text-[11px] text-[#FFB020]">or {naira(Math.round(card.price / 2))} to start</p>}
+              {card.price > 0 && startPercent && <p className="text-[11px] text-[#FFB020]">or {naira(firstPayment(card.price, startPercent))} to start</p>}
             </div>
             <Link to={card.href} className="rounded-full bg-white px-5 py-2.5 text-xs font-bold text-qore-dark transition-colors hover:bg-[#FFB020] hover:text-white">
               View track
@@ -98,6 +98,8 @@ export function TiltCard({ card, index }: { card: Card; index: number }) {
 
 export function TrackShowcase({ programs }: { programs: OpenProgram[] | null }) {
   const live = !!programs?.length;
+  const payPlan = usePaymentPlan();
+  const startPercent = payPlan.allowInstallments ? payPlan.firstInstallmentPercent : undefined;
   const cards: Card[] = live
     ? programs!.slice(0, 6).map((p) => ({
         key: p.id,
@@ -131,7 +133,7 @@ export function TrackShowcase({ programs }: { programs: OpenProgram[] | null }) 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {programs === null
             ? [0, 1, 2].map((i) => <div key={i} className="h-[380px] animate-pulse rounded-[28px] bg-qore-dark/10" />)
-            : cards.map((c, i) => <TiltCard key={c.key} card={c} index={i} />)}
+            : cards.map((c, i) => <TiltCard key={c.key} card={c} index={i} startPercent={startPercent} />)}
         </div>
 
         <p className="mt-10 text-center text-sm text-gray-500">

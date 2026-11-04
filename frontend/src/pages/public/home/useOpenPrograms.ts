@@ -18,8 +18,18 @@ export function useOpenPrograms(): OpenProgram[] | null {
 
   useEffect(() => {
     let alive = true;
-    api
-      .get('/cohorts')
+    // The free API server can take up to a minute to wake; retry instead of showing the sample tracks.
+    const fetchCohorts = async () => {
+      for (let attempt = 0; ; attempt++) {
+        try {
+          return await api.get('/cohorts', { timeout: 30000 });
+        } catch (err) {
+          if (attempt >= 3 || !alive) throw err;
+          await new Promise((r) => setTimeout(r, 5000));
+        }
+      }
+    };
+    fetchCohorts()
       .then(({ data }) => {
         const open: OpenProgram[] = [];
         for (const cohort of data ?? []) {
@@ -50,3 +60,14 @@ export function useOpenPrograms(): OpenProgram[] | null {
 
 export const shortDate = (d?: string) =>
   d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+
+/** Instalment rules from Settings → Payment Rules (defaults match the server's). */
+export function usePaymentPlan() {
+  const [plan, setPlan] = useState({ allowInstallments: true, firstInstallmentPercent: 50 });
+  useEffect(() => {
+    api.get('/settings/enrollment-rules').then(({ data }) => setPlan(data.paymentPlan)).catch(() => {});
+  }, []);
+  return plan;
+}
+
+export const firstPayment = (price: number, percent: number) => Math.round((price * percent) / 100);
