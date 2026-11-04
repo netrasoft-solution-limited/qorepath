@@ -66,6 +66,13 @@ export class Payment {
   @Column({ type: 'text', nullable: true })
   notes: string;
 
+  // Instalment balance reminders (see InstalmentRemindersService)
+  @Column({ type: 'int', default: 0 })
+  remindersSent: number;
+
+  @Column({ type: 'timestamp', nullable: true })
+  lastReminderAt: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

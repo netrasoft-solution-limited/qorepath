@@ -293,6 +293,12 @@ export class NotificationsService {
     });
   }
 
+  instalmentReminder(p: { email: string; firstName?: string; track: string; balance: unknown }): void {
+    this.run('instalment reminder', async () => [
+      { to: p.email, ...T.instalmentReminderEmail({ firstName: p.firstName, track: p.track, balance: p.balance, appUrl: this.appUrl }) },
+    ]);
+  }
+
   graduationDecided(recordId: string): void {
     this.run('graduation decision', async () => {
       const g = await this.dataSource.getRepository(GraduationRecord).findOne({

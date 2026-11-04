@@ -27,6 +27,9 @@ export interface PaymentPlan {
   allowInstallments: boolean;
   // Share of the price paid at checkout; the rest becomes a balance.
   firstInstallmentPercent: number;
+  // Email a reminder about an unpaid balance every N days after the first payment, at most maxReminders times.
+  reminderEveryDays: number;
+  maxReminders: number;
 }
 
 export interface EmailSetting { enabled: boolean; note: string }
@@ -53,7 +56,7 @@ const PAYMENT_PLAN_KEY = 'payment_plan';
 const EMAIL_SETTINGS_KEY = 'email_settings';
 
 export const DEFAULT_COHORT_RULES: CohortRules = { defaultMaxLearners: 30, oneProgramAtATime: true, lateEnrollmentDays: null };
-export const DEFAULT_PAYMENT_PLAN: PaymentPlan = { allowInstallments: true, firstInstallmentPercent: 50 };
+export const DEFAULT_PAYMENT_PLAN: PaymentPlan = { allowInstallments: true, firstInstallmentPercent: 50, reminderEveryDays: 7, maxReminders: 4 };
 
 const DEFAULT_REFUND_POLICY: RefundPolicy = {
   fullRefundBeforeStart: true,
@@ -123,6 +126,8 @@ export class SettingsService {
     const next: PaymentPlan = {
       allowInstallments: typeof patch.allowInstallments === 'boolean' ? patch.allowInstallments : current.allowInstallments,
       firstInstallmentPercent: Math.round(clampNum(patch.firstInstallmentPercent, current.firstInstallmentPercent, 10, 90)),
+      reminderEveryDays: Math.round(clampNum(patch.reminderEveryDays, current.reminderEveryDays, 1, 60)),
+      maxReminders: Math.round(clampNum(patch.maxReminders, current.maxReminders, 0, 20)),
     };
     await this.set(PAYMENT_PLAN_KEY, next);
     return next;

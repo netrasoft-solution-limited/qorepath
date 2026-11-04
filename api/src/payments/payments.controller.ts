@@ -23,10 +23,11 @@ import { UserRole } from '../users/user.entity';
 import { PaymentStatus } from './payment.entity';
 import { Audit, fullName, naira } from '../audit/audit.decorator';
 import { Payment } from './payment.entity';
+import { InstalmentRemindersService } from './instalment-reminders.service';
 
 @Controller('payments')
 export class PaymentsController {
-  constructor(private paymentsService: PaymentsService) {}
+  constructor(private paymentsService: PaymentsService, private reminders: InstalmentRemindersService) {}
 
   // ── Paystack webhook — PUBLIC, verified by signature, must come before guards ─
   @Post('webhook')
@@ -102,6 +103,16 @@ export class PaymentsController {
   @HttpCode(200)
   reconcileAll() {
     return this.paymentsService.reconcileAll();
+  }
+
+  /** Send any instalment reminders that are due now, instead of waiting for the hourly run. */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @RequirePermission('payments')
+  @Post('reminders/run')
+  @HttpCode(200)
+  sendReminders() {
+    return this.reminders.run();
   }
 
   // Admin-only manual record (e.g. a bank transfer). Learners pay via /initialize.

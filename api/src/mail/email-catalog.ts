@@ -31,6 +31,10 @@ export const EMAIL_CATALOG: EmailKind[] = [
     sample: (appUrl) => T.paymentReceiptEmail({ firstName: 'Ada', amount: 75000, reference: 'NN-PREVIEW-123', track: 'Cloud Engineering', cohort: 'Cohort 1', startDate: soon(), installment: { number: 1, total: 2 }, balance: 75000, appUrl }),
   },
   {
+    key: 'instalment reminder', name: 'Instalment balance reminder', audience: 'Learners with an unpaid balance', trigger: 'Every few days after the first instalment (Settings → Payment Rules)',
+    sample: (appUrl) => T.instalmentReminderEmail({ firstName: 'Ada', track: 'Cloud Engineering', balance: 75000, appUrl }),
+  },
+  {
     key: 'enrollment status', name: 'Enrollment approved / declined', audience: 'Learners', trigger: 'When an admin approves or rejects an enrollment',
     sample: (appUrl) => T.enrollmentStatusEmail({ firstName: 'Ada', approved: true, track: 'Cloud Engineering', cohort: 'Cohort 1', appUrl }),
   },

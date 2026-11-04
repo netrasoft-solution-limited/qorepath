@@ -390,3 +390,17 @@ export function contactMessageEmail(p: { name: string; email: string; phone?: st
     }),
   };
 }
+
+// ── Instalment reminder ──────────────────────────────────────────────────────
+
+export function instalmentReminderEmail(p: { firstName?: string; track: string; balance: unknown; appUrl: string }): EmailContent {
+  return {
+    subject: `Reminder: ${naira(p.balance)} left to pay for ${p.track}`,
+    html: layout({
+      heading: 'Your instalment balance is still open',
+      body: `${hi(p.firstName)}${paragraphs(`Thanks for learning with us. The second instalment for ${p.track} hasn't been paid yet.`)}${details([['Balance', esc(naira(p.balance))], ['Track', esc(p.track)]])}${paragraphs('You can pay it any time from your Payments page.')}`,
+      cta: { label: 'Pay my balance', url: `${p.appUrl}/learner/payments` },
+      footnote: 'Already paid? You can ignore this email. It can take a few minutes for a payment to show.',
+    }),
+  };
+}

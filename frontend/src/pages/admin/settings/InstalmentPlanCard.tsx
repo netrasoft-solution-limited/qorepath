@@ -5,14 +5,20 @@ import api from '../../../lib/api';
 const naira = (n: number) => `₦${Math.round(n).toLocaleString()}`;
 
 export function InstalmentPlanCard() {
-  const [plan, setPlan] = useState({ allowInstallments: true, firstInstallmentPercent: '50' });
+  const [plan, setPlan] = useState({ allowInstallments: true, firstInstallmentPercent: '50', reminderEveryDays: '7', maxReminders: '4' });
+  const show = (p: any) => setPlan({
+    allowInstallments: p.allowInstallments,
+    firstInstallmentPercent: String(p.firstInstallmentPercent),
+    reminderEveryDays: String(p.reminderEveryDays),
+    maxReminders: String(p.maxReminders),
+  });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     api.get('/settings/enrollment-rules')
-      .then(({ data }) => setPlan({ allowInstallments: data.paymentPlan.allowInstallments, firstInstallmentPercent: String(data.paymentPlan.firstInstallmentPercent) }))
+      .then(({ data }) => show(data.paymentPlan))
       .catch(() => setError('Could not load the instalment plan'));
   }, []);
 
@@ -23,8 +29,10 @@ export function InstalmentPlanCard() {
       const { data } = await api.patch('/settings/payment-plan', {
         allowInstallments: plan.allowInstallments,
         firstInstallmentPercent: Number(plan.firstInstallmentPercent),
+        reminderEveryDays: Number(plan.reminderEveryDays),
+        maxReminders: Number(plan.maxReminders),
       });
-      setPlan({ allowInstallments: data.allowInstallments, firstInstallmentPercent: String(data.firstInstallmentPercent) });
+      show(data);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (e: any) {
@@ -73,6 +81,25 @@ export function InstalmentPlanCard() {
           </p>
         </div>
       )}
+
+      <div>
+        <p className="text-xs font-semibold text-gray-500 mb-1.5">Balance reminder emails</p>
+        <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+          Every
+          <input type="number" min={1} max={60} value={plan.reminderEveryDays} onChange={(e) => setPlan({ ...plan, reminderEveryDays: e.target.value })}
+            className="w-20 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-qore-medium" />
+          days, up to
+          <input type="number" min={0} max={20} value={plan.maxReminders} onChange={(e) => setPlan({ ...plan, maxReminders: e.target.value })}
+            className="w-20 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-qore-medium" />
+          times
+        </div>
+        <p className="text-xs text-gray-400 mt-1">
+          {Number(plan.maxReminders) === 0
+            ? 'Reminders are off.'
+            : `Counted from the first payment. Reminders stop once the balance is paid. Set "up to" to 0 to turn them off.`}{' '}
+          They're checked shortly after the server wakes up and then every hour.
+        </p>
+      </div>
 
       <div className="flex items-center justify-end gap-3 pt-2">
         {saved && <span className="flex items-center gap-1.5 text-sm text-green-600"><CheckCircle size={16} /> Saved</span>}
