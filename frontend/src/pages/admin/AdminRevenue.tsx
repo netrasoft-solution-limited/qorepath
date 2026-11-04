@@ -42,8 +42,9 @@ export function AdminRevenue() {
   const revenueData = MONTHS.filter((m) => monthlyMap[m]).map((m) => ({ name: m, Revenue: monthlyMap[m] }));
 
   // Payment type split
-  const fullPaid = paid.filter((p) => p.method !== 'instalment').length;
-  const instalment = paid.filter((p) => p.method === 'instalment').length;
+  // Instalment payments belong to a plan (totalInstallments > 1); everything else was paid in full.
+  const instalment = paid.filter((p) => Number(p.totalInstallments) > 1).length;
+  const fullPaid = paid.length - instalment;
   const total = fullPaid + instalment || 1;
   const paymentTypeData = [
     { name: 'Full Payment', value: Math.round((fullPaid / total) * 100) },

@@ -160,7 +160,7 @@ export function CourseListing() {
           </h2>
           <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
             {[
-              ['01', 'Enroll', 'Pick a track and pay in full or half now, half later.'],
+              ['01', 'Enroll', 'Pick a track and pay in full, or part now and the balance later.'],
               ['02', 'Learn live', 'Join classes from your browser — attendance is automatic.'],
               ['03', 'Build weekly', 'Submit projects and get graded feedback from your tutor.'],
               ['04', 'Graduate', 'Earn a certificate with a number anyone can verify.'],

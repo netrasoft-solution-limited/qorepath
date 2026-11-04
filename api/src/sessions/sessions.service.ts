@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
@@ -187,8 +187,17 @@ export class SessionsService {
     return this.findOne(id);
   }
 
-  markAttendance(data: Partial<Attendance>) {
-    return this.attendanceRepo.save(this.attendanceRepo.create(data));
+  /** One record per learner per session: saving again updates the mark instead of adding a row. */
+  async markAttendance(data: Partial<Attendance>) {
+    const learnerId = (data.learner as any)?.id;
+    const sessionId = (data.session as any)?.id;
+    if (!learnerId) throw new BadRequestException('Choose a learner');
+    const existing = await this.attendanceRepo.findOne({ where: { session: { id: sessionId }, learner: { id: learnerId } } });
+    if (existing) {
+      await this.attendanceRepo.update(existing.id, { status: data.status ?? existing.status, notes: data.notes ?? existing.notes });
+      return this.attendanceRepo.findOneBy({ id: existing.id });
+    }
+    return this.attendanceRepo.save(this.attendanceRepo.create({ session: { id: sessionId } as any, learner: { id: learnerId } as any, status: data.status, notes: data.notes }));
   }
 
   getAttendance(sessionId: string) {

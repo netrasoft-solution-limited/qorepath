@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Enrollment, EnrollmentStatus } from './enrollment.entity';
 import { NotificationsService } from '../mail/notifications.service';
+import { User, UserRole } from '../users/user.entity';
+import { Program } from '../programs/program.entity';
 
 @Injectable()
 export class EnrollmentsService {
@@ -11,8 +13,33 @@ export class EnrollmentsService {
     private notifications: NotificationsService,
   ) {}
 
-  create(data: Partial<Enrollment>) {
-    return this.repo.save(this.repo.create(data));
+  /** Admin enrolls a learner by hand (e.g. paid by bank transfer, or a scholarship). Approved, capacity-checked. */
+  async create(data: Partial<Enrollment> & { notes?: string; learnerEmail?: string }) {
+    const programId = (data.program as any)?.id;
+    const email = data.learnerEmail?.trim().toLowerCase();
+    const learner = email
+      ? await this.repo.manager.findOneBy(User, { email })
+      : (data.learner as any)?.id ? await this.repo.manager.findOneBy(User, { id: (data.learner as any).id }) : null;
+    if (!programId) throw new BadRequestException('Choose a track');
+    if (!learner) throw new BadRequestException(email ? `No account found for ${email}. Ask them to sign up first.` : 'Choose a learner');
+    if (learner.role !== UserRole.LEARNER) throw new BadRequestException('Only learner accounts can be enrolled');
+    const learnerId = learner.id;
+    const program = await this.repo.manager.findOneBy(Program, { id: programId });
+    if (!program) throw new NotFoundException('Track not found');
+    const existing = await this.repo.findOne({ where: { learner: { id: learnerId }, program: { id: programId } } });
+    if (existing?.status === EnrollmentStatus.APPROVED) throw new BadRequestException('This learner is already enrolled in this track');
+    if (existing) throw new BadRequestException(`This learner already has a ${existing.status} enrollment in this track. Use Reinstate or Approve on it instead.`);
+    const status = (data.status as EnrollmentStatus) ?? EnrollmentStatus.APPROVED;
+    if (status === EnrollmentStatus.APPROVED && program.maxLearners) {
+      const taken = await this.repo.count({ where: { program: { id: programId }, status: EnrollmentStatus.APPROVED } });
+      if (taken >= program.maxLearners) throw new BadRequestException('This track is full. Raise its seat limit first.');
+    }
+    const saved = await this.repo.save(this.repo.create({
+      learner: { id: learnerId } as any, program: { id: programId } as any, status,
+      notes: data.notes?.trim() || 'Enrolled by an admin',
+    }));
+    if (status === EnrollmentStatus.APPROVED) this.notifications.enrollmentStatusChanged(saved.id);
+    return saved;
   }
 
   findAll() {

@@ -99,8 +99,8 @@ export function AdminAtRisk() {
                       {item.learner?.firstName} {item.learner?.lastName}
                     </h3>
                     <p className="text-sm text-gray-400">{item.learner?.email}</p>
-                    {item.cohort && (
-                      <p className="text-xs text-gray-400 mt-0.5">{item.cohort.track} · {item.cohort.name}</p>
+                    {(item.program || item.cohort) && (
+                      <p className="text-xs text-gray-400 mt-0.5">{[item.program?.track, item.cohort?.name].filter(Boolean).join(' · ')}</p>
                     )}
                   </div>
                   <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${risk.color}`}>

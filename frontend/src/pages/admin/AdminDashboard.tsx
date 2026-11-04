@@ -11,6 +11,7 @@ export function AdminDashboard() {
     enrolledLearners: 0,
     pendingEnrollments: 0,
     totalPayments: 0,
+    atRisk: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -18,10 +19,11 @@ export function AdminDashboard() {
     async function load() {
       try {
         // Independent so an admin without e.g. the payments permission still sees the rest.
-        const [cohortsRes, enrollmentsRes, paymentsRes] = await Promise.allSettled([
+        const [cohortsRes, enrollmentsRes, paymentsRes, atRiskRes] = await Promise.allSettled([
           api.get('/cohorts'),
           api.get('/enrollments'),
           api.get('/payments'),
+          api.get('/sessions/at-risk'),
         ]);
         const data = (r: PromiseSettledResult<any>) => (r.status === 'fulfilled' ? r.value.data : []);
         const cohorts = data(cohortsRes);
@@ -35,6 +37,7 @@ export function AdminDashboard() {
           totalPayments: payments
             .filter((p: any) => p.status === 'paid')
             .reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0),
+          atRisk: data(atRiskRes).length,
         });
       } catch {
         // silently keep zeros on error
@@ -75,11 +78,11 @@ export function AdminDashboard() {
     },
     {
       label: 'At-Risk Learners',
-      value: '—',
+      value: loading ? '…' : String(stats.atRisk),
       icon: AlertTriangle,
       color: 'text-red-600',
       bg: 'bg-red-50',
-      trend: 'Manual review',
+      trend: 'Below 70% attendance',
       path: '/admin/at-risk',
     },
     {

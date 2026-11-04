@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, CheckCircle, XCircle, Clock, RotateCcw } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Clock, RotateCcw, UserPlus } from 'lucide-react';
 import api from '../../lib/api';
 import { useConfirm, useToast } from '../../components/feedback';
 
@@ -11,6 +11,11 @@ export function AdminEnrollments() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [error, setError] = useState('');
+  // Manual enrollment (bank transfer, scholarship…): find the learner by email, pick a track.
+  const [showEnroll, setShowEnroll] = useState(false);
+  const [tracks, setTracks] = useState<any[]>([]);
+  const [enrollForm, setEnrollForm] = useState({ learnerEmail: '', programId: '', notes: '' });
+  const [enrolling, setEnrolling] = useState(false);
 
   const load = async () => {
     try {
@@ -24,6 +29,29 @@ export function AdminEnrollments() {
   };
 
   useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (!showEnroll || tracks.length) return;
+    api.get('/cohorts').then(({ data }) => setTracks(
+      data.filter((c: any) => c.status === 'upcoming' || c.status === 'active')
+        .flatMap((c: any) => (c.programs ?? []).map((p: any) => ({ id: p.id, label: `${p.track} — ${c.name}`, left: p.maxLearners ? p.maxLearners - (p.seatsTaken ?? 0) : null }))),
+    )).catch(() => {});
+  }, [showEnroll]);
+
+  const enrollLearner = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    setEnrolling(true);
+    try {
+      await api.post('/enrollments', { learnerEmail: enrollForm.learnerEmail, program: { id: enrollForm.programId }, notes: enrollForm.notes || undefined, status: 'approved' });
+      toast({ message: `${enrollForm.learnerEmail} is enrolled and has been emailed.`, variant: 'success' });
+      setEnrollForm({ learnerEmail: '', programId: '', notes: '' });
+      setShowEnroll(false);
+      load();
+    } catch (err: any) {
+      toast({ message: err.response?.data?.message || 'Could not enroll this learner.', variant: 'error' });
+    } finally {
+      setEnrolling(false);
+    }
+  };
 
   const updateStatus = async (id: string, status: 'approved' | 'rejected') => {
     try {
@@ -69,10 +97,49 @@ export function AdminEnrollments() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-qore-text">Enrollments</h1>
-        <p className="text-gray-500">{enrollments.filter((e) => e.status === 'pending').length} pending review</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-qore-text">Enrollments</h1>
+          <p className="text-gray-500">{enrollments.filter((e) => e.status === 'pending').length} pending review · learners who pay online are enrolled automatically</p>
+        </div>
+        <button onClick={() => setShowEnroll(!showEnroll)}
+          className="flex items-center gap-2 bg-qore-dark text-white px-4 py-2.5 rounded-xl hover:bg-qore-medium transition-colors text-sm font-medium">
+          <UserPlus size={16} /> Enroll a learner
+        </button>
       </div>
+
+      {showEnroll && (
+        <form onSubmit={enrollLearner} className="bg-white rounded-2xl p-6 shadow-sm border border-qore-highlight grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <h2 className="font-bold text-qore-text">Enroll a learner by hand</h2>
+            <p className="text-sm text-gray-500 mt-1">For a learner who paid another way (e.g. bank transfer) or a scholarship. They must have signed up already. No payment is recorded, and they get the "You're enrolled" email.</p>
+          </div>
+          <label className="block">
+            <span className="block text-sm font-medium text-gray-700 mb-1">Learner's email</span>
+            <input required type="email" value={enrollForm.learnerEmail} onChange={(e) => setEnrollForm({ ...enrollForm, learnerEmail: e.target.value })}
+              placeholder="learner@example.com" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-qore-medium" />
+          </label>
+          <label className="block">
+            <span className="block text-sm font-medium text-gray-700 mb-1">Track</span>
+            <select required value={enrollForm.programId} onChange={(e) => setEnrollForm({ ...enrollForm, programId: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-qore-medium">
+              <option value="">{tracks.length ? 'Select a track…' : 'No upcoming or active cohorts'}</option>
+              {tracks.map((t) => <option key={t.id} value={t.id}>{t.label}{t.left !== null ? ` (${t.left} seats left)` : ''}</option>)}
+            </select>
+          </label>
+          <label className="block md:col-span-2">
+            <span className="block text-sm font-medium text-gray-700 mb-1">Note <span className="font-normal text-gray-400">(optional, e.g. "Paid by transfer, ref 1234")</span></span>
+            <input value={enrollForm.notes} onChange={(e) => setEnrollForm({ ...enrollForm, notes: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-qore-medium" />
+          </label>
+          <div className="md:col-span-2 flex gap-3">
+            <button type="submit" disabled={enrolling} className="bg-qore-dark text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-qore-medium disabled:opacity-60">
+              {enrolling ? 'Enrolling…' : 'Enroll learner'}
+            </button>
+            <button type="button" onClick={() => setShowEnroll(false)} className="border border-gray-300 text-gray-600 px-5 py-2 rounded-lg text-sm font-medium hover:bg-gray-50">Cancel</button>
+          </div>
+        </form>
+      )}
 
       {error && <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}
 

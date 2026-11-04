@@ -10,6 +10,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { toSlug } from './trackSlug';
 import { TRACKS, genericTrack, type TrackContent } from './trackContent';
 import { trackIcon, naira } from './home/data';
+import { usePaymentPlan, firstPayment } from './home/useOpenPrograms';
 
 interface Offering {
   programId: string;
@@ -40,6 +41,7 @@ export function TrackDetail() {
   const { slug = '' } = useParams<{ slug: string }>();
   const [params] = useSearchParams();
   const { user } = useAuth();
+  const payPlan = usePaymentPlan();
   const [offerings, setOfferings] = useState<Offering[] | null>(null);
   const [openWeek, setOpenWeek] = useState<number | null>(1);
 
@@ -195,9 +197,9 @@ export function TrackDetail() {
               <>
                 <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Tuition</p>
                 <p className="font-display text-4xl font-extrabold text-qore-dark">{current.price > 0 ? naira(current.price) : 'TBA'}</p>
-                {current.price > 0 && (
+                {current.price > 0 && payPlan.allowInstallments && (
                   <p className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-orange-50 px-2.5 py-1 text-xs font-semibold text-[#FF6A00]">
-                    <Wallet size={13} /> or {naira(Math.round(current.price / 2))} now + {naira(current.price - Math.round(current.price / 2))} later
+                    <Wallet size={13} /> or {naira(firstPayment(current.price, payPlan.firstInstallmentPercent))} now + {naira(current.price - firstPayment(current.price, payPlan.firstInstallmentPercent))} later
                   </p>
                 )}
                 <dl className="mt-6 space-y-3 text-sm">

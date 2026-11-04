@@ -1,6 +1,6 @@
 import {
   Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,
-  ManyToOne, JoinColumn,
+  ManyToOne, JoinColumn, Index,
 } from 'typeorm';
 import { User } from '../users/user.entity';
 import { Session } from './session.entity';
@@ -12,6 +12,7 @@ export enum AttendanceStatus {
 }
 
 @Entity('attendances')
+@Index('UQ_attendance_session_learner', ['session', 'learner'], { unique: true })
 export class Attendance {
   @PrimaryGeneratedColumn('uuid')
   id: string;

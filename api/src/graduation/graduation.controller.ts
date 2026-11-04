@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, Body, UseGuards, Request } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Post, Patch, Param, Body, UseGuards, Request } from '@nestjs/common';
 import { GraduationService } from './graduation.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -22,6 +22,9 @@ export class GraduationController {
     @Request() req: any,
   ) {
     await this.access.assert(this.access.canStaffProgram(req.user, await this.service.programIdOfEnrollment(body.enrollmentId)), 'You can only recommend learners in programs you teach');
+    if (body.recommendation !== 'pass' && !body.notes?.trim()) {
+      throw new BadRequestException('Add a note explaining a Conditional or Fail recommendation');
+    }
     return this.service.upsert(body.enrollmentId, req.user.id, body.recommendation, body.notes ?? '');
   }
 

@@ -64,14 +64,14 @@ export function AdminInstructors() {
     }
   };
 
+  // Staff are assigned per track (program) in Cohorts, e.g. "Cloud Engineering (Cohort 1)".
   const getAssignedCohorts = (userId: string, role: StaffRole) => {
-    if (role === 'instructor') {
-      const assigned = cohorts.filter((c) => c.instructor?.id === userId);
-      return assigned.length ? assigned.map((c) => c.name).join(', ') : '—';
-    } else {
-      const assigned = cohorts.filter((c) => c.assistants?.some((a: any) => a.id === userId));
-      return assigned.length ? assigned.map((c) => c.name).join(', ') : '—';
-    }
+    const assigned = cohorts.flatMap((c) =>
+      (c.programs ?? [])
+        .filter((p: any) => (role === 'instructor' ? p.instructor?.id === userId : p.assistants?.some((a: any) => a.id === userId)))
+        .map((p: any) => `${p.track} (${c.name})`),
+    );
+    return assigned.length ? assigned.join(', ') : '—';
   };
 
   const staff = users.filter((u) => u.role === tab);
@@ -183,7 +183,7 @@ export function AdminInstructors() {
               <thead className="bg-gray-50/50 border-b border-gray-100">
                 <tr className="text-xs text-gray-500 uppercase tracking-wider">
                   <th className="p-4 font-medium">{ROLE_LABEL[tab]}</th>
-                  <th className="p-4 font-medium">Assigned Cohort(s)</th>
+                  <th className="p-4 font-medium">Assigned tracks</th>
                   <th className="p-4 font-medium">Status</th>
                   <th className="p-4 font-medium text-right">Actions</th>
                 </tr>

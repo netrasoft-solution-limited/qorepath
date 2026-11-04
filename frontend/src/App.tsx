@@ -63,11 +63,12 @@ import { AdminReports } from './pages/admin/AdminReports';
 import { AdminSettings } from './pages/admin/AdminSettings';
 import { AdminUsers } from './pages/admin/AdminUsers';
 import { AdminAuditLog } from './pages/admin/AdminAuditLog';
+import { AdminGuide } from './pages/admin/guide/AdminGuide';
 // Icons
 import {
   LayoutDashboard, Calendar, CalendarDays, FileText, Award, TrendingUp, CreditCard,
   User, Users, ClipboardList, Megaphone, Folder, CheckSquare, Shield,
-  BookOpen, DollarSign, BarChart, Settings, Activity, Undo2,
+  BookOpen, DollarSign, BarChart, Settings, Activity, Undo2, LifeBuoy,
 } from 'lucide-react';
 
 const learnerNav = [
@@ -110,10 +111,11 @@ const adminNav = [
   { name: 'Settings', path: '/admin/settings', icon: Settings, permission: 'settings' },
   { name: 'Users', path: '/admin/users', icon: Shield, permission: 'users' },
   { name: 'Audit Log', path: '/admin/audit', icon: Activity, permission: 'audit_log' },
+  { name: 'Guide', path: '/admin/guide', icon: LifeBuoy, superAdminOnly: true },
 ];
 
 function filterNav(nav: any[], user: any) {
-  return nav.filter((item) => !item.permission || hasPermission(user, item.permission));
+  return nav.filter((item) => (item.superAdminOnly ? !!user?.isSuperAdmin : !item.permission || hasPermission(user, item.permission)));
 }
 
 function LearnerPortal() {
@@ -181,6 +183,7 @@ function AdminPortal() {
           <Route path="settings" element={<AdminSettings />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="audit" element={<AdminAuditLog />} />
+          <Route path="guide" element={user?.isSuperAdmin ? <AdminGuide /> : <Navigate to="/admin/dashboard" replace />} />
           <Route index element={<Navigate to="dashboard" replace />} />
         </Routes>
       </PortalLayout>
@@ -214,7 +217,7 @@ export function App() {
 
           {/* Virtual Classroom — full screen, no portal layout */}
           <Route path="/classroom/:sessionId" element={
-            <ProtectedRoute roles={['learner', 'instructor', 'admin']}>
+            <ProtectedRoute roles={['learner', 'instructor', 'assistant', 'admin']}>
               <VirtualClassroom />
             </ProtectedRoute>
           } />

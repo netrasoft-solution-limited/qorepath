@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Download, Users, DollarSign, TrendingUp, Award } from 'lucide-react';
+import { Download, Users, DollarSign, TrendingUp, Award } from 'lucide-react';
 import api from '../../lib/api';
 import { useToast } from '../../components/feedback';
 
-function exportCSV(data: any[], filename: string) {
-  if (!data.length) return;
+// Returns false when there was nothing to export. The BOM makes Excel read ₦ and accents correctly.
+function exportCSV(data: any[], filename: string): boolean {
+  if (!data.length) return false;
   const keys = Object.keys(data[0]);
-  const csv = [keys.join(','), ...data.map((r) => keys.map((k) => `"${r[k] ?? ''}"`).join(','))].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
+  const cell = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const csv = [keys.join(','), ...data.map((r) => keys.map((k) => cell(r[k])).join(','))].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = filename; a.click();
   URL.revokeObjectURL(url);
+  return true;
 }
 
 function filterByRange(items: any[], range: string, dateField = 'createdAt') {
@@ -34,8 +37,8 @@ type ReportId = 'enrollment' | 'revenue' | 'performance' | 'certificate';
 const REPORTS: { id: ReportId; title: string; desc: string; icon: any; color: string; bg: string }[] = [
   { id: 'enrollment', title: 'Enrollment Report', desc: 'Detailed breakdown of enrollments by track, cohort, and status.', icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
   { id: 'revenue', title: 'Revenue Report', desc: 'Financial data including full payments, instalments, and outstanding balances.', icon: DollarSign, color: 'text-qore-medium', bg: 'bg-qore-light' },
-  { id: 'performance', title: 'Learner Performance', desc: 'Aggregated attendance and grading data across cohorts.', icon: TrendingUp, color: 'text-purple-600', bg: 'bg-purple-50' },
-  { id: 'certificate', title: 'Certificate Report', desc: 'Log of all issued certificates.', icon: Award, color: 'text-amber-600', bg: 'bg-amber-50' },
+  { id: 'performance', title: 'At-Risk Learners', desc: 'Learners below 70% attendance, with sessions attended (current snapshot).', icon: TrendingUp, color: 'text-purple-600', bg: 'bg-purple-50' },
+  { id: 'certificate', title: 'Certificate Report', desc: 'Every issued certificate with its number, track and date.', icon: Award, color: 'text-amber-600', bg: 'bg-amber-50' },
 ];
 
 export function AdminReports() {
@@ -49,29 +52,32 @@ export function AdminReports() {
 
   const handleExport = async (id: ReportId) => {
     setExport(id, true);
+    let exported = true;
     try {
       if (id === 'enrollment') {
         const { data } = await api.get('/enrollments');
-        const filtered = filterByRange(data, ranges.enrollment);
-        exportCSV(
+        const filtered = filterByRange(data, ranges.enrollment, 'enrolledAt');
+        exported = exportCSV(
           filtered.map((e: any) => ({
             Learner: `${e.learner?.firstName} ${e.learner?.lastName}`,
             Email: e.learner?.email ?? '',
-            Cohort: e.cohort?.name ?? '',
-            Track: e.cohort?.track ?? '',
+            Track: e.program?.track ?? '',
+            Cohort: e.program?.cohort?.name ?? '',
             Status: e.status,
-            EnrolledAt: e.createdAt?.slice(0, 10),
+            EnrolledAt: e.enrolledAt?.slice(0, 10),
           })),
           'netranova-enrollments.csv'
         );
       } else if (id === 'revenue') {
         const { data } = await api.get('/payments');
         const filtered = filterByRange(data, ranges.revenue);
-        exportCSV(
+        exported = exportCSV(
           filtered.map((p: any) => ({
             Learner: `${p.user?.firstName} ${p.user?.lastName}`,
             Email: p.user?.email ?? '',
+            Track: p.program?.track ?? '',
             Cohort: p.cohort?.name ?? '',
+            Instalment: p.totalInstallments ? `${p.installmentNumber} of ${p.totalInstallments}` : 'Full',
             Amount: p.amount,
             Method: p.method ?? '',
             Status: p.status,
@@ -81,7 +87,7 @@ export function AdminReports() {
         );
       } else if (id === 'performance') {
         const { data } = await api.get('/sessions/at-risk');
-        exportCSV(
+        exported = exportCSV(
           data.map((d: any) => ({
             Learner: `${d.learner?.firstName} ${d.learner?.lastName}`,
             Email: d.learner?.email ?? '',
@@ -94,19 +100,21 @@ export function AdminReports() {
         );
       } else if (id === 'certificate') {
         const { data } = await api.get('/certificates');
-        const filtered = filterByRange(data, ranges.certificate, 'issuedAt');
-        exportCSV(
+        const filtered = filterByRange(data, ranges.certificate, 'issuedDate');
+        exported = exportCSV(
           filtered.map((c: any) => ({
-            Learner: `${c.learner?.firstName} ${c.learner?.lastName}`,
-            Email: c.learner?.email ?? '',
+            Learner: `${c.user?.firstName} ${c.user?.lastName}`,
+            Email: c.user?.email ?? '',
             CertificateNumber: c.certificateNumber,
+            Track: c.enrollment?.program?.track ?? '',
             Cohort: c.cohort?.name ?? '',
-            Track: c.cohort?.track ?? '',
-            IssuedAt: c.issuedAt?.slice(0, 10),
+            IssuedDate: String(c.issuedDate ?? '').slice(0, 10),
+            File: c.fileName ? 'Yes' : 'No',
           })),
           'netranova-certificates.csv'
         );
       }
+      if (!exported) toast({ message: 'Nothing to export for this date range.', variant: 'info' });
     } catch {
       toast({ message: 'Export failed. Please try again.', variant: 'error' });
     } finally {
@@ -118,7 +126,7 @@ export function AdminReports() {
     <div className="space-y-6 max-w-6xl mx-auto">
       <div>
         <h1 className="text-2xl font-bold text-qore-text">Reports & Exports</h1>
-        <p className="text-gray-500">Generate and download platform data.</p>
+        <p className="text-gray-500">Download platform data as CSV files, which open directly in Excel or Google Sheets.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -140,7 +148,7 @@ export function AdminReports() {
               </div>
             </div>
 
-            <div className="mb-6">
+            {report.id !== 'performance' && <div className="mb-6">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Date Range</label>
               <select
                 value={ranges[report.id]}
@@ -152,7 +160,7 @@ export function AdminReports() {
                 <option>This Quarter</option>
                 <option>This Year</option>
               </select>
-            </div>
+            </div>}
 
             <div className="flex gap-3 pt-4 border-t border-gray-100">
               <button
@@ -161,13 +169,6 @@ export function AdminReports() {
                 className="flex-1 bg-qore-medium hover:bg-qore-dark text-white py-2 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
               >
                 <Download size={16} /> {exporting[report.id] ? 'Exporting…' : 'Export CSV'}
-              </button>
-              <button
-                onClick={() => handleExport(report.id)}
-                disabled={exporting[report.id]}
-                className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-2 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
-              >
-                <FileText size={16} /> Export Excel
               </button>
             </div>
           </motion.div>

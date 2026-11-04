@@ -66,12 +66,12 @@ export function AdminGraduation() {
             >
               {cohorts.length === 0 && <option value="">No cohorts</option>}
               {cohorts.map((c) => (
-                <option key={c.id} value={c.id}>{c.name} — {c.track}</option>
+                <option key={c.id} value={c.id}>{c.name}{c.programs?.length ? ` — ${c.programs.map((p: any) => p.track).join(', ')}` : ''}</option>
               ))}
             </select>
-            {currentCohort?.instructor && (
+            {currentCohort?.programs?.some((p: any) => p.instructor) && (
               <p className="text-sm text-gray-500">
-                Instructor: {currentCohort.instructor.firstName} {currentCohort.instructor.lastName}
+                Instructors: {currentCohort.programs.filter((p: any) => p.instructor).map((p: any) => `${p.instructor.firstName} ${p.instructor.lastName} (${p.track})`).join(', ')}
               </p>
             )}
           </div>

@@ -144,7 +144,7 @@ export function TrackListing() {
                     </div>
                     <div className="text-right">
                       <p className="font-display text-xl font-extrabold text-qore-dark">{Number(p.price) > 0 ? naira(Number(p.price)) : 'TBA'}</p>
-                      {Number(p.price) > 0 && <p className="text-[11px] text-[#FF6A00]">or {naira(Math.round(Number(p.price) / 2))} to start</p>}
+                      {Number(p.price) > 0 && payPlan.allowInstallments && <p className="text-[11px] text-[#FF6A00]">or {naira(Math.round((Number(p.price) * pct) / 100))} to start</p>}
                     </div>
                     <Link to={`/public/tracks/${toSlug(p.track)}?cohort=${c.id}&program=${p.id}`} className="rounded-xl border border-gray-200 px-4 py-2.5 text-center text-xs font-bold text-qore-dark transition-colors hover:border-qore-medium hover:text-qore-medium">
                       View track
