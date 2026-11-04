@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronDown, Lightbulb, Search, TriangleAlert, Zap, Link as LinkIcon } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, Lightbulb, Search, TriangleAlert, X, Zap, Link as LinkIcon } from 'lucide-react';
 import { GUIDE, type GuideSection, type Scenario, type Step } from './content';
 
 // Matches a scenario or menu entry against the search box.
@@ -22,6 +22,51 @@ function StepText({ step }: { step: Step }) {
   );
 }
 
+type Shots = NonNullable<Scenario['shots']>;
+const shotUrl = (file: string) => `/guide/${file}.webp`;
+
+/** Full-size screenshot viewer: click outside or press Esc to close, arrows to move. */
+function Lightbox({ shots, index, onClose, onMove }: { shots: Shots; index: number; onClose: () => void; onMove: (i: number) => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight') onMove((index + 1) % shots.length);
+      if (e.key === 'ArrowLeft') onMove((index - 1 + shots.length) % shots.length);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [index, shots.length]);
+  const [file, caption] = shots[index];
+  return (
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/80 p-4" onClick={onClose}>
+      <button onClick={onClose} className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20" aria-label="Close"><X size={20} /></button>
+      <img src={shotUrl(file)} alt={caption} className="max-h-[82vh] max-w-full rounded-xl shadow-2xl" onClick={(e) => e.stopPropagation()} />
+      <div className="mt-4 flex items-center gap-4 text-sm text-white" onClick={(e) => e.stopPropagation()}>
+        {shots.length > 1 && <button onClick={() => onMove((index - 1 + shots.length) % shots.length)} className="rounded-full bg-white/10 p-2 hover:bg-white/20" aria-label="Previous"><ChevronLeft size={18} /></button>}
+        <span>{caption}{shots.length > 1 ? ` · ${index + 1} of ${shots.length}` : ''}</span>
+        {shots.length > 1 && <button onClick={() => onMove((index + 1) % shots.length)} className="rounded-full bg-white/10 p-2 hover:bg-white/20" aria-label="Next"><ChevronRight size={18} /></button>}
+      </div>
+    </div>
+  );
+}
+
+function ShotStrip({ shots }: { shots: Shots }) {
+  const [open, setOpen] = useState<number | null>(null);
+  return (
+    <>
+      <div className={`grid gap-3 ${shots.length === 1 ? 'grid-cols-1 sm:max-w-xl' : shots.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-3'}`}>
+        {shots.map(([file, caption], i) => (
+          <button key={file + i} onClick={() => setOpen(i)} className="group text-left">
+            <img src={shotUrl(file)} alt={caption} loading="lazy" className="aspect-[16/10] w-full rounded-xl border border-gray-200 object-cover object-top shadow-sm transition group-hover:shadow-md group-hover:ring-2 group-hover:ring-qore-highlight" />
+            <span className="mt-1.5 block text-xs text-gray-500">{caption}</span>
+          </button>
+        ))}
+      </div>
+      {open !== null && <Lightbox shots={shots} index={open} onClose={() => setOpen(null)} onMove={setOpen} />}
+    </>
+  );
+}
+
 function ScenarioCard({ s, open, onToggle }: { s: Scenario; open: boolean; onToggle: () => void }) {
   const copyLink = () => navigator.clipboard?.writeText(`${window.location.origin}/admin/guide#${s.id}`);
   return (
@@ -35,6 +80,7 @@ function ScenarioCard({ s, open, onToggle }: { s: Scenario; open: boolean; onTog
       </button>
       {open && (
         <div className="space-y-4 border-t border-gray-100 px-5 pb-5 pt-4 text-sm text-gray-700">
+          {s.shots?.length ? <ShotStrip shots={s.shots} /> : null}
           <ol className="space-y-2.5">
             {s.steps.map((step, i) => (
               <li key={i} className="flex gap-3">
@@ -132,7 +178,7 @@ export function AdminGuide() {
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-qore-text">Platform Guide</h1>
-        <p className="text-gray-500">How every portal works, told as real situations. {total} scenarios across the admin, teaching and learner portals and the public site.</p>
+        <p className="text-gray-500">How every portal works, told as real situations. {total} scenarios across the admin, teaching and learner portals and the public site. Screenshots use made-up demo people.</p>
       </div>
 
       <div className="relative">

@@ -4,6 +4,8 @@ import { Plus, Video, Calendar, Clock, Link as LinkIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../lib/api';
+import { fetchMyPrograms, pickPrimaryProgram } from '../../lib/tutor';
+import { TrackPicker } from '../../components/TrackPicker';
 
 export function InstructorSessions() {
   const { user } = useAuth();
@@ -20,17 +22,27 @@ export function InstructorSessions() {
     title: '', description: '', scheduledAt: '', durationMinutes: '90', zoomLink: '',
   });
 
+  const [programs, setPrograms] = useState<any[]>([]);
+
+  const loadSessions = async (id: string) => {
+    const { data } = await api.get(`/sessions/program/${id}`);
+    setSessions(data);
+  };
+
+  const selectProgram = async (p: any) => {
+    setProgramId(p.id);
+    setProgramName(p.track);
+    setCohortName(p.cohort?.name ?? '');
+    await loadSessions(p.id);
+  };
+
+  // Starts on the track in the running cohort; tutors on several tracks can switch.
   const load = async () => {
     try {
-      const { data: programs } = await api.get('/programs/mine');
-      const mine = programs[0];
-      if (mine) {
-        setProgramId(mine.id);
-        setProgramName(mine.track);
-        setCohortName(mine.cohort?.name ?? '');
-        const { data } = await api.get(`/sessions/program/${mine.id}`);
-        setSessions(data);
-      }
+      const mine = await fetchMyPrograms();
+      setPrograms(mine);
+      const current = mine.find((p) => p.id === programId) ?? pickPrimaryProgram(mine);
+      if (current) await selectProgram(current);
     } catch {
       setError('Failed to load sessions');
     } finally {
@@ -80,12 +92,15 @@ export function InstructorSessions() {
           <p className="text-gray-500">{programName || '—'}{cohortName ? ` · ${cohortName}` : ''} · {sessions.length} sessions</p>
         </div>
         {programId && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 bg-qore-dark text-white px-4 py-2.5 rounded-xl hover:bg-qore-medium transition-colors text-sm font-medium"
-          >
-            <Plus size={16} /> Schedule Session
-          </button>
+          <div className="flex items-center gap-2">
+            <TrackPicker programs={programs} value={programId} onChange={(id) => selectProgram(programs.find((p) => p.id === id))} />
+            <button
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-2 bg-qore-dark text-white px-4 py-2.5 rounded-xl hover:bg-qore-medium transition-colors text-sm font-medium"
+            >
+              <Plus size={16} /> Schedule Session
+            </button>
+          </div>
         )}
       </div>
 

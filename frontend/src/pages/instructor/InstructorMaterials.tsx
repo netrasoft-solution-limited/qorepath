@@ -5,6 +5,8 @@ import {
   Plus, Trash2, ChevronDown, ChevronRight, X, CheckCircle,
 } from 'lucide-react';
 import api from '../../lib/api';
+import { fetchMyPrograms, pickPrimaryProgram } from '../../lib/tutor';
+import { TrackPicker } from '../../components/TrackPicker';
 
 const TYPE_ICONS: Record<string, any> = {
   pdf: FileText,
@@ -44,17 +46,20 @@ export function InstructorMaterials() {
     }
   };
 
+  const [programs, setPrograms] = useState<any[]>([]);
+  const select = (p: any) => {
+    setProgramId(p.id);
+    setProgramName(`${p.track}${p.cohort?.name ? ` · ${p.cohort.name}` : ''}`);
+    load(p.id);
+  };
+
+  // Starts on the track in the running cohort; tutors on several tracks can switch.
   useEffect(() => {
-    // Find the program this instructor/TA is assigned to
-    api.get('/programs/mine').then(({ data }) => {
-      const myProgram = data[0];
-      if (myProgram) {
-        setProgramId(myProgram.id);
-        setProgramName(myProgram.track);
-        load(myProgram.id);
-      } else {
-        setLoading(false);
-      }
+    fetchMyPrograms().then((mine) => {
+      setPrograms(mine);
+      const current = pickPrimaryProgram(mine);
+      if (current) select(current);
+      else setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
 
@@ -102,12 +107,15 @@ export function InstructorMaterials() {
           <h1 className="text-2xl font-bold text-qore-text">Materials Library</h1>
           <p className="text-gray-500">Resources for{programName ? ` · ${programName}` : ' your program'}.</p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-qore-medium hover:bg-qore-dark text-white px-4 py-2.5 rounded-xl font-medium transition-colors flex items-center gap-2 text-sm"
-        >
-          <Plus size={16} /> Add Material
-        </button>
+        <div className="flex items-center gap-2">
+          <TrackPicker programs={programs} value={programId ?? ''} onChange={(id) => select(programs.find((p) => p.id === id))} />
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-qore-medium hover:bg-qore-dark text-white px-4 py-2.5 rounded-xl font-medium transition-colors flex items-center gap-2 text-sm"
+          >
+            <Plus size={16} /> Add Material
+          </button>
+        </div>
       </div>
 
       {error && <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}

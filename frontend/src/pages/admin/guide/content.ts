@@ -13,6 +13,8 @@ export interface Scenario {
   who: string;
   when: string;
   steps: Step[];
+  // Screenshots in /public/guide, taken from a demo copy of the platform (made-up people).
+  shots?: [file: string, caption: string][];
   auto?: string[];
   tips?: string[];
 }
@@ -52,6 +54,7 @@ export const GUIDE: GuideSection[] = [
         title: 'The whole journey, start to finish',
         who: 'Everyone',
         when: 'Read this first',
+        shots: [['public-home-tracks', 'The homepage lists every track open for enrollment'], ['admin-dashboard', 'The admin dashboard'], ['admin-bell', 'The bell: your live to-do list']],
         steps: [
           { text: 'An admin creates a cohort (e.g. "Cohort 2"), adds tracks to it with a price and seat limit, and assigns an instructor.', link: go('/admin/cohorts', 'Cohorts') },
           'The cohort appears on the public homepage and pricing page as soon as its status is Upcoming or Active.',
@@ -111,6 +114,7 @@ export const GUIDE: GuideSection[] = [
         title: 'We are launching a new cohort',
         who: 'Admin with Cohorts',
         when: 'Before you start selling seats',
+        shots: [['admin-new-cohort', 'Cohorts → New Cohort'], ['admin-cohorts', 'A cohort expanded: tracks, price, seats, instructor and TAs'], ['admin-course-page', 'Course Page editor: what visitors read']],
         steps: [
           { text: 'Open Cohorts and click New Cohort. Enter a name (e.g. "Cohort 2 — Jan 2027"), the start date and end date, then Create Cohort.', link: go('/admin/cohorts', 'Cohorts') },
           'Click the cohort to expand it, then Add Program. Choose the track, set the Price (₦) and Max Learners (seats), optionally pick the instructor, then Add Program. Repeat for each track.',
@@ -132,6 +136,7 @@ export const GUIDE: GuideSection[] = [
         title: 'The cohort has started (or finished)',
         who: 'Admin with Cohorts',
         when: 'On the start date and the end date',
+        shots: [['admin-cohorts', 'The status dropdown on each cohort']],
         steps: [
           { text: 'Open Cohorts and change the status dropdown: Upcoming → Active when classes begin, Active → Completed when it ends. Use Cancelled if it will not run.', link: go('/admin/cohorts', 'Cohorts') },
           'Status does not change by itself, so set a reminder for both dates.',
@@ -147,6 +152,7 @@ export const GUIDE: GuideSection[] = [
         title: '"I paid but I\'m not enrolled"',
         who: 'Admin with Payments',
         when: 'A learner contacts you after paying',
+        shots: [['admin-payments', 'Payments: Re-check pending (top right), Refund and Mark paid per row']],
         steps: [
           { text: 'Open Payments and search for the learner. A Paid payment means they are enrolled — ask them to sign out and back in.', link: go('/admin/payments', 'Payments') },
           'If it shows Pending, click Re-check pending. NetraNova asks Paystack directly; confirmed payments become Paid and the learner is enrolled and sent a receipt.',
@@ -165,6 +171,7 @@ export const GUIDE: GuideSection[] = [
         title: 'A learner paid by bank transfer, or has a scholarship',
         who: 'Admin with Enrollments',
         when: 'Money (or no money) arrived outside Paystack',
+        shots: [['admin-enroll-learner', 'Enrollments → Enroll a learner']],
         steps: [
           'Ask the learner to create a free account on the website first.',
           { text: 'Open Enrollments → Enroll a learner. Enter their email, pick the track, add a note (e.g. "Paid by transfer, ref 1234"), then Enroll learner.', link: go('/admin/enrollments', 'Enrollments') },
@@ -180,6 +187,7 @@ export const GUIDE: GuideSection[] = [
         title: 'There are enrollments waiting for review',
         who: 'Admin with Enrollments',
         when: 'The bell says "Enrollment awaiting review"',
+        shots: [['admin-enrollments', 'Pending rows have ✓ approve and ✗ reject']],
         steps: [
           { text: 'Open Enrollments, filter by Pending, and click ✓ to approve or ✗ to reject. Both apply immediately.', link: go('/admin/enrollments', 'Enrollments') },
         ],
@@ -191,6 +199,7 @@ export const GUIDE: GuideSection[] = [
         title: 'A learner wants to leave and get a refund',
         who: 'Admin with Payments',
         when: 'The bell says "Withdrawal needs review"',
+        shots: [['admin-withdrawals', 'Withdrawals: suggested refund, Approve & refund or Deny refund']],
         steps: [
           'The learner withdraws themselves from Programs in their portal. They lose access straight away and any unpaid instalment is cancelled.',
           { text: 'Open Withdrawals. You see what they paid, how far into the cohort they were, and a suggested refund from your refund policy.', link: go('/admin/withdrawals', 'Withdrawals') },
@@ -210,6 +219,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Refund one payment without a withdrawal',
         who: 'Admin with Payments',
         when: 'E.g. someone was charged twice',
+        shots: [['admin-payments', 'Refund is on each paid payment']],
         steps: [
           { text: 'Open Payments, find the Paid payment and click Refund. Confirm.', link: go('/admin/payments', 'Payments') },
         ],
@@ -221,6 +231,7 @@ export const GUIDE: GuideSection[] = [
         title: 'A learner is falling behind',
         who: 'Admin with At-Risk',
         when: 'The dashboard shows at-risk learners',
+        shots: [['admin-at-risk', 'At-Risk learners with attendance rate']],
         steps: [
           { text: 'Open At-Risk. Learners below 70% attendance are listed with how many classes they attended.', link: go('/admin/at-risk', 'At-Risk') },
           'Click Send Email to write to them from your own email app, or share the list with their instructor.',
@@ -232,6 +243,7 @@ export const GUIDE: GuideSection[] = [
         title: 'We hired a new instructor or TA',
         who: 'Admin with Teaching Staff',
         when: 'Before their first class',
+        shots: [['admin-instructors', 'Teaching Staff with their assigned tracks']],
         steps: [
           { text: 'Open Instructors, choose the Instructors or Technical Assistants tab, click Add, fill in their details and a temporary password, then Create.', link: go('/admin/instructors', 'Instructors') },
           { text: 'Open Cohorts, expand the cohort, and pick them in the track\'s Instructor dropdown (or + Add TA).', link: go('/admin/cohorts', 'Cohorts') },
@@ -244,6 +256,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Graduation day: approving graduates and issuing certificates',
         who: 'Admin with Graduation and Certificates',
         when: 'End of the cohort',
+        shots: [['admin-graduation', 'Graduation queue: recommendations, Approve / Hold / Reject'], ['admin-certificates', 'Certificates: Ready to issue, attach a file, Issue certificate']],
         steps: [
           'Instructors submit a recommendation for each learner (Pass, Conditional or Fail) from their Graduation page.',
           { text: 'Open Graduation and pick the cohort. Approve, Hold (for Conditional) or Reject each learner. "Bulk Approve Passing" approves every Pass at once.', link: go('/admin/graduation', 'Graduation') },
@@ -264,6 +277,7 @@ export const GUIDE: GuideSection[] = [
         title: 'A certificate has a mistake, or must be withdrawn',
         who: 'Admin with Certificates',
         when: 'Wrong file, or issued in error',
+        shots: [['admin-certificates', 'Replace, Remove file, view (eye) and revoke (bin)']],
         steps: [
           { text: 'Open Certificates. To change only the file, use Replace (or Remove file). The certificate number stays valid.', link: go('/admin/certificates', 'Certificates') },
           'To cancel it entirely, click the bin icon (Revoke). It stops verifying immediately and disappears from the learner\'s portal. You can then issue a new one.',
@@ -275,6 +289,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Give a colleague admin access to only some areas',
         who: 'Admin with User Management',
         when: 'E.g. a finance person who should only see payments',
+        shots: [['admin-permissions', 'Gear icon → choose the areas this admin can use']],
         steps: [
           { text: 'Open Users → Add User, choose the Admin role and create the account.', link: go('/admin/users', 'Users') },
           'Click the gear icon on their row, tick only the areas they need (e.g. Payments, Revenue, Reports), then Save.',
@@ -290,6 +305,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Someone has left, or an account must be blocked',
         who: 'Admin with User Management',
         when: 'Staff leaving, suspicious account',
+        shots: [['admin-users', 'Users: role, status and actions per account']],
         steps: [
           { text: 'Open Users, find them and click the suspend icon. Reactivate the same way.', link: go('/admin/users', 'Users') },
         ],
@@ -301,6 +317,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Make (or remove) another super admin',
         who: 'Super admin',
         when: 'Adding a co-owner',
+        shots: [['admin-users', 'The crown icon grants super admin']],
         steps: [
           { text: 'Open Users and click the crown icon on an admin account to grant or remove super admin.', link: go('/admin/users', 'Users') },
         ],
@@ -311,6 +328,7 @@ export const GUIDE: GuideSection[] = [
         title: '"Who changed this?"',
         who: 'Admin with Audit Log',
         when: 'A price, refund, role or key changed unexpectedly',
+        shots: [['admin-audit', 'Audit Log: who, what and when; click a row for details']],
         steps: [
           { text: 'Open Audit Log. Search for a name, email or word (e.g. "price", "refund"), or filter by action.', link: go('/admin/audit', 'Audit Log') },
           'Click a row to see the old and new values, and the IP address it came from.',
@@ -322,6 +340,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Month-end: export the numbers',
         who: 'Admin with Revenue or Reports',
         when: 'Accounting, board updates',
+        shots: [['admin-revenue', 'Revenue dashboard and Export CSV'], ['admin-reports', 'Reports with date ranges']],
         steps: [
           { text: 'Revenue shows totals and the monthly chart; Export CSV downloads every payment.', link: go('/admin/revenue', 'Revenue') },
           { text: 'Reports lets you pick a date range for the enrollment, revenue and certificate reports, plus the current at-risk list. Files open in Excel or Google Sheets.', link: go('/admin/reports', 'Reports') },
@@ -352,6 +371,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Change a track\'s price or number of seats',
         who: 'Admin with Settings (or Cohorts)',
         when: 'Before or during enrollment',
+        shots: [['settings-pricing', 'Settings → Program Pricing']],
         steps: [{ text: 'Settings → Program Pricing: edit the Price or Max Learners, then Save Changes. (You can also edit them on the track row in Cohorts.)', link: go('/admin/settings', 'Settings') }],
         tips: ['New prices apply to new checkouts only. Existing payments and balances keep their amounts.'],
       },
@@ -360,6 +380,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Change the refund policy',
         who: 'Admin with Settings',
         when: 'Business decision',
+        shots: [['settings-payment-rules', 'Settings → Payment Rules → Refund Policy']],
         steps: [
           { text: 'Settings → Payment Rules → Refund Policy. Choose whether learners get 100% back before the cohort starts, the grace window (days after start), the refund % within it and the % after it. Save Policy.', link: go('/admin/settings', 'Settings') },
         ],
@@ -370,6 +391,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Change or switch off instalments',
         who: 'Admin with Settings',
         when: 'Business decision',
+        shots: [['settings-instalments', 'Instalments: on/off, first payment %, reminders']],
         steps: [
           { text: 'Settings → Payment Rules → Instalments. Untick "Offer two instalments" to only allow full payment, or change the first payment % (10–90).', link: go('/admin/settings', 'Settings') },
           'Set the balance reminders: "Every N days, up to M times". 0 turns reminders off.',
@@ -386,6 +408,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Stop people joining a cohort too late',
         who: 'Admin with Settings',
         when: 'Before a cohort starts',
+        shots: [['settings-cohort-rules', 'Settings → Cohort Rules']],
         steps: [{ text: 'Settings → Cohort Rules → Late enrollment: enter the number of days after the start date that learners can still pay (0 = up to the start day). Leave it blank for no limit. Save Rules.', link: go('/admin/settings', 'Settings') }],
         auto: ['Finished and cancelled cohorts are always closed, whatever this says.'],
         tips: ['You can still enroll someone by hand from Enrollments.'],
@@ -395,6 +418,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Add our WhatsApp group link to the welcome email',
         who: 'Admin with Settings',
         when: 'Any time',
+        shots: [['settings-templates', 'Notification Templates: switch, note, preview']],
         steps: [
           { text: 'Settings → Notification Templates. Click the email (e.g. "Enrollment approved / declined" or "Payment receipt").', link: go('/admin/settings', 'Settings') },
           'Type the note in "Extra note" — it appears in a highlighted box in that email.',
@@ -410,6 +434,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Publish our contact details, socials and legal pages',
         who: 'Admin with Settings',
         when: 'Before launch',
+        shots: [['settings-site', 'Settings → Site & Contact'], ['public-contact', 'What visitors see on the Contact page']],
         steps: [
           { text: 'Settings → Site & Contact. Fill in the contact email (messages from the website\'s contact form go here), phone, WhatsApp, address and hours.', link: go('/admin/settings', 'Settings') },
           'Paste your social media links (each must start with https://).',
@@ -427,6 +452,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Go live with real payments',
         who: 'Super admin',
         when: 'When Paystack activates your business',
+        shots: [['settings-integrations', 'Settings → Integrations (super admins only)']],
         steps: [
           'In your Paystack dashboard: Settings → API Keys & Webhooks. Copy the live secret key (sk_live_…) and public key (pk_live_…).',
           { text: 'Settings → Integrations → Paystack. Paste both and click Save keys. Confirm "Switch payments to LIVE?".', link: go('/admin/settings', 'Settings') },
@@ -439,6 +465,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Emails are not arriving, or change the sender address',
         who: 'Super admin',
         when: 'Setting up email',
+        shots: [['settings-integrations', 'Email (Resend) is the second card']],
         steps: [
           { text: 'Settings → Integrations → Email (Resend). The sender must be on a domain verified in your Resend account. Save email settings.', link: go('/admin/settings', 'Settings') },
           'Use Send test email to check it works.',
@@ -451,6 +478,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Turn on file and photo storage',
         who: 'Super admin',
         when: 'Once',
+        shots: [['settings-integrations', 'Files & images (Publitio) is further down this tab']],
         steps: [{ text: 'Settings → Integrations → Files & images (Publitio). Paste the API key and secret from Publitio → Settings → API, then Save keys.', link: go('/admin/settings', 'Settings') }],
         auto: ['Certificate files and profile photos are then stored on Publitio. Without it, certificate files are kept in the database and profile photos are turned off.'],
         tips: ['Files on Publitio are public links (fine for certificates and photos, not for private documents).'],
@@ -464,7 +492,7 @@ export const GUIDE: GuideSection[] = [
     title: 'Instructor portal',
     icon: GraduationCap,
     intro:
-      'Used by instructors and teaching assistants (TAs) for the tracks they are assigned to in Cohorts. Instructors and TAs have the same tools. Share this tab with new teaching staff.',
+      'Used by instructors and teaching assistants (TAs) for the tracks they are assigned to in Cohorts. Instructors and TAs have the same tools. Pages open on the track in the running cohort; someone on several tracks (e.g. Cohort 1 and Cohort 2) gets a track switcher at the top right. Share this tab with new teaching staff.',
     menu: [
       { name: 'Dashboard', desc: 'Their tracks, session counts and next session.' },
       { name: 'Sessions', desc: 'Schedule live classes, launch the classroom, mark a class complete, open recordings.' },
@@ -482,6 +510,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Getting a new instructor started',
         who: 'Instructor or TA',
         when: 'First sign-in',
+        shots: [['inst-dashboard', 'The instructor dashboard'], ['inst-calendar', 'Their classes on the calendar'], ['inst-roster', 'Learner Roster']],
         steps: [
           'They open the "Your NetraNova account has been created" email and click the link to set a password (valid 72 hours).',
           'They sign in and land on the Instructor portal dashboard, which lists the tracks they are assigned to.',
@@ -493,6 +522,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Schedule and teach a live class',
         who: 'Instructor or TA',
         when: 'Every class',
+        shots: [['inst-schedule', 'Sessions → Schedule Session'], ['classroom', 'The classroom before joining: Start Classroom'], ['inst-sessions', 'Completed classes show their recording']],
         steps: [
           'Sessions → Schedule Session. Enter the title, date & time and duration, then Create Session.',
           'At class time click Launch Classroom, then Start Classroom. The class runs in the browser (8x8); no app is needed.',
@@ -514,6 +544,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Correct or record attendance',
         who: 'Instructor or TA',
         when: 'After class',
+        shots: [['inst-attendance', 'Attendance: Present / Excused / Absent, then Save Attendance']],
         steps: [
           'Attendance → select the session. Click Present, Excused or Absent for each learner.',
           'Click Save Attendance. Anyone left unmarked is saved as Absent; saving again updates the marks.',
@@ -525,6 +556,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Set an assignment, then grade it',
         who: 'Instructor or TA',
         when: 'Weekly',
+        shots: [['inst-assignments', 'Assignments with submissions and grades']],
         steps: [
           'Assignments → New Assignment. Choose the track (if they teach more than one), add the title, due date, description and maximum score, then Create.',
           'For the final project tick "This is the capstone project" (one per track).',
@@ -541,6 +573,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Tell the class something',
         who: 'Instructor or TA',
         when: 'Changes, reminders',
+        shots: [['inst-announcements', 'Announcements']],
         steps: ['Announcements → write a title and message → Post Announcement.'],
         auto: ['It is emailed to every learner in the cohort (all tracks), and shows on their dashboard and bell.'],
         tips: ['Announcements reach the whole cohort, not just one track.'],
@@ -550,6 +583,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Share slides and resources',
         who: 'Instructor or TA',
         when: 'Weekly',
+        shots: [['inst-materials', 'Materials by week']],
         steps: ['Materials → Add Material. Paste a link (e.g. Google Drive — set sharing to "Anyone with the link"), choose the type and week, then Add Material.'],
         tips: ['Materials are links, not uploads. Learners do not have a Materials page yet, so also share important links in an announcement or the assignment description.'],
       },
@@ -558,6 +592,7 @@ export const GUIDE: GuideSection[] = [
         title: 'End of cohort: recommend learners for graduation',
         who: 'Instructor or TA',
         when: 'Last week',
+        shots: [['inst-graduation', 'Graduation: Pass, Conditional or Fail with notes']],
         steps: [
           'Graduation → for each learner choose Pass, Conditional or Fail, add notes, then Submit Recommendation. It can be changed until an admin decides.',
         ],
@@ -590,6 +625,7 @@ export const GUIDE: GuideSection[] = [
         title: 'How a learner signs up and pays',
         who: 'Learner',
         when: 'Enrolling',
+        shots: [['public-register', 'Sign-up page'], ['learner-checkout', 'Checkout: pay in full or in instalments']],
         steps: [
           'On the website they open a track and click Enroll now (or Create Free Account on the sign-up page).',
           'After signing up, checkout opens: Pay in full, or 2 installments (pay part now, the rest later). They pay with Paystack — card, bank transfer or USSD.',
@@ -605,6 +641,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Paying the second instalment',
         who: 'Learner',
         when: 'Any time before the end',
+        shots: [['learner-payments', 'Payments: Pay balance on the open instalment']],
         steps: ['Payments → Pay balance → Pay with Paystack.'],
         auto: ['The bell shows "Instalment balance due" and reminder emails are sent on the schedule in Settings → Payment Rules until it is paid.'],
       },
@@ -613,6 +650,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Joining a live class, or catching up',
         who: 'Learner',
         when: 'Class time',
+        shots: [['learner-dashboard', 'Learner dashboard with the next class'], ['learner-sessions', 'Sessions: Join Classroom / Watch Recording']],
         steps: [
           'Dashboard (Next Session) or Sessions → Join Classroom → Join Classroom. It opens in the browser; allow the camera and microphone.',
           'Missed it? Sessions → Watch Recording on the completed class.',
@@ -625,6 +663,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Submitting work',
         who: 'Learner',
         when: 'Weekly and at the end',
+        shots: [['learner-assignments', 'Assignments with scores and feedback'], ['learner-capstone', 'The capstone page']],
         steps: [
           'Assignments → Submit → paste the link (GitHub, Google Drive…) → Submit. They can Update submission until it is graded.',
           'Capstone → fill in the project title, description, GitHub repository and optional live demo → Submit Capstone.',
@@ -636,6 +675,7 @@ export const GUIDE: GuideSection[] = [
         title: '"Am I on track to graduate?"',
         who: 'Learner',
         when: 'Any time',
+        shots: [['learner-progress', 'Progress and the graduation checklist']],
         steps: ['Progress shows attendance (aim for 70%+), assignments submitted (aim for 80%+), capstone, payments and the instructor\'s recommendation.'],
         tips: ['The checklist is guidance. The final decision is the instructor\'s recommendation plus your approval in Graduation.'],
       },
@@ -644,6 +684,7 @@ export const GUIDE: GuideSection[] = [
         title: 'A learner wants to withdraw',
         who: 'Learner',
         when: 'Leaving the course',
+        shots: [['learner-programs', 'Programs: Withdraw is on their current track']],
         steps: ['Programs → Withdraw on their track → confirm.'],
         auto: ['They lose access straight away and get an email with the suggested refund. You decide the refund in Withdrawals.'],
       },
@@ -652,6 +693,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Getting and sharing the certificate',
         who: 'Learner',
         when: 'After graduation',
+        shots: [['learner-certificate', 'Certificate: Download and Share']],
         steps: ['Certificate → Download (if you attached a file) and Share, which copies a verification link they can put on LinkedIn or send to employers.'],
         auto: ['They get an email and a bell notification when it is issued.'],
       },
@@ -660,6 +702,7 @@ export const GUIDE: GuideSection[] = [
         title: 'Profile photo, name or forgotten password',
         who: 'Learner',
         when: 'Any time',
+        shots: [['learner-profile', 'Profile: click the photo to change it']],
         steps: [
           'Profile → click the photo to upload one (JPG, PNG or WebP, up to 2 MB), edit name or phone → Save Changes. The email address cannot be changed.',
           'Forgot password: on the login page click "Forgot password?" and follow the emailed link (valid 1 hour).',
@@ -690,6 +733,7 @@ export const GUIDE: GuideSection[] = [
         title: 'What decides which tracks the homepage shows?',
         who: 'Admin',
         when: 'Planning a launch',
+        shots: [['public-home-tracks', 'Homepage tracks'], ['public-pricing', 'Pricing page'], ['public-track', "A track's course page"]],
         steps: [
           'The "Enrolling now" cards list every track in a cohort marked Upcoming or Active, soonest first, with its price and the instalment amount.',
           'If no cohort is Upcoming or Active, three sample tracks are shown with "dates announced soon".',
@@ -702,6 +746,7 @@ export const GUIDE: GuideSection[] = [
         title: 'An employer wants to check a certificate',
         who: 'Anyone',
         when: 'Hiring',
+        shots: [['public-verify', 'A verified certificate']],
         steps: ['They open the link the learner shared, or go to Verify and type the number (e.g. NN-1793701087721-9QGEC).'],
         auto: ['A valid certificate shows "Verified", the holder\'s name, track, cohort and date, and "View the certificate" if a file was attached. No contact details are shown. Revoked numbers show as not found.'],
       },
@@ -710,6 +755,7 @@ export const GUIDE: GuideSection[] = [
         title: 'A visitor sends a message',
         who: 'Visitor',
         when: 'Questions before buying',
+        shots: [['public-contact', 'Contact page']],
         steps: ['Contact → fill in the form → Send message.'],
         auto: ['It is emailed to your contact address; just reply to answer them. Each visitor can send up to 3 messages in 10 minutes (50 a day for the whole site) to stop spam.'],
       },
