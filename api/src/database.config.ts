@@ -21,9 +21,10 @@ export function databaseOptions(env: Record<string, string | undefined>): DataSo
     username: env.DB_USERNAME,
     password: env.DB_PASSWORD,
     database: env.DB_NAME,
-    // Compiled files only: the app and the CLI both run from dist/.
+    // Compiled files: the app and the CLI both run from dist/. Tests run the TypeScript
+    // sources directly (ts-jest), so there the migrations are .ts.
     entities: [join(__dirname, '**', '*.entity.js')],
-    migrations: [join(__dirname, 'migrations', '*.js')],
+    migrations: [join(__dirname, 'migrations', env.NODE_ENV === 'test' ? '*.ts' : '*.js')],
     migrationsTableName: 'migrations',
     // Each migration in its own transaction, so a failing one leaves the database as it was.
     migrationsTransactionMode: 'each',
