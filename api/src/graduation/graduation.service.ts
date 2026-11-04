@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { GraduationRecord, GraduationStatus } from './graduation.entity';
 import { Enrollment } from '../enrollments/enrollment.entity';
+import { Certificate } from '../certificates/certificate.entity';
 import { NotificationsService } from '../mail/notifications.service';
 
 @Injectable()
@@ -36,21 +37,39 @@ export class GraduationService {
     return this.repo.save(record);
   }
 
-  findByCohort(cohortId: string) {
-    return this.repo
+  // Adds `certificate` ({ id, certificateNumber } or null) so the queue shows what's been issued.
+  private async withCertificates(records: GraduationRecord[]) {
+    const ids = records.map((r) => r.enrollment?.id).filter(Boolean);
+    const certs = ids.length
+      ? await this.repo.manager.find(Certificate, { where: { enrollment: { id: In(ids) } } })
+      : [];
+    const byEnrollment = new Map(certs.map((c) => [c.enrollment?.id, c]));
+    return records.map((r) => {
+      const c = byEnrollment.get(r.enrollment?.id);
+      return { ...r, certificate: c ? { id: c.id, certificateNumber: c.certificateNumber } : null };
+    });
+  }
+
+  async findByCohort(cohortId: string) {
+    return this.withCertificates(await this.repo
       .createQueryBuilder('g')
       .leftJoinAndSelect('g.enrollment', 'enrollment')
       .leftJoinAndSelect('enrollment.learner', 'learner')
       .leftJoinAndSelect('enrollment.program', 'program')
       .leftJoinAndSelect('program.cohort', 'cohort')
       .where('cohort.id = :cohortId', { cohortId })
-      .getMany();
+      .getMany());
   }
 
   async updateStatus(id: string, status: GraduationStatus) {
     const before = await this.repo.findOne({ where: { id } });
+    if (!before) throw new NotFoundException('Graduation record not found');
+    if (before.status === GraduationStatus.APPROVED && status !== GraduationStatus.APPROVED &&
+        await this.repo.manager.exists(Certificate, { where: { enrollment: { id: before.enrollment?.id } } })) {
+      throw new BadRequestException('A certificate has been issued for this graduation. Revoke the certificate first.');
+    }
     await this.repo.update(id, { status });
-    if (before && before.status !== status) this.notifications.graduationDecided(id);
+    if (before.status !== status) this.notifications.graduationDecided(id);
     return this.repo.findOne({ where: { id } });
   }
 
@@ -66,8 +85,8 @@ export class GraduationService {
       .getOne();
   }
 
-  findAll() {
-    return this.repo
+  async findAll() {
+    return this.withCertificates(await this.repo
       .createQueryBuilder('g')
       .leftJoinAndSelect('g.enrollment', 'enrollment')
       .leftJoinAndSelect('enrollment.learner', 'learner')
@@ -75,6 +94,6 @@ export class GraduationService {
       .leftJoinAndSelect('program.cohort', 'cohort')
       .leftJoinAndSelect('g.submittedBy', 'submittedBy')
       .orderBy('g.createdAt', 'DESC')
-      .getMany();
+      .getMany());
   }
 }

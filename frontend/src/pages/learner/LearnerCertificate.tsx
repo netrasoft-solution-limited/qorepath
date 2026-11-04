@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Award, Share2 } from 'lucide-react';
+import { Award, Share2, Download } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../lib/api';
+import { openCertificateFile } from '../admin/AdminCertificates';
 
 export function LearnerCertificate() {
   const { user } = useAuth();
@@ -40,7 +41,8 @@ export function LearnerCertificate() {
                     <Award size={32} className="text-qore-highlight" />
                     <div>
                       <p className="text-xs text-white/60 uppercase tracking-widest">Certificate of Completion</p>
-                      <p className="font-bold text-xl">{c.cohort?.name}</p>
+                      <p className="font-bold text-xl">{c.enrollment?.program?.track ?? c.cohort?.name}</p>
+                      {c.enrollment?.program?.track && <p className="text-white/60 text-sm">{c.cohort?.name}</p>}
                     </div>
                   </div>
                   <p className="text-white/80 text-sm">
@@ -50,15 +52,16 @@ export function LearnerCertificate() {
                   <p className="font-mono text-xs text-qore-highlight mt-2">{c.certificateNumber}</p>
                 </div>
                 <div className="flex gap-2">
-                  {c.downloadUrl && (
-                    <a href={c.downloadUrl} target="_blank" rel="noreferrer"
+                  {c.fileName && (
+                    <button onClick={() => openCertificateFile(c.id)}
                       className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl text-xs font-medium transition-colors"
                     >
-                      Download
-                    </a>
+                      <Download size={13} /> Download
+                    </button>
                   )}
                   <button
-                    onClick={() => navigator.clipboard.writeText(c.certificateNumber)}
+                    onClick={() => navigator.clipboard.writeText(`${window.location.origin}/public/verify/${c.certificateNumber}`)}
+                    title="Copy the public verification link"
                     className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl text-xs font-medium transition-colors"
                   >
                     <Share2 size={13} /> Share

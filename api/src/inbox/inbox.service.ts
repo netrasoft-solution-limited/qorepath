@@ -69,12 +69,20 @@ export class InboxService {
     // Only show what this admin is allowed to act on (super admins see everything).
     const perms = user?.isSuperAdmin ? null : effectivePermissions(user ?? { role: 'admin', permissions: null });
     const can = (p: string) => !perms || perms.includes(p);
-    const [withdrawals, graduations, enrollments, payments, signups] = await Promise.all([
+    const [withdrawals, graduations, enrollments, payments, signups, toCertify] = await Promise.all([
       this.repo(WithdrawalRequest).find({ where: { status: WithdrawalStatus.PENDING }, order: { createdAt: 'DESC' }, take: 10 }),
       this.repo(GraduationRecord).find({ where: { status: GraduationStatus.PENDING }, order: { createdAt: 'DESC' }, take: 10 }),
       this.repo(Enrollment).find({ where: { status: EnrollmentStatus.PENDING }, order: { enrolledAt: 'DESC' }, take: 10 }),
       this.repo(Payment).find({ where: { status: PaymentStatus.PAID, updatedAt: MoreThan(ago(7)) }, order: { updatedAt: 'DESC' }, take: 10 }),
       this.repo(User).find({ where: { role: UserRole.LEARNER, createdAt: MoreThan(ago(7)) }, order: { createdAt: 'DESC' }, take: 10 }),
+      // Approved graduations that don't have a certificate yet
+      this.repo(GraduationRecord).createQueryBuilder('g')
+        .leftJoinAndSelect('g.enrollment', 'e')
+        .leftJoinAndSelect('e.learner', 'learner')
+        .leftJoinAndSelect('e.program', 'program')
+        .where('g.status = :approved', { approved: GraduationStatus.APPROVED })
+        .andWhere('NOT EXISTS (SELECT 1 FROM certificates c WHERE c."enrollmentId" = e.id)')
+        .orderBy('g.createdAt', 'DESC').take(10).getMany(),
     ]);
     return [
       ...(can('payments') ? withdrawals : []).map((w) => ({
@@ -88,6 +96,12 @@ export class InboxService {
         title: 'Graduation awaiting approval',
         detail: `${name(g.enrollment?.learner)} · ${g.enrollment?.program?.track ?? ''} — recommended "${g.recommendation}"`,
         link: '/admin/graduation', at: iso(g.createdAt),
+      })),
+      ...(can('certificates') ? toCertify : []).map((g) => ({
+        id: `cert-due-${g.id}`, kind: 'action' as const,
+        title: 'Certificate to issue',
+        detail: `${name(g.enrollment?.learner)} · ${g.enrollment?.program?.track ?? ''} — graduation approved`,
+        link: '/admin/certificates', at: iso(g.createdAt),
       })),
       ...(can('enrollments') ? enrollments : []).map((e) => ({
         id: `en-${e.id}`, kind: 'action' as const,

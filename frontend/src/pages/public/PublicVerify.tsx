@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { Search, XCircle, BadgeCheck, GraduationCap, ShieldCheck, Hash, Globe2 } from 'lucide-react';
+import { Search, XCircle, BadgeCheck, GraduationCap, ShieldCheck, Hash, Globe2, FileText } from 'lucide-react';
 import api from '../../lib/api';
 
 const longDate = (d?: string) =>
@@ -125,7 +125,9 @@ export function PublicVerify() {
                 <p className="relative mt-2 font-display text-3xl font-extrabold sm:text-4xl">
                   {result.user?.firstName} {result.user?.lastName}
                 </p>
-                {result.cohort?.name && <p className="relative mt-1 text-white/70">{result.cohort.name}</p>}
+                {(result.track || result.cohort?.name) && (
+                  <p className="relative mt-1 text-white/70">{[result.track, result.cohort?.name].filter(Boolean).join(' · ')}</p>
+                )}
                 <div className="relative mt-10 flex flex-wrap items-end justify-between gap-6">
                   <div className="space-y-1 text-sm">
                     <p className="text-white/50">Issued <span className="font-semibold text-white">{longDate(result.issuedDate)}</span></p>
@@ -135,6 +137,17 @@ export function PublicVerify() {
                 </div>
               </div>
               <p className="mt-5 text-center text-sm font-medium text-green-700">This is a valid, authentic NetraNova certificate.</p>
+              {result.hasFile && (
+                <p className="mt-3 text-center">
+                  <a
+                    href={`${api.defaults.baseURL}/certificates/verify/${encodeURIComponent(result.certificateNumber)}/file`}
+                    target="_blank" rel="noreferrer"
+                    className="inline-flex items-center gap-2 rounded-xl bg-qore-dark px-5 py-2.5 text-sm font-semibold text-white hover:bg-qore-medium"
+                  >
+                    <FileText size={16} /> View the certificate
+                  </a>
+                </p>
+              )}
               <p className="mt-1 text-center text-xs text-gray-400">Checked {longDate(new Date().toISOString())} · NetraNova certificate registry</p>
             </motion.div>
           )}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, XCircle, Award, AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import api from '../../lib/api';
 
 export function AdminGraduation() {
@@ -27,12 +28,13 @@ export function AdminGraduation() {
 
   const updateStatus = async (id: string, status: string) => {
     setUpdating((prev) => ({ ...prev, [id]: true }));
+    setError('');
     try {
       await api.patch(`/graduation/${id}/status`, { status });
       const { data } = await api.get(`/graduation/cohort/${selectedCohort}`);
       setRecords(data);
-    } catch {
-      setError('Failed to update status');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to update status');
     } finally {
       setUpdating((prev) => ({ ...prev, [id]: false }));
     }
@@ -168,7 +170,20 @@ export function AdminGraduation() {
                         </button>
                       </>
                     )}
-                    {record.status !== 'pending' && (
+                    {record.status === 'approved' && record.certificate && (
+                      <span className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-2 rounded-lg text-xs font-medium">
+                        <Award size={14} /> Certificate {record.certificate.certificateNumber}
+                      </span>
+                    )}
+                    {record.status === 'approved' && !record.certificate && (
+                      <Link
+                        to={`/admin/certificates?graduation=${record.id}`}
+                        className="bg-qore-dark hover:bg-qore-medium text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+                      >
+                        <Award size={15} /> Issue certificate
+                      </Link>
+                    )}
+                    {record.status !== 'pending' && !record.certificate && (
                       <button
                         onClick={() => updateStatus(record.id, 'pending')}
                         disabled={updating[record.id]}

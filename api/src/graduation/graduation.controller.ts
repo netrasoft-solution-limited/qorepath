@@ -38,7 +38,7 @@ export class GraduationController {
   }
 
   @Roles(UserRole.ADMIN)
-  @RequirePermission('graduation', 'audit_log')
+  @RequirePermission('graduation', 'certificates', 'audit_log')
   @Get('all')
   getAll() {
     return this.service.findAll();
