@@ -47,7 +47,9 @@ export class StorageService {
       const c = await this.integrations.publitio();
       if (!c.apiKey) return;
       const res = await fetch(`https://api.publit.io/v1/files/delete/${encodeURIComponent(id)}?${IntegrationsService.publitioAuth(c.apiKey, c.apiSecret)}`, { method: 'DELETE' });
-      if (!res.ok) this.logger.warn(`Publitio delete of ${id} returned ${res.status}`);
+      const body: any = await res.json().catch(() => null);
+      if (!res.ok || !body?.success) this.logger.warn(`Publitio delete of ${id} failed: ${res.status} ${JSON.stringify(body)}`);
+      else this.logger.log(`Deleted ${id} from Publitio`);
     } catch (err: any) {
       this.logger.warn(`Publitio delete of ${id} failed: ${err.message}`);
     }
