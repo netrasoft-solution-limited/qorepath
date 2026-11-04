@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { randomBytes } from 'crypto';
 import { IntegrationsService } from '../integrations/integrations.service';
 
 export type UploadedFileLike = { originalname: string; mimetype: string; size: number; buffer: Buffer };
@@ -20,12 +21,15 @@ export class StorageService {
     return !!c.apiKey && !!c.apiSecret;
   }
 
-  async upload(file: UploadedFileLike, title: string): Promise<StoredFile | null> {
+  // `kind` becomes part of the public address (e.g. certificate-3f9a…), so addresses never clash
+  // and never reveal the uploaded file's name.
+  async upload(file: UploadedFileLike, title: string, kind: 'certificate' | 'photo'): Promise<StoredFile | null> {
     const c = await this.integrations.publitio();
     if (!c.apiKey || !c.apiSecret) return null;
     const form = new FormData();
     form.append('file', new Blob([new Uint8Array(file.buffer)], { type: file.mimetype }), file.originalname);
     form.append('title', title);
+    form.append('public_id', `${kind}-${randomBytes(8).toString('hex')}`);
     form.append('privacy', '1');
     form.append('option_download', '1');
     let body: any;

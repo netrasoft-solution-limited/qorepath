@@ -76,7 +76,7 @@ export class CertificatesService {
     if (!FILE_TYPES.includes(file.mimetype)) throw new BadRequestException('Upload a PDF, PNG or JPG file');
     if (file.size > MAX_FILE_BYTES) throw new BadRequestException('The file must be 5 MB or smaller');
     const meta = { fileName: file.originalname, fileType: file.mimetype, fileSize: file.size };
-    const stored = await this.storage.upload(file, `Certificate ${certificateNumber}`);
+    const stored = await this.storage.upload(file, `Certificate ${certificateNumber}`, 'certificate');
     return stored
       ? { ...meta, fileUrl: stored.url, fileStorageId: stored.id, fileData: null }
       : { ...meta, fileUrl: null, fileStorageId: null, fileData: file.buffer };

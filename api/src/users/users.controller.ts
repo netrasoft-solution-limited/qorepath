@@ -50,7 +50,7 @@ export class UsersController {
     if (!file) throw new BadRequestException('Choose a photo to upload');
     if (!PHOTO_TYPES.includes(file.mimetype)) throw new BadRequestException('Upload a JPG, PNG or WebP image');
     const me = (await this.usersService.findOne(req.user.id))!;
-    const stored = await this.storage.upload(file, `Profile photo ${me.email}`);
+    const stored = await this.storage.upload(file, `Profile photo ${me.email}`, 'photo');
     if (!stored) throw new BadRequestException("Photo uploads aren't switched on yet. An admin needs to connect Publitio in Settings → Integrations.");
     await this.usersService.update(me.id, { avatarUrl: stored.url, avatarStorageId: stored.id } as any);
     await this.storage.remove(me.avatarStorageId);
