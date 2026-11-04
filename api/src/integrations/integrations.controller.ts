@@ -1,11 +1,12 @@
 import { BadRequestException, Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Request, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SuperAdminGuard } from '../auth/super-admin.guard';
-import { IntegrationsService } from './integrations.service';
+import { IntegrationsService, Provider } from './integrations.service';
 import { MailService } from '../mail/mail.service';
 import { Audit } from '../audit/audit.decorator';
 
 // Summaries describe what changed, never the key values themselves.
+const NAMES: Record<string, string> = { paystack: 'Paystack', resend: 'Resend', publitio: 'Publitio' };
 const mode = (k?: string) => (k?.includes('_live_') ? 'live' : k?.includes('_test_') ? 'test' : '');
 
 @UseGuards(JwtAuthGuard, SuperAdminGuard)
@@ -44,16 +45,22 @@ export class IntegrationsController {
     return this.integrations.saveResend(body ?? {}, req.user.email);
   }
 
+  @Audit({ action: 'PUBLITIO_KEYS_CHANGED', entity: 'Integration', summary: () => 'Saved Publitio API key and secret' })
+  @Put('publitio')
+  savePublitio(@Body() body: { apiKey?: string; apiSecret?: string }, @Request() req: any) {
+    return this.integrations.savePublitio(body ?? {}, req.user.email);
+  }
+
   /** Revert to the server's environment values. */
   @Audit({
     action: 'INTEGRATION_RESET',
     entity: 'Integration',
-    summary: ({ params }) => `Removed saved ${params.provider === 'paystack' ? 'Paystack' : 'Resend'} keys (back to server defaults)`,
+    summary: ({ params }) => `Removed saved ${NAMES[params.provider] ?? params.provider} keys (back to server defaults)`,
   })
   @Delete(':provider')
   async clear(@Param('provider') provider: string) {
-    if (provider !== 'paystack' && provider !== 'resend') throw new BadRequestException('Unknown provider');
-    await this.integrations.clear(provider);
+    if (!Object.hasOwn(NAMES, provider)) throw new BadRequestException('Unknown provider');
+    await this.integrations.clear(provider as Provider);
     return this.integrations.status();
   }
 

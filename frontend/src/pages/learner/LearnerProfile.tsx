@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Save, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../lib/api';
+import { EditableAvatar, useProfilePhoto } from '../../components/ProfilePhoto';
 import { pickCurrentEnrollment } from '../../lib/enrollments';
 
 export function LearnerProfile() {
@@ -43,7 +44,7 @@ export function LearnerProfile() {
     }
   };
 
-  const initials = `${form.firstName.charAt(0)}${form.lastName.charAt(0)}`.toUpperCase();
+  const photo = useProfilePhoto();
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
@@ -58,12 +59,16 @@ export function LearnerProfile() {
         className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8"
       >
         <div className="flex items-center gap-6 mb-8 pb-8 border-b border-gray-100">
-          <div className="w-20 h-20 rounded-full bg-qore-medium flex items-center justify-center text-2xl font-bold text-white">
-            {initials || '?'}
+          <div className="flex flex-col items-center gap-1.5">
+            <EditableAvatar user={user} className="w-20 h-20 text-2xl" />
+            {(user as any)?.avatarUrl && (
+              <button type="button" onClick={photo.remove} disabled={photo.busy} className="text-xs text-gray-400 hover:text-red-600">Remove photo</button>
+            )}
           </div>
           <div>
             <h2 className="text-xl font-bold text-qore-text">{form.firstName} {form.lastName}</h2>
             <p className="text-gray-500 text-sm">{(user as any)?.email}</p>
+            <p className="text-xs text-gray-400 mt-0.5">Click your photo to change it (JPG, PNG or WebP, up to 2 MB).</p>
             {enrollment && (
               <p className="text-xs text-qore-medium mt-1">
                 {enrollment.program?.track} · {enrollment.program?.cohort?.name}

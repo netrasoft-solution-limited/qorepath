@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { EditableAvatar } from '../components/ProfilePhoto';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { LogOut, Menu, X } from 'lucide-react';
@@ -26,7 +27,6 @@ export function PortalLayout({ children, navItems, portalName }: PortalLayoutPro
 
   const displayName = user ? `${(user as any).firstName ?? ''} ${(user as any).lastName ?? ''}`.trim() || user.email : '';
   const displayRole = user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : '';
-  const initials = displayName ? displayName.charAt(0).toUpperCase() : '?';
 
   const handleLogout = () => {
     logout();
@@ -44,9 +44,7 @@ export function PortalLayout({ children, navItems, portalName }: PortalLayoutPro
 
         <div className="p-6 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-qore-medium flex items-center justify-center text-white font-bold">
-              {initials}
-            </div>
+            <EditableAvatar user={user} className="w-10 h-10" />
             <div>
               <p className="font-medium text-sm">{displayName}</p>
               <p className="text-xs text-qore-highlight">{displayRole}</p>

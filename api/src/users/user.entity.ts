@@ -47,8 +47,12 @@ export class User {
   @Column({ nullable: true })
   phone: string;
 
-  @Column({ nullable: true })
-  avatarUrl: string;
+  // Profile photo on Publitio; avatarStorageId is Publitio's file id, used to delete the old one.
+  @Column({ type: 'varchar', nullable: true })
+  avatarUrl: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  avatarStorageId: string | null;
 
   @Column({ default: true })
   isActive: boolean;

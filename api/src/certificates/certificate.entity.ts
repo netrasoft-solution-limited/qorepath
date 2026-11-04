@@ -35,8 +35,8 @@ export class Certificate {
   @Column({ nullable: true })
   downloadUrl: string;
 
-  // Optional certificate file uploaded by an admin (PDF/PNG/JPEG). Stored in the database
-  // because the API's disk is wiped on every deploy. Never selected unless asked for.
+  // Optional certificate file uploaded by an admin (PDF/PNG/JPEG). Kept on Publitio (fileUrl +
+  // fileStorageId) when it's set up, otherwise in the database (fileData, never selected unless asked for).
   @Column({ type: 'varchar', nullable: true })
   fileName: string | null;
 
@@ -45,6 +45,12 @@ export class Certificate {
 
   @Column({ type: 'int', nullable: true })
   fileSize: number | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  fileUrl: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  fileStorageId: string | null;
 
   @Column({ type: 'bytea', nullable: true, select: false })
   fileData: Buffer | null;

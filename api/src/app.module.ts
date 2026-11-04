@@ -19,6 +19,7 @@ import { WithdrawalsModule } from './withdrawals/withdrawals.module';
 import { MailModule } from './mail/mail.module';
 import { AccessModule } from './access/access.module';
 import { IntegrationsModule } from './integrations/integrations.module';
+import { StorageModule } from './storage/storage.module';
 import { InboxModule } from './inbox/inbox.module';
 import { AuditModule } from './audit/audit.module';
 
@@ -35,6 +36,7 @@ import { AuditModule } from './audit/audit.module';
       }),
     }),
     IntegrationsModule,
+    StorageModule,
     AuditModule,
     MailModule,
     AccessModule,

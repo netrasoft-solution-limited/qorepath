@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle2, CreditCard, Eye, EyeOff, KeyRound, Mail, RotateCcw, Send, ShieldAlert } from 'lucide-react';
+import { CheckCircle2, CreditCard, Eye, EyeOff, ImageUp, KeyRound, Mail, RotateCcw, Send, ShieldAlert } from 'lucide-react';
 import api from '../../lib/api';
 import { useConfirm, useToast } from '../../components/feedback';
 
 interface Status {
   paystack: { configured: boolean; mode: 'test' | 'live' | 'unknown'; secretKey: string; publicKey: string; source: 'dashboard' | 'server'; updatedAt?: string | null; updatedBy?: string | null };
   resend: { configured: boolean; apiKey: string; mailFrom: string; source: 'dashboard' | 'server'; updatedAt?: string | null; updatedBy?: string | null };
+  publitio: { configured: boolean; apiKey: string; source: 'dashboard' | 'server'; updatedAt?: string | null; updatedBy?: string | null };
 }
+type Provider = 'paystack' | 'resend' | 'publitio';
+const WHAT: Record<Provider, string> = { paystack: 'Paystack keys', resend: 'email settings', publitio: 'Publitio keys' };
 
 const when = (d?: string | null) => (d ? new Date(d).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '');
 const errMsg = (e: any, fallback: string) => {
@@ -49,6 +52,7 @@ export function AdminIntegrations() {
   const [error, setError] = useState('');
   const [ps, setPs] = useState({ secretKey: '', publicKey: '' });
   const [rs, setRs] = useState({ apiKey: '', mailFrom: '' });
+  const [fs, setFs] = useState({ apiKey: '', apiSecret: '' });
   const [testTo, setTestTo] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -94,8 +98,22 @@ export function AdminIntegrations() {
     }
   };
 
-  const revert = async (provider: 'paystack' | 'resend') => {
-    const ok = await confirm({ title: 'Use the server default?', message: `The ${provider === 'paystack' ? 'Paystack keys' : 'email settings'} saved here will be removed and the values configured on the server will be used.`, confirmLabel: 'Revert', variant: 'danger' });
+  const savePublitio = async () => {
+    setBusy('publitio');
+    try {
+      const { data } = await api.put('/integrations/publitio', fs);
+      setStatus(data);
+      setFs({ apiKey: '', apiSecret: '' });
+      toast({ message: 'Publitio connected — new files and photos will be stored there', variant: 'success' });
+    } catch (e) {
+      toast({ message: errMsg(e, 'Could not save Publitio keys'), variant: 'error' });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const revert = async (provider: Provider) => {
+    const ok = await confirm({ title: 'Use the server default?', message: `The ${WHAT[provider]} saved here will be removed and the values configured on the server will be used.`, confirmLabel: 'Revert', variant: 'danger' });
     if (!ok) return;
     try {
       const { data } = await api.delete(`/integrations/${provider}`);
@@ -122,12 +140,13 @@ export function AdminIntegrations() {
   if (!status) return <div className="p-8 text-center text-gray-400">Loading…</div>;
   const p = status.paystack;
   const r = status.resend;
+  const f = status.publitio;
 
   return (
     <div className="space-y-6">
       <div className="flex items-start gap-3 rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-800">
         <ShieldAlert size={18} className="mt-0.5 shrink-0" />
-        <p>Only super admins can see this page. Keys are stored encrypted and are never shown again after saving — keep a copy in your Paystack and Resend dashboards.</p>
+        <p>Only super admins can see this page. Keys are stored encrypted and are never shown again after saving — keep a copy in your Paystack, Resend and Publitio dashboards.</p>
       </div>
 
       {/* Paystack */}
@@ -209,6 +228,45 @@ export function AdminIntegrations() {
           <button onClick={sendTest} disabled={busy === 'test' || !r.configured} className="flex items-center justify-center gap-1.5 rounded-xl border border-qore-medium px-5 py-2.5 text-sm font-bold text-qore-medium hover:bg-qore-light disabled:opacity-50">
             <Send size={14} /> {busy === 'test' ? 'Sending…' : 'Send test email'}
           </button>
+        </div>
+      </section>
+
+      {/* Publitio */}
+      <section className="rounded-2xl border border-gray-100 p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50"><ImageUp size={18} className="text-violet-600" /></span>
+            <div>
+              <h3 className="font-bold text-qore-text">Files &amp; images (Publitio)</h3>
+              <Source source={f.source} updatedAt={f.updatedAt} updatedBy={f.updatedBy} />
+            </div>
+          </div>
+          <span className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${f.configured ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+            {f.configured ? <><CheckCircle2 size={12} /> Connected</> : 'Not configured'}
+          </span>
+        </div>
+        <p className="mt-4 text-sm text-gray-500">
+          Certificate files and profile photos are stored on Publitio. Until it's connected, certificate files are kept in the database and profile photos are turned off.
+        </p>
+        {f.configured && (
+          <dl className="mt-5 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+            <div><dt className="text-xs text-gray-400">API key</dt><dd className="font-mono text-qore-text">{f.apiKey}</dd></div>
+          </dl>
+        )}
+        <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
+          <label className="block"><span className="mb-1.5 block text-xs font-semibold text-gray-500">API key</span><SecretInput value={fs.apiKey} onChange={(v) => setFs({ ...fs, apiKey: v })} placeholder="Publitio API key" /></label>
+          <label className="block"><span className="mb-1.5 block text-xs font-semibold text-gray-500">API secret</span><SecretInput value={fs.apiSecret} onChange={(v) => setFs({ ...fs, apiSecret: v })} placeholder="Publitio API secret" /></label>
+        </div>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs text-gray-400">Find them in Publitio → Settings → API. The keys are checked with Publitio before they're saved.</p>
+          <div className="flex gap-2">
+            {f.source === 'dashboard' && (
+              <button onClick={() => revert('publitio')} className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 hover:border-gray-300"><RotateCcw size={14} /> Remove keys</button>
+            )}
+            <button onClick={savePublitio} disabled={busy === 'publitio' || !fs.apiKey || !fs.apiSecret} className="flex items-center gap-1.5 rounded-xl bg-qore-dark px-5 py-2 text-sm font-bold text-white hover:bg-qore-medium disabled:opacity-50">
+              <KeyRound size={14} /> {busy === 'publitio' ? 'Checking…' : 'Save keys'}
+            </button>
+          </div>
         </div>
       </section>
     </div>

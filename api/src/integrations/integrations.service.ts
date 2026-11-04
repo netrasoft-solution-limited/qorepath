@@ -7,9 +7,13 @@ import { Setting } from '../settings/setting.entity';
 
 export interface PaystackKeys { secretKey: string; publicKey: string; source: 'dashboard' | 'server' }
 export interface ResendConfig { apiKey: string; mailFrom: string; source: 'dashboard' | 'server' }
+export interface PublitioConfig { apiKey: string; apiSecret: string; source: 'dashboard' | 'server' }
+export type Provider = 'paystack' | 'resend' | 'publitio';
 
 const PAYSTACK_KEY = 'integration.paystack';
 const RESEND_KEY = 'integration.resend';
+const PUBLITIO_KEY = 'integration.publitio';
+const KEYS: Record<Provider, string> = { paystack: PAYSTACK_KEY, resend: RESEND_KEY, publitio: PUBLITIO_KEY };
 const CACHE_MS = 60 * 1000;
 
 interface Stored<T> { data: T; updatedAt: string; updatedBy: string }
@@ -18,7 +22,7 @@ const mask = (v?: string) => (v ? `${v.slice(0, 8)}…${v.slice(-4)}` : '');
 const domainOf = (from: string) => (from.match(/@([^>\s]+)>?\s*$/)?.[1] ?? '').toLowerCase();
 
 /**
- * Third-party credentials (Paystack, Resend) that a super admin can manage from
+ * Third-party credentials (Paystack, Resend, Publitio) that a super admin can manage from
  * the dashboard. Stored encrypted (AES-256-GCM) in the settings table; secrets are
  * never returned to the browser. Server env vars are the fallback.
  */
@@ -76,8 +80,8 @@ export class IntegrationsService {
     this.cache.delete(key);
   }
 
-  async clear(provider: 'paystack' | 'resend') {
-    const key = provider === 'paystack' ? PAYSTACK_KEY : RESEND_KEY;
+  async clear(provider: Provider) {
+    const key = KEYS[provider];
     await this.repo.delete({ key });
     this.cache.delete(key);
   }
@@ -104,13 +108,33 @@ export class IntegrationsService {
     };
   }
 
+  async publitio(): Promise<PublitioConfig> {
+    const s = await this.read<{ apiKey: string; apiSecret: string }>(PUBLITIO_KEY);
+    if (s?.data.apiKey) return { ...s.data, source: 'dashboard' };
+    return {
+      apiKey: this.config.get<string>('PUBLITIO_API_KEY') ?? '',
+      apiSecret: this.config.get<string>('PUBLITIO_API_SECRET') ?? '',
+      source: 'server',
+    };
+  }
+
+  /** Publitio's request signature: sha1(timestamp + nonce + secret), sent as query params. */
+  static publitioAuth(apiKey: string, apiSecret: string) {
+    const api_timestamp = Math.floor(Date.now() / 1000).toString();
+    const api_nonce = crypto.randomInt(10_000_000, 100_000_000).toString();
+    const api_signature = crypto.createHash('sha1').update(api_timestamp + api_nonce + apiSecret).digest('hex');
+    return new URLSearchParams({ api_key: apiKey, api_timestamp, api_nonce, api_signature });
+  }
+
   /** Masked overview for the admin screen — never includes a full secret. */
   async status() {
-    const [p, r, ps, rs] = await Promise.all([
+    const [p, r, f, ps, rs, fs] = await Promise.all([
       this.paystack(),
       this.resend(),
+      this.publitio(),
       this.read<any>(PAYSTACK_KEY),
       this.read<any>(RESEND_KEY),
+      this.read<any>(PUBLITIO_KEY),
     ]);
     return {
       paystack: {
@@ -129,6 +153,13 @@ export class IntegrationsService {
         source: r.source,
         updatedAt: r.source === 'dashboard' ? rs?.updatedAt : null,
         updatedBy: r.source === 'dashboard' ? rs?.updatedBy : null,
+      },
+      publitio: {
+        configured: !!f.apiKey && !!f.apiSecret,
+        apiKey: mask(f.apiKey),
+        source: f.source,
+        updatedAt: f.source === 'dashboard' ? fs?.updatedAt : null,
+        updatedBy: f.source === 'dashboard' ? fs?.updatedBy : null,
       },
     };
   }
@@ -182,6 +213,29 @@ export class IntegrationsService {
 
     await this.write(RESEND_KEY, { apiKey, mailFrom }, by);
     this.logger.log(`Resend settings updated by ${by} (sender ${mailFrom})`);
+    return this.status();
+  }
+
+  async savePublitio(input: { apiKey?: string; apiSecret?: string }, by: string) {
+    const apiKey = input.apiKey?.trim() ?? '';
+    const apiSecret = input.apiSecret?.trim() ?? '';
+    if (!apiKey || !apiSecret) throw new BadRequestException('Enter both the Publitio API key and API secret');
+    let res: Response;
+    try {
+      res = await fetch(`https://api.publit.io/v1/files/list?limit=1&${IntegrationsService.publitioAuth(apiKey, apiSecret)}`);
+    } catch {
+      throw new BadRequestException('Could not reach Publitio to check the keys. Try again in a moment.');
+    }
+    const body: any = await res.json().catch(() => null);
+    if (!res.ok || body?.success === false) {
+      throw new BadRequestException(
+        res.status === 401 || res.status === 403 || body?.code === 401
+          ? 'Publitio rejected these keys. Copy the API key and secret again from Publitio → Settings → API.'
+          : `Publitio returned ${body?.error?.message ?? body?.message ?? res.status} while checking the keys`,
+      );
+    }
+    await this.write(PUBLITIO_KEY, { apiKey, apiSecret }, by);
+    this.logger.log(`Publitio keys updated by ${by}`);
     return this.status();
   }
 }

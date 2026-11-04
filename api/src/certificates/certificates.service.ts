@@ -4,9 +4,12 @@ import { Repository } from 'typeorm';
 import { Certificate } from './certificate.entity';
 import { GraduationRecord, GraduationStatus } from '../graduation/graduation.entity';
 import { NotificationsService } from '../mail/notifications.service';
+import { StorageService } from '../storage/storage.service';
 
 export const MAX_FILE_BYTES = 5 * 1024 * 1024;
 const FILE_TYPES = ['application/pdf', 'image/png', 'image/jpeg'];
+
+const NO_FILE = { fileName: null, fileType: null, fileSize: null, fileUrl: null, fileStorageId: null, fileData: null };
 
 export type UploadedCertificateFile = { originalname: string; mimetype: string; size: number; buffer: Buffer };
 
@@ -15,6 +18,7 @@ export class CertificatesService {
   constructor(
     @InjectRepository(Certificate) private repo: Repository<Certificate>,
     private notifications: NotificationsService,
+    private storage: StorageService,
   ) {}
 
   // A certificate can only be issued for an approved graduation, once per enrollment.
@@ -32,13 +36,14 @@ export class CertificatesService {
       throw new BadRequestException('A certificate has already been issued for this learner and track');
     }
     const certificateNumber = `NN-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    const fileCols = file ? await this.fileColumns(file, certificateNumber) : {};
     const saved = await this.repo.save(this.repo.create({
       user: g.enrollment.learner,
       cohort: g.enrollment.program?.cohort,
       enrollment: { id: g.enrollment.id } as any,
       certificateNumber,
       issuedDate: new Date(),
-      ...(file ? this.fileColumns(file) : {}),
+      ...fileCols,
     }));
     this.notifications.certificateIssued(saved.id);
     return this.findOne(saved.id);
@@ -46,36 +51,44 @@ export class CertificatesService {
 
   async attachFile(id: string, file?: UploadedCertificateFile) {
     if (!file) throw new BadRequestException('Choose a file to upload');
-    await this.findOne(id);
-    await this.repo.update(id, this.fileColumns(file));
+    const cert = await this.findOne(id);
+    await this.repo.update(id, await this.fileColumns(file, cert.certificateNumber));
+    await this.storage.remove(cert.fileStorageId);
     return this.findOne(id);
   }
 
   async removeFile(id: string) {
-    await this.findOne(id);
-    await this.repo.update(id, { fileName: null, fileType: null, fileSize: null, fileData: null });
+    const cert = await this.findOne(id);
+    await this.repo.update(id, NO_FILE);
+    await this.storage.remove(cert.fileStorageId);
     return this.findOne(id);
   }
 
   async revoke(id: string) {
     const cert = await this.findOne(id);
     await this.repo.delete(id);
+    await this.storage.remove(cert.fileStorageId);
     return cert;
   }
 
-  private fileColumns(file: UploadedCertificateFile) {
+  // Publitio when it's set up, otherwise the database.
+  private async fileColumns(file: UploadedCertificateFile, certificateNumber: string) {
     if (!FILE_TYPES.includes(file.mimetype)) throw new BadRequestException('Upload a PDF, PNG or JPG file');
     if (file.size > MAX_FILE_BYTES) throw new BadRequestException('The file must be 5 MB or smaller');
-    return { fileName: file.originalname, fileType: file.mimetype, fileSize: file.size, fileData: file.buffer };
+    const meta = { fileName: file.originalname, fileType: file.mimetype, fileSize: file.size };
+    const stored = await this.storage.upload(file, `Certificate ${certificateNumber}`);
+    return stored
+      ? { ...meta, fileUrl: stored.url, fileStorageId: stored.id, fileData: null }
+      : { ...meta, fileUrl: null, fileStorageId: null, fileData: file.buffer };
   }
 
   async file(where: { id: string } | { certificateNumber: string }) {
     const cert = await this.repo.findOne({
       where,
-      select: { id: true, fileName: true, fileType: true, fileData: true, user: { id: true } },
+      select: { id: true, fileName: true, fileType: true, fileUrl: true, fileData: true, user: { id: true } },
       relations: { user: true },
     });
-    if (!cert?.fileData) throw new NotFoundException('No certificate file has been uploaded');
+    if (!cert?.fileUrl && !cert?.fileData) throw new NotFoundException('No certificate file has been uploaded');
     return cert;
   }
 

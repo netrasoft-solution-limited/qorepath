@@ -19,6 +19,7 @@ const describe = (c?: Certificate | null) =>
   `${c?.certificateNumber} for ${fullName(c?.user)} (${c?.enrollment?.program?.track ?? c?.cohort?.name ?? 'cohort'})`;
 
 function sendFile(res: Response, cert: Certificate) {
+  if (cert.fileUrl) return res.redirect(302, cert.fileUrl);
   res.set({
     'Content-Type': cert.fileType ?? 'application/octet-stream',
     'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(cert.fileName ?? 'certificate')}`,

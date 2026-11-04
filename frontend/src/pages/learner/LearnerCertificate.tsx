@@ -53,7 +53,7 @@ export function LearnerCertificate() {
                 </div>
                 <div className="flex gap-2">
                   {c.fileName && (
-                    <button onClick={() => openCertificateFile(c.id)}
+                    <button onClick={() => openCertificateFile(c)}
                       className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl text-xs font-medium transition-colors"
                     >
                       <Download size={13} /> Download

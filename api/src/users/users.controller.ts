@@ -1,6 +1,10 @@
 import {
   Controller, Get, Post, Param, Patch, Body, Delete, UseGuards, Request, ForbiddenException,
+  BadRequestException, UploadedFile, UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { StorageService } from '../storage/storage.service';
+import type { UploadedFileLike } from '../storage/storage.service';
 import { UsersService } from './users.service';
 import { AuthService } from '../auth/auth.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -12,7 +16,9 @@ import { AccessService } from '../access/access.service';
 import { Audit, fullName } from '../audit/audit.decorator';
 
 // Fields a non-admin user is allowed to change on their own profile.
-const SELF_EDITABLE = ['firstName', 'lastName', 'phone', 'avatarUrl'];
+const SELF_EDITABLE = ['firstName', 'lastName', 'phone'];
+const PHOTO_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
 // Fields an admin may change on any (non-super-admin) account.
 const ADMIN_EDITABLE = [...SELF_EDITABLE, 'email', 'role', 'permissions', 'isActive'];
 // Changes worth a line in the audit log (never passwords or tokens).
@@ -34,7 +40,30 @@ export class UsersController {
     private usersService: UsersService,
     private authService: AuthService,
     private access: AccessService,
+    private storage: StorageService,
   ) {}
+
+  // Profile photo for whoever is signed in. Photos are stored on Publitio only.
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_PHOTO_BYTES } }))
+  @Post('me/avatar')
+  async uploadAvatar(@UploadedFile() file: UploadedFileLike | undefined, @Request() req: any) {
+    if (!file) throw new BadRequestException('Choose a photo to upload');
+    if (!PHOTO_TYPES.includes(file.mimetype)) throw new BadRequestException('Upload a JPG, PNG or WebP image');
+    const me = (await this.usersService.findOne(req.user.id))!;
+    const stored = await this.storage.upload(file, `Profile photo ${me.email}`);
+    if (!stored) throw new BadRequestException("Photo uploads aren't switched on yet. An admin needs to connect Publitio in Settings → Integrations.");
+    await this.usersService.update(me.id, { avatarUrl: stored.url, avatarStorageId: stored.id } as any);
+    await this.storage.remove(me.avatarStorageId);
+    return this.usersService.findOne(me.id);
+  }
+
+  @Delete('me/avatar')
+  async removeAvatar(@Request() req: any) {
+    const me = (await this.usersService.findOne(req.user.id))!;
+    await this.usersService.update(me.id, { avatarUrl: null, avatarStorageId: null } as any);
+    await this.storage.remove(me.avatarStorageId);
+    return this.usersService.findOne(me.id);
+  }
 
   private async isSuperAdmin(userId: string) {
     return !!(await this.usersService.findOne(userId))?.isSuperAdmin;

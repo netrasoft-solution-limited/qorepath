@@ -9,11 +9,16 @@ const kb = (n?: number) => (n ? (n >= 1024 * 1024 ? `${(n / 1024 / 1024).toFixed
 const errText = (err: any, fallback: string) =>
   err.response?.status === 413 ? 'The file must be 5 MB or smaller' : err.response?.data?.message || fallback;
 
-// Opens an uploaded certificate file (the request needs the admin's token, so it can't be a plain link).
-export async function openCertificateFile(id: string) {
+// Opens an uploaded certificate file. Files on Publitio open directly; files kept in the
+// database need the user's token, so they're fetched first.
+export async function openCertificateFile(cert: { id: string; fileUrl?: string | null }) {
+  if (cert.fileUrl) {
+    window.open(cert.fileUrl, '_blank', 'noopener');
+    return;
+  }
   const tab = window.open('', '_blank');
   try {
-    const { data } = await api.get(`/certificates/${id}/file`, { responseType: 'blob' });
+    const { data } = await api.get(`/certificates/${cert.id}/file`, { responseType: 'blob' });
     const url = URL.createObjectURL(data);
     if (tab) tab.location.href = url; else window.location.href = url;
   } catch {
@@ -196,7 +201,7 @@ export function AdminCertificates() {
                   <td className="px-6 py-4">
                     {c.fileName ? (
                       <div className="flex items-center gap-2 text-xs">
-                        <button onClick={() => openCertificateFile(c.id)} className="flex items-center gap-1 text-qore-medium font-medium hover:underline" title={c.fileName}>
+                        <button onClick={() => openCertificateFile(c)} className="flex items-center gap-1 text-qore-medium font-medium hover:underline" title={c.fileName}>
                           <FileText size={14} /> <span className="max-w-[10rem] truncate">{c.fileName}</span>
                         </button>
                         <span className="text-gray-400">{kb(c.fileSize)}</span>
