@@ -1,18 +1,16 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Lock, Eye, EyeOff, ArrowRight, CheckCircle } from 'lucide-react';
+import { Lock, ArrowRight, CheckCircle2, Link2Off } from 'lucide-react';
 import api from '../../lib/api';
+import { AuthShell, Field, FormError, FormHeader, SubmitButton } from './AuthShell';
 
 // Used both for "forgot password" links and for staff setting their first password (?welcome=1).
 export default function ResetPasswordPage() {
   const [params] = useSearchParams();
   const token = params.get('token') ?? '';
   const isWelcome = params.get('welcome') === '1';
-
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -34,121 +32,49 @@ export default function ResetPasswordPage() {
     }
   };
 
-  const inputClass =
-    'w-full border border-gray-200 rounded-xl pl-11 pr-12 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-qore-medium focus:border-transparent transition-shadow bg-gray-50 focus:bg-white';
-
   return (
-    <div className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-qore-dark px-4 sm:px-12 py-12">
-      <div className="nn-stars pointer-events-none absolute inset-0 opacity-60" />
-      <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-qore-medium/30 blur-3xl" />
-      <div className="relative mb-8 text-center">
-        <Link to="/public/home">
-          <span className="inline-flex items-center gap-2"><img src="/netranova-icon.webp" alt="" className="h-9 w-9" /><span className="font-display text-xl font-extrabold text-white">NetraNova</span></span>
-        </Link>
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="relative w-full max-w-[440px] mx-auto rounded-3xl bg-white p-8 shadow-2xl shadow-black/30 sm:p-10"
-      >
-        {!token ? (
-          <div className="text-center">
-            <h1 className="text-2xl font-extrabold text-gray-900 mb-2">Invalid link</h1>
-            <p className="text-gray-500 text-sm">This password link is missing its token. Please request a new one.</p>
-            <Link to="/forgot-password" className="inline-block mt-6 text-qore-dark font-bold hover:text-qore-medium">
-              Request a new link →
-            </Link>
-          </div>
-        ) : done ? (
-          <div className="text-center">
-            <div className="w-14 h-14 rounded-full bg-qore-light flex items-center justify-center mx-auto mb-5">
-              <CheckCircle size={28} className="text-qore-medium" />
-            </div>
-            <h1 className="text-2xl font-extrabold text-gray-900 mb-2">Password {isWelcome ? 'set' : 'updated'}</h1>
-            <p className="text-gray-500 text-sm">You can now sign in with your new password.</p>
-            <Link
-              to="/login"
-              className="mt-6 w-full bg-qore-dark hover:bg-qore-medium text-white py-3.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
-            >
-              Sign in <ArrowRight size={15} />
-            </Link>
-          </div>
-        ) : (
-          <>
-            <div className="mb-8">
-              <h1 className="text-3xl font-extrabold text-gray-900 mb-1.5">
-                {isWelcome ? 'Set your password' : 'Choose a new password'}
-              </h1>
-              <p className="text-gray-400 text-sm">At least 8 characters.</p>
-            </div>
-
-            {error && (
-              <div className="mb-5 p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
-                {error}
-                {/expired|invalid/i.test(error) && (
-                  <Link to="/forgot-password" className="block mt-1 font-semibold underline">
-                    Request a new link
-                  </Link>
-                )}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                  New password
-                </label>
-                <div className="relative">
-                  <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    minLength={8}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className={inputClass}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                  Confirm password
-                </label>
-                <div className="relative">
-                  <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={confirm}
-                    onChange={(e) => setConfirm(e.target.value)}
-                    placeholder="••••••••"
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-qore-dark hover:bg-qore-medium text-white py-3.5 rounded-xl font-bold text-sm transition-colors disabled:opacity-60 flex items-center justify-center gap-2 mt-2"
-              >
-                {loading ? 'Saving…' : <>{isWelcome ? 'Set password' : 'Update password'} <ArrowRight size={15} /></>}
-              </button>
-            </form>
-          </>
-        )}
-      </motion.div>
-    </div>
+    <AuthShell
+      eyebrow={isWelcome ? 'Welcome to the team' : 'Account help'}
+      headline={isWelcome ? 'Your NetraNova account is' : 'Choose a new password and'}
+      accent={isWelcome ? 'ready.' : 'carry on.'}
+      blurb={isWelcome
+        ? 'Set a password to finish setting up your account. You will land in your portal straight after signing in.'
+        : 'Pick something you have not used before. You will use it to sign in from now on.'}
+    >
+      {!token ? (
+        <div className="py-4 text-center">
+          <span className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-50"><Link2Off size={28} className="text-red-500" /></span>
+          <h1 className="font-display text-2xl font-extrabold text-qore-dark">Invalid link</h1>
+          <p className="mt-2 text-sm text-gray-500">This password link is missing its token. Please request a new one.</p>
+          <Link to="/forgot-password" className="mt-6 inline-block font-bold text-qore-dark hover:text-qore-medium">Request a new link →</Link>
+        </div>
+      ) : done ? (
+        <div className="py-4 text-center">
+          <span className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-green-50"><CheckCircle2 size={30} className="text-green-600" /></span>
+          <h1 className="font-display text-2xl font-extrabold text-qore-dark">Password {isWelcome ? 'set' : 'updated'}</h1>
+          <p className="mt-2 text-sm text-gray-500">You can now sign in with your new password.</p>
+          <Link to="/login" className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FF8A00] to-[#FF6A00] py-3.5 text-sm font-bold text-white shadow-lg shadow-orange-500/30">
+            Sign in <ArrowRight size={16} />
+          </Link>
+        </div>
+      ) : (
+        <>
+          <FormHeader title={isWelcome ? 'Set your password' : 'Choose a new password'} subtitle="At least 8 characters." />
+          {error && (
+            <FormError>
+              {error}
+              {/expired|invalid/i.test(error) && (
+                <Link to="/forgot-password" className="mt-1 block font-semibold underline">Request a new link</Link>
+              )}
+            </FormError>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Field label="New password" icon={Lock} type="password" required minLength={8} autoComplete="new-password" autoFocus value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
+            <Field label="Confirm password" icon={Lock} type="password" required autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Type it again" />
+            <SubmitButton loading={loading} loadingText="Saving…">{isWelcome ? 'Set password' : 'Update password'}</SubmitButton>
+          </form>
+        </>
+      )}
+    </AuthShell>
   );
 }
