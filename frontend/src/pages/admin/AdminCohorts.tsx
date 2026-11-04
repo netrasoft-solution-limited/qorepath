@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Search, Users, Calendar, ChevronDown, ChevronRight,
   CheckCircle, X, Layers, BookOpen, DollarSign, Trash2, FileEdit,
-  GripVertical,
+  GripVertical, Pencil,
 } from 'lucide-react';
 import api from '../../lib/api';
 import { useConfirm } from '../../components/feedback';
@@ -39,6 +39,7 @@ export function AdminCohorts() {
   // Cohort form
   const [showCohortForm, setShowCohortForm] = useState(false);
   const [cohortForm, setCohortForm] = useState({ name: '', startDate: '', endDate: '' });
+  const [editingCohortId, setEditingCohortId] = useState<string | null>(null);
 
   // Program form
   const [showProgramForm, setShowProgramForm] = useState<string | null>(null); // cohortId
@@ -77,24 +78,53 @@ export function AdminCohorts() {
   };
 
   // ── Cohort CRUD ────────────────────────────────────────────────────────
-  const handleCreateCohort = async (e: React.FormEvent) => {
+  const openNewCohort = () => {
+    setEditingCohortId(null);
+    setCohortForm({ name: '', startDate: '', endDate: '' });
+    setShowCohortForm(true);
+  };
+
+  const openEditCohort = (cohort: any) => {
+    setEditingCohortId(cohort.id);
+    setCohortForm({ name: cohort.name ?? '', startDate: String(cohort.startDate ?? '').slice(0, 10), endDate: String(cohort.endDate ?? '').slice(0, 10) });
+    setShowCohortForm(true);
+  };
+
+  const closeCohortForm = () => {
+    setShowCohortForm(false);
+    setEditingCohortId(null);
+  };
+
+  const handleSaveCohort = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (cohortForm.endDate < cohortForm.startDate) return setError('The end date must be on or after the start date.');
     setSaving(true);
     setError('');
     try {
-      await api.post('/cohorts', cohortForm);
-      setShowCohortForm(false);
+      if (editingCohortId) await api.patch(`/cohorts/${editingCohortId}`, cohortForm);
+      else await api.post('/cohorts', cohortForm);
+      flash(editingCohortId ? 'Cohort updated' : 'Cohort created');
+      closeCohortForm();
       setCohortForm({ name: '', startDate: '', endDate: '' });
-      flash('Cohort created');
       load();
-    } catch {
-      setError('Failed to create cohort');
+    } catch (err: any) {
+      const msg = err.response?.data?.message;
+      setError((Array.isArray(msg) ? msg[0] : msg) || (editingCohortId ? 'Failed to update cohort' : 'Failed to create cohort'));
     } finally {
       setSaving(false);
     }
   };
 
   const handleCohortStatus = async (id: string, status: string) => {
+    if (status === 'completed' || status === 'cancelled') {
+      const ok = await confirm({
+        title: status === 'completed' ? 'Mark cohort completed?' : 'Cancel cohort?',
+        message: 'Enrollment closes for this cohort and it disappears from the public tracks pages. You can change the status back later.',
+        confirmLabel: status === 'completed' ? 'Mark completed' : 'Cancel cohort',
+        variant: status === 'cancelled' ? 'danger' : undefined,
+      });
+      if (!ok) return load();
+    }
     try {
       await api.patch(`/cohorts/${id}`, { status });
       load();
@@ -211,7 +241,7 @@ export function AdminCohorts() {
           <p className="text-gray-500">Each cohort can have multiple programs running simultaneously.</p>
         </div>
         <button
-          onClick={() => setShowCohortForm(true)}
+          onClick={openNewCohort}
           className="flex items-center gap-2 bg-qore-medium hover:bg-qore-dark text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
         >
           <Plus size={16} /> New Cohort
@@ -244,23 +274,27 @@ export function AdminCohorts() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
-            onClick={() => setShowCohortForm(false)}
+            onClick={closeCohortForm}
           >
             <motion.form
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               onClick={(e) => e.stopPropagation()}
-              onSubmit={handleCreateCohort}
+              onSubmit={handleSaveCohort}
               className="bg-white rounded-2xl shadow-xl p-7 w-full max-w-md space-y-4"
             >
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-gray-900">New Cohort</h3>
-                <button type="button" onClick={() => setShowCohortForm(false)}>
+                <h3 className="font-bold text-gray-900">{editingCohortId ? 'Edit Cohort' : 'New Cohort'}</h3>
+                <button type="button" onClick={closeCohortForm}>
                   <X size={18} className="text-gray-400" />
                 </button>
               </div>
-              <p className="text-xs text-gray-400">A cohort is the intake batch. Add programs after creating it.</p>
+              <p className="text-xs text-gray-400">
+                {editingCohortId
+                  ? 'Changing the dates updates the track pages, the sign-up badge and enrollment windows straight away.'
+                  : 'A cohort is the intake batch. Add programs after creating it.'}
+              </p>
               <input
                 required
                 value={cohortForm.name}
@@ -295,7 +329,7 @@ export function AdminCohorts() {
                 disabled={saving}
                 className="w-full bg-qore-medium hover:bg-qore-dark text-white py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 transition-colors"
               >
-                {saving ? 'Creating…' : 'Create Cohort'}
+                {saving ? 'Saving…' : editingCohortId ? 'Save Changes' : 'Create Cohort'}
               </button>
             </motion.form>
           </motion.div>
@@ -434,6 +468,14 @@ export function AdminCohorts() {
                 >
                   {STATUS_OPTIONS.map((s) => <option key={s}>{s}</option>)}
                 </select>
+
+                <button
+                  onClick={(e) => { e.stopPropagation(); openEditCohort(cohort); }}
+                  className="p-1.5 text-gray-300 hover:text-qore-medium transition-colors"
+                  title="Edit name and dates"
+                >
+                  <Pencil size={15} />
+                </button>
 
                 <button
                   onClick={(e) => { e.stopPropagation(); handleDeleteCohort(cohort.id); }}

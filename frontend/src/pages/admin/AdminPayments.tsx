@@ -44,12 +44,20 @@ export function AdminPayments() {
 
   useEffect(() => { load(); }, []);
 
-  const markPaid = async (id: string) => {
+  // For money received outside Paystack (e.g. a bank transfer).
+  const markPaid = async (p: any) => {
+    const who = `${p.user?.firstName ?? ''} ${p.user?.lastName ?? ''}`.trim() || p.user?.email || 'the learner';
+    const ok = await confirm({
+      title: 'Mark as paid?',
+      message: `Only do this once you've received ₦${Number(p.amount).toLocaleString()} from ${who}. They'll be enrolled in ${p.program?.track ?? 'the track'} and emailed a receipt.`,
+      confirmLabel: 'Mark paid',
+    });
+    if (!ok) return;
     try {
-      await api.patch(`/payments/${id}/status`, { status: 'paid' });
+      await api.patch(`/payments/${p.id}/status`, { status: 'paid' });
       load();
-    } catch {
-      setError('Failed to update payment');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to update payment');
     }
   };
 
@@ -170,7 +178,7 @@ export function AdminPayments() {
                   <td className="px-6 py-4">
                     {p.status === 'pending' && (
                       <button
-                        onClick={() => markPaid(p.id)}
+                        onClick={() => markPaid(p)}
                         className="text-xs text-green-600 hover:underline flex items-center gap-1"
                       >
                         <CheckCircle size={13} /> Mark paid

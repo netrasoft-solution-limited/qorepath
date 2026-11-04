@@ -76,13 +76,56 @@ export class PaymentsService implements OnModuleInit, OnModuleDestroy {
     return payment;
   }
 
+  /**
+   * Admin status change. Marking a payment paid (e.g. a bank transfer) settles it the
+   * same way Paystack does: the learner's enrollment is approved and a receipt is sent.
+   */
   async updateStatus(id: string, status: PaymentStatus, reference?: string) {
-    await this.findOne(id);
-    await this.repo.update(id, {
-      status,
-      ...(reference && { paystackReference: reference }),
+    if (!Object.values(PaymentStatus).includes(status)) throw new BadRequestException('Unknown payment status');
+    let justPaid = false;
+    await this.dataSource.transaction(async (manager: EntityManager) => {
+      const locked = await manager
+        .createQueryBuilder(Payment, 'p')
+        .setLock('pessimistic_write')
+        .where('p.id = :id', { id })
+        .getOne();
+      if (!locked) throw new NotFoundException('Payment not found');
+      const payment = await manager.findOne(Payment, { where: { id }, relations: { user: true, program: true } });
+      if (!payment) throw new NotFoundException('Payment not found');
+
+      justPaid = status === PaymentStatus.PAID && payment.status !== PaymentStatus.PAID;
+      payment.status = status;
+      if (reference) payment.paystackReference = reference;
+      if (justPaid && !payment.method) payment.method = PaymentMethod.BANK_TRANSFER;
+      await manager.save(payment);
+      if (justPaid) await this.approveEnrollment(manager, payment.user?.id, payment.program?.id, 'Approved when an admin marked the payment paid');
     });
+    if (justPaid) this.notifications.paymentSettled(id);
     return this.findOne(id);
+  }
+
+  /** Approves the learner's enrollment on the program, creating it if needed. */
+  private async approveEnrollment(manager: EntityManager, userId: string | undefined, programId: string | undefined, notes: string) {
+    if (!userId || !programId) return;
+    const existing = await manager.findOne(Enrollment, {
+      where: { learner: { id: userId }, program: { id: programId } },
+    });
+    if (existing) {
+      if (existing.status !== EnrollmentStatus.APPROVED) {
+        existing.status = EnrollmentStatus.APPROVED;
+        existing.notes = notes;
+        await manager.save(existing);
+      }
+      return;
+    }
+    await manager.save(
+      manager.create(Enrollment, {
+        learner: { id: userId } as any,
+        program: { id: programId } as any,
+        status: EnrollmentStatus.APPROVED,
+        notes,
+      }),
+    );
   }
 
   // ── Paystack: initialize ───────────────────────────────────────────────────
@@ -472,32 +515,7 @@ export class PaymentsService implements OnModuleInit, OnModuleDestroy {
       await manager.save(payment);
       justPaid = true;
 
-      const userId = payment.user?.id;
-      const programId = payment.program?.id;
-      if (userId && programId) {
-        const existing = await manager.findOne(Enrollment, {
-          where: {
-            learner: { id: userId },
-            program: { id: programId },
-          },
-        });
-        if (existing) {
-          if (existing.status !== EnrollmentStatus.APPROVED) {
-            existing.status = EnrollmentStatus.APPROVED;
-            existing.notes = `Auto-approved after payment ${reference}`;
-            await manager.save(existing);
-          }
-        } else {
-          await manager.save(
-            manager.create(Enrollment, {
-              learner: { id: userId } as any,
-              program: { id: programId } as any,
-              status: EnrollmentStatus.APPROVED,
-              notes: `Auto-approved after payment ${reference}`,
-            }),
-          );
-        }
-      }
+      await this.approveEnrollment(manager, payment.user?.id, payment.program?.id, `Auto-approved after payment ${reference}`);
 
       return payment;
     });

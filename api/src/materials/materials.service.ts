@@ -11,11 +11,17 @@ export class MaterialsService {
     return this.repo.save(this.repo.create(data));
   }
 
-  findByProgram(programId: string) {
-    return this.repo.find({
+  /** Learners read this too, so the uploader is reduced to a display name. */
+  async findByProgram(programId: string) {
+    const rows = await this.repo.find({
       where: { program: { id: programId } },
       order: { week: 'ASC', createdAt: 'ASC' },
     });
+    return rows.map(({ uploadedBy: u, program, ...m }) => ({
+      ...m,
+      program: program ? { id: program.id, track: program.track } : null,
+      uploadedBy: u ? { id: u.id, firstName: u.firstName, lastName: u.lastName } : null,
+    }));
   }
 
   async programIdOf(id: string): Promise<string | undefined> {

@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Cohort } from './cohort.entity';
+import { Cohort, CohortStatus } from './cohort.entity';
 import { Enrollment, EnrollmentStatus } from '../enrollments/enrollment.entity';
 
 @Injectable()
@@ -49,10 +49,33 @@ export class CohortsService {
     return cohort;
   }
 
+  /** Only the cohort's own fields can be edited here; programs are managed through /programs. */
   async update(id: string, data: any) {
     const cohort = await this.findOne(id);
-    Object.assign(cohort, data);
-    return this.repo.save(cohort);
+    const changes: Partial<Cohort> = {};
+    if (data.name !== undefined) {
+      const name = String(data.name).trim();
+      if (!name) throw new BadRequestException('Cohort name cannot be empty');
+      changes.name = name;
+    }
+    if (data.description !== undefined) changes.description = data.description ? String(data.description) : (null as any);
+    if (data.status !== undefined) {
+      if (!Object.values(CohortStatus).includes(data.status)) throw new BadRequestException('Unknown cohort status');
+      changes.status = data.status;
+    }
+    for (const key of ['startDate', 'endDate'] as const) {
+      if (data[key] === undefined) continue;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(data[key])) || isNaN(Date.parse(data[key]))) {
+        throw new BadRequestException(`${key === 'startDate' ? 'Start' : 'End'} date is not a valid date`);
+      }
+      changes[key] = data[key];
+    }
+    const day = (d: any) => (d ? new Date(d).toISOString().slice(0, 10) : '');
+    const start = day(changes.startDate ?? cohort.startDate);
+    const end = day(changes.endDate ?? cohort.endDate);
+    if (start && end && end < start) throw new BadRequestException('End date must be on or after the start date');
+    await this.repo.update(id, changes);
+    return this.findOne(id);
   }
 
   async remove(id: string) {

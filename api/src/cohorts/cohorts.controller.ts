@@ -41,7 +41,8 @@ export class CohortsController {
   @Audit({
     action: 'COHORT_UPDATED', entity: 'Cohort', load: Cohort, track: ['name', 'status', 'startDate', 'endDate', 'description'], skipIfUnchanged: true,
     summary: ({ before, after }) =>
-      before?.status !== after?.status ? `Changed cohort ${after?.name} from ${before?.status} to ${after?.status}` : `Edited cohort ${after?.name}`,
+      before?.status !== after?.status ? `Changed cohort ${after?.name} from ${before?.status} to ${after?.status}`
+        : before?.name !== after?.name ? `Renamed cohort ${before?.name} to ${after?.name}` : `Edited cohort ${after?.name}`,
   })
   @Patch(':id')
   update(@Param('id') id: string, @Body() body: any) {

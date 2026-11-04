@@ -75,8 +75,8 @@ export function InstructorMaterials() {
       setForm({ title: '', url: '', type: 'link', week: 1 });
       setTimeout(() => setSaved(false), 3000);
       load(programId);
-    } catch {
-      setError('Failed to add material');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to add material');
     } finally {
       setSaving(false);
     }

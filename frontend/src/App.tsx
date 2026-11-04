@@ -34,6 +34,7 @@ import { LearnerDashboard } from './pages/learner/LearnerDashboard';
 import { LearnerPrograms } from './pages/learner/LearnerPrograms';
 import { LearnerSessions } from './pages/learner/LearnerSessions';
 import { LearnerAssignments } from './pages/learner/LearnerAssignments';
+import { LearnerMaterials } from './pages/learner/LearnerMaterials';
 import { LearnerCapstone } from './pages/learner/LearnerCapstone';
 import { LearnerProgress } from './pages/learner/LearnerProgress';
 import { LearnerPayments } from './pages/learner/LearnerPayments';
@@ -77,6 +78,7 @@ const learnerNav = [
   { name: 'Sessions', path: '/learner/sessions', icon: Calendar, permission: 'sessions' },
   { name: 'Calendar', path: '/learner/calendar', icon: CalendarDays, permission: 'calendar' },
   { name: 'Assignments', path: '/learner/assignments', icon: FileText, permission: 'assignments' },
+  { name: 'Materials', path: '/learner/materials', icon: Folder },
   { name: 'Capstone', path: '/learner/capstone', icon: Award, permission: 'capstone' },
   { name: 'Progress', path: '/learner/progress', icon: TrendingUp, permission: 'progress' },
   { name: 'Payments', path: '/learner/payments', icon: CreditCard, permission: 'payments' },
@@ -129,6 +131,7 @@ function LearnerPortal() {
           <Route path="sessions" element={<LearnerSessions />} />
           <Route path="calendar" element={<LearnerCalendar />} />
           <Route path="assignments" element={<LearnerAssignments />} />
+          <Route path="materials" element={<LearnerMaterials />} />
           <Route path="capstone" element={<LearnerCapstone />} />
           <Route path="progress" element={<LearnerProgress />} />
           <Route path="payments" element={<LearnerPayments />} />

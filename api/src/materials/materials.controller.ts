@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Param, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, UseGuards, Request, BadRequestException } from '@nestjs/common';
 import { MaterialsService } from './materials.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -15,11 +15,17 @@ export class MaterialsController {
   @Post()
   async create(@Body() body: any, @Request() req: any) {
     await this.access.assert(this.access.canStaffProgram(req.user, body.programId), 'You can only add materials to programs you teach');
+    // Learners open these links, so only plain web addresses are allowed.
+    if (!/^https?:\/\/\S+$/i.test(String(body.url ?? '').trim())) {
+      throw new BadRequestException('The link must start with http:// or https://');
+    }
+    if (!String(body.title ?? '').trim()) throw new BadRequestException('Give the material a title');
+    const week = Number(body.week ?? 1);
     return this.service.create({
-      title: body.title,
-      url: body.url,
-      type: body.type ?? 'link',
-      week: body.week ?? 1,
+      title: String(body.title).trim(),
+      url: String(body.url).trim(),
+      type: ['link', 'pdf', 'video', 'doc'].includes(body.type) ? body.type : 'link',
+      week: Number.isInteger(week) && week >= 1 && week <= 52 ? week : 1,
       program: { id: body.programId } as any,
       uploadedBy: { id: req.user.id } as any,
     });
