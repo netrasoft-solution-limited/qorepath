@@ -26,27 +26,22 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <AuthShell
-      eyebrow="Account help"
-      headline="Locked out? We'll get you"
-      accent="back in."
-      blurb="Enter the email you signed up with and we'll send a secure link to choose a new password."
-    >
+    <AuthShell>
       {sent ? (
         <div className="py-4 text-center">
-          <span className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-qore-light">
-            <MailCheck size={30} className="text-qore-medium" />
+          <span className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06]">
+            <MailCheck size={26} className="text-qore-highlight" />
           </span>
-          <h1 className="font-display text-2xl font-extrabold text-qore-dark">Check your email</h1>
-          <p className="mt-2 text-sm leading-relaxed text-gray-500">
-            If an account exists for <span className="font-semibold text-gray-700">{email}</span>, we've sent a link
+          <h1 className="font-display text-2xl font-bold">Check your email</h1>
+          <p className="mt-2 text-sm leading-relaxed text-white/60">
+            If an account exists for <span className="font-semibold text-white">{email}</span>, we've sent a link
             to reset your password. It expires in 1 hour.
           </p>
-          <p className="mt-4 text-xs text-gray-400">Didn't get it? Check your spam folder, or try again in a minute.</p>
+          <p className="mt-4 text-xs text-white/40">Didn't get it? Check your spam folder, or try again in a minute.</p>
         </div>
       ) : (
         <>
-          <FormHeader title="Forgot password?" subtitle="We'll email you a link to reset it." />
+          <FormHeader title="Reset your password" subtitle="Enter your email and we'll send you a link to choose a new one." />
           {error && <FormError>{error}</FormError>}
           <form onSubmit={handleSubmit} className="space-y-4">
             <Field label="Email address" icon={Mail} type="email" required autoComplete="email" autoFocus value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
@@ -55,7 +50,7 @@ export default function ForgotPasswordPage() {
         </>
       )}
       <p className="mt-7 text-center text-sm">
-        <Link to="/login" className="inline-flex items-center gap-1.5 font-bold text-qore-dark transition-colors hover:text-qore-medium">
+        <Link to="/login" className="inline-flex items-center gap-1.5 text-white/60 transition-colors hover:text-white">
           <ArrowLeft size={14} /> Back to sign in
         </Link>
       </p>

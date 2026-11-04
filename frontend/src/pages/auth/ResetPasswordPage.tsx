@@ -33,33 +33,26 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <AuthShell
-      eyebrow={isWelcome ? 'Welcome to the team' : 'Account help'}
-      headline={isWelcome ? 'Your NetraNova account is' : 'Choose a new password and'}
-      accent={isWelcome ? 'ready.' : 'carry on.'}
-      blurb={isWelcome
-        ? 'Set a password to finish setting up your account. You will land in your portal straight after signing in.'
-        : 'Pick something you have not used before. You will use it to sign in from now on.'}
-    >
+    <AuthShell>
       {!token ? (
         <div className="py-4 text-center">
-          <span className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-50"><Link2Off size={28} className="text-red-500" /></span>
-          <h1 className="font-display text-2xl font-extrabold text-qore-dark">Invalid link</h1>
-          <p className="mt-2 text-sm text-gray-500">This password link is missing its token. Please request a new one.</p>
-          <Link to="/forgot-password" className="mt-6 inline-block font-bold text-qore-dark hover:text-qore-medium">Request a new link →</Link>
+          <span className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06]"><Link2Off size={26} className="text-red-300" /></span>
+          <h1 className="font-display text-2xl font-bold">Invalid link</h1>
+          <p className="mt-2 text-sm text-white/60">This password link is missing its token. Please request a new one.</p>
+          <Link to="/forgot-password" className="mt-6 inline-block font-semibold text-white hover:text-qore-highlight">Request a new link →</Link>
         </div>
       ) : done ? (
         <div className="py-4 text-center">
-          <span className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-green-50"><CheckCircle2 size={30} className="text-green-600" /></span>
-          <h1 className="font-display text-2xl font-extrabold text-qore-dark">Password {isWelcome ? 'set' : 'updated'}</h1>
-          <p className="mt-2 text-sm text-gray-500">You can now sign in with your new password.</p>
-          <Link to="/login" className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FF8A00] to-[#FF6A00] py-3.5 text-sm font-bold text-white shadow-lg shadow-orange-500/30">
+          <span className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06]"><CheckCircle2 size={26} className="text-green-300" /></span>
+          <h1 className="font-display text-2xl font-bold">Password {isWelcome ? 'set' : 'updated'}</h1>
+          <p className="mt-2 text-sm text-white/60">You can now sign in with your new password.</p>
+          <Link to="/login" className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 text-sm font-semibold text-qore-dark hover:bg-white/90">
             Sign in <ArrowRight size={16} />
           </Link>
         </div>
       ) : (
         <>
-          <FormHeader title={isWelcome ? 'Set your password' : 'Choose a new password'} subtitle="At least 8 characters." />
+          <FormHeader title={isWelcome ? 'Welcome to NetraNova' : 'Choose a new password'} subtitle={isWelcome ? 'Set a password to finish setting up your account.' : 'At least 8 characters.'} />
           {error && (
             <FormError>
               {error}
