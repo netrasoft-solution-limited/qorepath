@@ -3,12 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Program } from './program.entity';
 import { NotificationsService } from '../mail/notifications.service';
+import { SettingsService } from '../settings/settings.service';
 
 @Injectable()
 export class ProgramsService {
   constructor(
     @InjectRepository(Program) private repo: Repository<Program>,
     private notifications: NotificationsService,
+    private settings: SettingsService,
   ) {}
 
   async create(data: any) {
@@ -16,7 +18,7 @@ export class ProgramsService {
       track: data.track,
       description: data.description,
       price: data.price ?? 0,
-      maxLearners: data.maxLearners ?? 30,
+      maxLearners: data.maxLearners || (await this.settings.getCohortRules()).defaultMaxLearners,
       cohort: { id: data.cohortId } as any,
       instructor: data.instructorId ? ({ id: data.instructorId } as any) : null,
       assistants: [],

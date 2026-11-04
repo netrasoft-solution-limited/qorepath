@@ -14,7 +14,7 @@ const included = [
   { icon: Video, title: 'Live classes', desc: 'Expert-led sessions you join from your browser — no pre-recorded playlists.' },
   { icon: CheckCircle2, title: 'Automatic attendance', desc: "You're marked present the moment you join a class." },
   { icon: Film, title: 'Every class recorded', desc: 'Replay any session from your dashboard if you miss it.' },
-  { icon: Wallet, title: 'Pay your way', desc: 'Pay in full, or in two instalments: half to start, the balance later.' },
+  { icon: Wallet, title: 'Pay your way', desc: 'Pay in full, or in two instalments: part to start, the balance later.' },
   { icon: BadgeCheck, title: 'Verifiable certificate', desc: 'A unique certificate number anyone can check on our public verification page.' },
   { icon: Bell, title: 'Never miss an update', desc: 'New sessions, grades and announcements are emailed to you as they happen.' },
 ];

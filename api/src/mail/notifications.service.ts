@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import { MailService, OutgoingEmail } from './mail.service';
 import * as T from './mail.templates';
+import { SettingsService } from '../settings/settings.service';
+import { emailKind } from './email-catalog';
 import { User, UserRole } from '../users/user.entity';
 import { Enrollment, EnrollmentStatus } from '../enrollments/enrollment.entity';
 import { Payment, PaymentStatus } from '../payments/payment.entity';
@@ -29,15 +31,22 @@ export class NotificationsService {
     private mail: MailService,
     private config: ConfigService,
     private dataSource: DataSource,
+    private settings: SettingsService,
   ) {}
 
   private get appUrl() {
     return (this.config.get<string>('FRONTEND_URL') ?? 'http://localhost:5173').replace(/\/$/, '');
   }
 
+  // `label` is the email's key in EMAIL_CATALOG: admins can switch it off or add a note to it.
   private run(label: string, build: () => Promise<OutgoingEmail[]>): void {
-    build()
-      .then((emails) => this.mail.send(emails))
+    this.settings.getEmailSettings()
+      .then(async (all) => {
+        const setting = all[label];
+        if (setting && !setting.enabled && !emailKind(label)?.locked) return;
+        const emails = await build();
+        return this.mail.send(setting?.note ? emails.map((e) => ({ ...e, ...T.withNote(e, setting.note) })) : emails.map((e) => ({ ...e, ...T.withNote(e) })));
+      })
       .catch((err) => this.logger.error(`Notification "${label}" failed`, err as Error));
   }
 

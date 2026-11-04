@@ -16,10 +16,12 @@ export function TrackListing() {
   const [cohorts, setCohorts] = useState<any[] | null>(null);
   const [policy, setPolicy] = useState<RefundPolicy | null>(null);
   const [pick, setPick] = useState(0);
+  const [payPlan, setPayPlan] = useState({ allowInstallments: true, firstInstallmentPercent: 50 });
 
   useEffect(() => {
     api.get('/cohorts').then(({ data }) => setCohorts(data.filter((c: any) => c.status === 'active' || c.status === 'upcoming'))).catch(() => setCohorts([]));
     api.get('/settings/refund-policy').then(({ data }) => setPolicy(data)).catch(() => {});
+    api.get('/settings/enrollment-rules').then(({ data }) => setPayPlan(data.paymentPlan)).catch(() => {});
     document.title = 'Pricing · NetraNova';
     return () => { document.title = 'NetraNova Live Learning Platform'; };
   }, []);
@@ -29,7 +31,9 @@ export function TrackListing() {
   const seen = new Set<string>();
   const examples = (live.length ? live : FALLBACK_TRACKS).filter((t) => (seen.has(t.track) ? false : (seen.add(t.track), true)));
   const ex = examples[Math.min(pick, examples.length - 1)];
-  const half = ex ? Math.round(ex.price / 2) : 0;
+  const pct = payPlan.firstInstallmentPercent;
+  const half = ex ? Math.round((ex.price * pct) / 100) : 0;
+  const firstShare = pct === 50 ? 'Half' : `${pct}%`;
 
   return (
     <div className="min-h-screen bg-[#F5F8FF]">
@@ -44,7 +48,7 @@ export function TrackListing() {
               One price.{' '}
               <span className="bg-gradient-to-r from-[#FFB020] to-[#FF6A00] bg-clip-text text-transparent">Two ways to pay.</span>
             </h1>
-            <p className="mx-auto mt-5 max-w-xl text-white/60">No subscriptions, no hidden fees. Pay for the whole cohort up front, or start with half and pay the rest later.</p>
+            <p className="mx-auto mt-5 max-w-xl text-white/60">No subscriptions, no hidden fees. Pay for the whole cohort up front{payPlan.allowInstallments ? `, or start with ${firstShare.toLowerCase()} and pay the rest later` : ''}.</p>
           </motion.div>
           {examples.length > 1 && (
             <div className="mt-9 inline-flex flex-wrap justify-center gap-2 rounded-2xl bg-white/10 p-1.5 backdrop-blur">
@@ -61,10 +65,12 @@ export function TrackListing() {
 
       {/* Plans */}
       {ex && (
-        <section className="relative z-10 mx-auto -mt-28 grid max-w-5xl grid-cols-1 gap-6 px-4 sm:px-6 md:grid-cols-2 lg:px-8">
+        <section className={`relative z-10 mx-auto -mt-28 grid grid-cols-1 gap-6 px-4 sm:px-6 lg:px-8 ${payPlan.allowInstallments ? 'max-w-5xl md:grid-cols-2' : 'max-w-xl'}`}>
           {[
             { name: 'Pay in full', now: ex.price, later: 0, note: 'One payment, done.', featured: false },
-            { name: 'Two instalments', now: half, later: ex.price - half, note: 'Half to secure your seat, the rest from your dashboard.', featured: true },
+            ...(payPlan.allowInstallments
+              ? [{ name: 'Two instalments', now: half, later: ex.price - half, note: `${firstShare} to secure your seat, the rest from your dashboard.`, featured: true }]
+              : []),
           ].map((plan, i) => (
             <motion.div
               key={plan.name}

@@ -50,7 +50,7 @@ export const FAQS = [
   { q: 'How long is each cohort?', a: 'Frontend and Backend Engineering run for 12 weeks; Product Design runs for 10 weeks. All sessions are live and scheduled around working hours.' },
   { q: 'What if I miss a live session?', a: 'Every live session is recorded and shows up in your dashboard, so you can catch up. Attendance is still tracked for your graduation record.' },
   { q: 'Is the certificate recognised by employers?', a: 'Every certificate has a unique number that anyone — including employers — can verify on our public verification page.' },
-  { q: 'Can I pay in instalments?', a: 'Yes. Choose the two-instalment plan at checkout: pay half to secure your seat and settle the balance from your Payments page.' },
+  { q: 'Can I pay in instalments?', a: 'Yes. Choose the two-instalment plan at checkout: pay part of the fee to secure your seat and settle the balance from your Payments page.' },
   { q: 'What if I need to withdraw?', a: 'You can withdraw from your dashboard. Refunds follow our published refund policy and are reviewed by our team before any money moves.' },
 ];
 

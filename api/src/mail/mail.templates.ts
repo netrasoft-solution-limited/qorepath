@@ -70,11 +70,22 @@ function layout(opts: { heading: string; body: string; cta?: { label: string; ur
 <tr><td style="padding:28px;font-size:15px;line-height:1.6">
 <h1 style="margin:0 0 16px;font-size:20px;line-height:1.3;color:${BRAND}">${esc(opts.heading)}</h1>
 ${opts.body}
+${NOTE_MARKER}
 ${opts.cta ? button(opts.cta.label, opts.cta.url) : ''}
 ${opts.footnote ? `<p style="margin:20px 0 0;font-size:12px;color:#6b7280">${opts.footnote}</p>` : ''}
 </td></tr>
 <tr><td style="padding:16px 28px;background:#f9fafb;color:#9ca3af;font-size:12px">You're receiving this because you have a NetraNova account.</td></tr>
 </table></td></tr></table></body></html>`;
+}
+
+// Where an admin's extra note (Settings → Notification Templates) goes in every email.
+const NOTE_MARKER = '<!--admin-note-->';
+
+export function withNote(email: EmailContent, note?: string): EmailContent {
+  const box = note?.trim()
+    ? `<div style="margin:18px 0 4px;padding:14px 16px;border-left:3px solid ${ACCENT};background:#f5f8ff;border-radius:8px">${paragraphs(note)}</div>`
+    : '';
+  return { ...email, html: email.html.replace(NOTE_MARKER, box) };
 }
 
 const hi = (name?: string) => `<p style="margin:0 0 14px">Hi ${esc(name || 'there')},</p>`;

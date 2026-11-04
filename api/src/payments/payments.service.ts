@@ -16,6 +16,7 @@ import { Program } from '../programs/program.entity';
 import { PaystackService } from './paystack.service';
 import { NotificationsService } from '../mail/notifications.service';
 import { AuditService } from '../audit/audit.service';
+import { SettingsService } from '../settings/settings.service';
 
 // A checkout Paystack reports as "abandoned" is only closed once it's this old,
 // so a learner who is still on the payment screen isn't cut off.
@@ -35,7 +36,23 @@ export class PaymentsService implements OnModuleInit, OnModuleDestroy {
     private config: ConfigService,
     private notifications: NotificationsService,
     private audit: AuditService,
+    private settings: SettingsService,
   ) {}
+
+  /** Cohorts that have finished, or passed the late-enrollment window (Settings → Cohort Rules), are closed. */
+  private assertEnrollmentOpen(cohort: any, lateEnrollmentDays: number | null) {
+    if (!cohort) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const day = (d: any) => (d ? new Date(d).toISOString().slice(0, 10) : '');
+    if (['completed', 'cancelled'].includes(cohort.status) || (cohort.endDate && day(cohort.endDate) < today)) {
+      throw new BadRequestException('Enrollment for this cohort has closed.');
+    }
+    if (lateEnrollmentDays !== null && cohort.startDate) {
+      const last = new Date(cohort.startDate);
+      last.setUTCDate(last.getUTCDate() + lateEnrollmentDays);
+      if (day(last) < today) throw new BadRequestException('Enrollment for this cohort has closed — it started too long ago to join.');
+    }
+  }
 
   create(data: Partial<Payment>) {
     return this.repo.save(this.repo.create(data));
@@ -85,6 +102,11 @@ export class PaymentsService implements OnModuleInit, OnModuleDestroy {
       relations: { cohort: true },
     });
     if (!program) throw new NotFoundException('Program not found');
+    const [rules, payPlan] = await Promise.all([this.settings.getCohortRules(), this.settings.getPaymentPlan()]);
+    this.assertEnrollmentOpen(program.cohort, rules.lateEnrollmentDays);
+    if (plan === 'installments' && !payPlan.allowInstallments) {
+      throw new BadRequestException('Paying in instalments is not available right now. Please pay in full.');
+    }
 
     // One active program at a time: look at the learner's approved enrollments.
     const approved = await this.enrollmentRepo
@@ -103,7 +125,7 @@ export class PaymentsService implements OnModuleInit, OnModuleDestroy {
     const ongoing = approved.find((e) =>
       ['active', 'upcoming'].includes(e.program?.cohort?.status),
     );
-    if (ongoing) {
+    if (ongoing && rules.oneProgramAtATime) {
       throw new BadRequestException(
         'Finish your current program before enrolling in another.',
       );
@@ -132,11 +154,11 @@ export class PaymentsService implements OnModuleInit, OnModuleDestroy {
       method: PaymentMethod.PAYSTACK,
     };
 
-    // Installments: pay 50% now to enroll, the remaining 50% becomes a pending
-    // balance the learner settles later from their Payments page.
+    // Installments: pay firstInstallmentPercent now to enroll (Settings → Payment Rules); the rest
+    // becomes a pending balance the learner settles later from their Payments page.
     if (plan === 'installments') {
       const planReference = `PLAN-${this.randomSuffix()}`;
-      const firstAmount = Math.round(amount / 2);
+      const firstAmount = Math.round((amount * payPlan.firstInstallmentPercent) / 100);
       const secondAmount = amount - firstAmount;
       const ref1 = this.newReference();
 

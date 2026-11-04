@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, Lock, ShieldCheck, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
 import api from '../lib/api';
@@ -8,7 +8,7 @@ type Plan = 'full' | 'installments';
 
 // ── Paystack Payment Modal ──────────────────────────────────────────────────
 // Two modes:
-//   • program mode  (pass `program`): choose full or 2×50% installments → /payments/initialize
+//   • program mode  (pass `program`): choose full or 2 installments (split set in Settings) → /payments/initialize
 //   • balance mode  (pass `payment`): pay a pending installment balance     → /payments/:id/checkout
 export function PaymentModal({
   program,
@@ -26,6 +26,13 @@ export function PaymentModal({
   // confirm → opening → paying (Paystack popup) → verifying → success | error
   const [step, setStep] = useState<'confirm' | 'opening' | 'paying' | 'verifying' | 'success' | 'error'>('confirm');
   const [error, setError] = useState('');
+  // Instalment rules from Settings → Payment Rules (defaults match the server's).
+  const [payPlan, setPayPlan] = useState({ allowInstallments: true, firstInstallmentPercent: 50 });
+  useEffect(() => {
+    if (isBalance) return;
+    api.get('/settings/enrollment-rules').then(({ data }) => setPayPlan(data.paymentPlan)).catch(() => {});
+  }, [isBalance]);
+  useEffect(() => { if (!payPlan.allowInstallments) setPlan('full'); }, [payPlan.allowInstallments]);
 
   const track = isBalance ? payment.program?.track : program?.track;
   const cohortName = isBalance
@@ -33,7 +40,7 @@ export function PaymentModal({
     : program?.cohortName;
 
   const basePrice = Number(program?.price ?? 0);
-  const firstInstallment = Math.round(basePrice / 2);
+  const firstInstallment = Math.round((basePrice * payPlan.firstInstallmentPercent) / 100);
   const secondInstallment = basePrice - firstInstallment;
   const chargeNow = isBalance
     ? Number(payment.amount)
@@ -161,7 +168,7 @@ export function PaymentModal({
               )}
 
               {/* Plan selector (program mode only) */}
-              {!isBalance && (
+              {!isBalance && payPlan.allowInstallments && (
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setPlan('full')}

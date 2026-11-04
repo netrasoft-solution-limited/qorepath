@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Settings, Save, CheckCircle } from 'lucide-react';
+import { Save, CheckCircle } from 'lucide-react';
 import api from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { AdminIntegrations } from './AdminIntegrations';
+import { CohortRulesTab } from './settings/CohortRulesTab';
+import { InstalmentPlanCard } from './settings/InstalmentPlanCard';
+import { EmailTemplatesTab } from './settings/EmailTemplatesTab';
 
 export function AdminSettings() {
   const { user, refreshUser } = useAuth();
@@ -266,17 +269,15 @@ export function AdminSettings() {
                   <Save size={18} /> {policySaving ? 'Saving…' : 'Save Policy'}
                 </button>
               </div>
+              <InstalmentPlanCard />
             </motion.div>
           )}
 
+          {activeTab === 'cohorts' && <CohortRulesTab />}
+          {activeTab === 'notifications' && <EmailTemplatesTab />}
+
           {activeTab === 'integrations' && user?.isSuperAdmin && <AdminIntegrations />}
 
-          {activeTab !== 'tracks' && activeTab !== 'payments' && activeTab !== 'integrations' && (
-            <div className="py-12 flex flex-col items-center justify-center text-gray-400">
-              <Settings size={48} className="mb-4 text-gray-300" />
-              <p>Settings panel for {tabs.find((t) => t.id === activeTab)?.label} will be added here.</p>
-            </div>
-          )}
         </div>
       </div>
     </div>
