@@ -9,6 +9,7 @@ export interface OutgoingEmail {
   to: string;
   subject: string;
   html: string;
+  replyTo?: string;
 }
 
 @Injectable()
@@ -26,7 +27,7 @@ export class MailService {
       const res = await fetch(`${RESEND_BASE}/emails`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: mailFrom, to: [email.to], subject: email.subject, html: email.html }),
+        body: JSON.stringify({ from: mailFrom, to: [email.to], subject: email.subject, html: email.html, ...(email.replyTo ? { reply_to: email.replyTo } : {}) }),
       });
       if (res.ok) return { ok: true };
       const body = (await res.json().catch(() => null)) as any;

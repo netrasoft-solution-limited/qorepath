@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Setting } from './setting.entity';
@@ -31,6 +31,21 @@ export interface PaymentPlan {
 
 export interface EmailSetting { enabled: boolean; note: string }
 export type EmailSettings = Record<string, EmailSetting>;
+
+export const SOCIALS = ['instagram', 'x', 'linkedin', 'facebook', 'youtube', 'tiktok'] as const;
+export interface SiteInfo {
+  contactEmail: string; // where contact-form messages go, and shown on the Contact page
+  phone: string;
+  whatsapp: string;
+  address: string;
+  hours: string;
+  socials: Partial<Record<(typeof SOCIALS)[number], string>>;
+  termsText: string;
+  privacyText: string;
+}
+export const EMPTY_SITE_INFO: SiteInfo = { contactEmail: '', phone: '', whatsapp: '', address: '', hours: '', socials: {}, termsText: '', privacyText: '' };
+const SITE_INFO_KEY = 'site_info';
+const MAX_LEGAL = 50_000;
 
 const REFUND_POLICY_KEY = 'refund_policy';
 const COHORT_RULES_KEY = 'cohort_rules';
@@ -110,6 +125,35 @@ export class SettingsService {
       firstInstallmentPercent: Math.round(clampNum(patch.firstInstallmentPercent, current.firstInstallmentPercent, 10, 90)),
     };
     await this.set(PAYMENT_PLAN_KEY, next);
+    return next;
+  }
+
+  async getSiteInfo(): Promise<SiteInfo> {
+    const saved = await this.get<Partial<SiteInfo>>(SITE_INFO_KEY, {});
+    return { ...EMPTY_SITE_INFO, ...saved, socials: { ...(saved.socials ?? {}) } };
+  }
+
+  async setSiteInfo(patch: Partial<SiteInfo>): Promise<SiteInfo> {
+    const next = await this.getSiteInfo();
+    const text = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : undefined);
+    for (const [k, max] of [['phone', 40], ['whatsapp', 40], ['address', 300], ['hours', 120], ['termsText', MAX_LEGAL], ['privacyText', MAX_LEGAL]] as const) {
+      const v = text(patch[k], max);
+      if (v !== undefined) next[k] = v;
+    }
+    const email = text(patch.contactEmail, 200);
+    if (email !== undefined) {
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new BadRequestException('Contact email must be a valid email address');
+      next.contactEmail = email;
+    }
+    if (patch.socials && typeof patch.socials === 'object') {
+      for (const k of SOCIALS) {
+        const v = text((patch.socials as any)[k], 300);
+        if (v === undefined) continue;
+        if (v && !/^https:\/\/[^\s]+$/.test(v)) throw new BadRequestException(`The ${k === 'x' ? 'X' : k} link must start with https://`);
+        if (v) next.socials[k] = v; else delete next.socials[k];
+      }
+    }
+    await this.set(SITE_INFO_KEY, next);
     return next;
   }
 

@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, Menu, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { TRACKS } from '../pages/public/trackContent';
+import { useSiteInfo } from '../lib/siteInfo';
+import { SocialLinks } from '../components/SocialLinks';
 
 const NAV = [
   { name: 'Home', path: '/public/home' },
@@ -11,6 +13,7 @@ const NAV = [
   { name: 'Tracks', path: '/public/courses' },
   { name: 'Pricing', path: '/public/tracks', exact: true },
   { name: 'Verify', path: '/public/verify' },
+  { name: 'Contact', path: '/public/contact' },
 ];
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -19,6 +22,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const site = useSiteInfo();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -38,7 +42,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
 
   const footerColumns = [
     { title: 'Tracks', links: Object.values(TRACKS).map((t) => ({ label: t.track, path: `/public/tracks/${t.slug}` })) },
-    { title: 'Explore', links: [{ label: 'About NetraNova', path: '/public/about' }, { label: 'All tracks', path: '/public/courses' }, { label: 'Pricing & refunds', path: '/public/tracks' }] },
+    { title: 'Explore', links: [{ label: 'About NetraNova', path: '/public/about' }, { label: 'All tracks', path: '/public/courses' }, { label: 'Pricing & refunds', path: '/public/tracks' }, { label: 'Contact us', path: '/public/contact' }] },
     { title: 'Learners', links: [{ label: 'Verify a certificate', path: '/public/verify' }, { label: 'Log in', path: '/login' }, { label: 'Create an account', path: '/register' }, { label: 'Forgot password', path: '/forgot-password' }] },
   ];
 
@@ -132,6 +136,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               <Link to="/register" className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#FFB020] to-[#FF6A00] px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-500/20">
                 Get notified about new cohorts <ArrowRight size={15} />
               </Link>
+              <SocialLinks socials={site?.socials} className="mt-6" />
             </div>
             <div className="grid grid-cols-2 gap-10 sm:grid-cols-3">
               {footerColumns.map((col) => (
@@ -150,7 +155,11 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
           </div>
           <div className="mt-14 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs text-white/40 md:flex-row">
             <p>© {new Date().getFullYear()} NetraNova · A product of <a href="https://netrasoft.co" className="text-white/60 hover:text-white">NetraSoft Solutions</a></p>
-            <p>Payments secured by Paystack</p>
+            <p className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+              {site?.termsText && <Link to="/public/terms" className="hover:text-white">Terms</Link>}
+              {site?.privacyText && <Link to="/public/privacy" className="hover:text-white">Privacy</Link>}
+              <span>Payments secured by Paystack</span>
+            </p>
           </div>
         </div>
       </footer>

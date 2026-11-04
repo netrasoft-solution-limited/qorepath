@@ -3,6 +3,7 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, User, Phone, ArrowRight, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSiteInfo } from '../../lib/siteInfo';
 
 // Product facts (not marketing numbers) for the panel footer.
 const highlights = [
@@ -46,6 +47,7 @@ export default function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const site = useSiteInfo();
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -277,13 +279,15 @@ export default function RegisterPage() {
               <PasswordStrength password={form.password} />
             </div>
 
-            {/* Terms notice */}
-            <p className="text-xs text-gray-400 leading-relaxed pt-1">
-              By creating an account you agree to our{' '}
-              <Link to="/public/about" className="text-qore-medium hover:underline font-medium">Terms of Service</Link>
-              {' '}and{' '}
-              <Link to="/public/about" className="text-qore-medium hover:underline font-medium">Privacy Policy</Link>.
-            </p>
+            {/* Terms notice — only once the legal pages are published (Settings → Site & Contact) */}
+            {(site?.termsText || site?.privacyText) && (
+              <p className="text-xs text-gray-400 leading-relaxed pt-1">
+                By creating an account you agree to our{' '}
+                {site.termsText && <Link to="/public/terms" target="_blank" className="text-qore-medium hover:underline font-medium">Terms of Service</Link>}
+                {site.termsText && site.privacyText && ' and '}
+                {site.privacyText && <Link to="/public/privacy" target="_blank" className="text-qore-medium hover:underline font-medium">Privacy Policy</Link>}.
+              </p>
+            )}
 
             {/* Submit */}
             <button

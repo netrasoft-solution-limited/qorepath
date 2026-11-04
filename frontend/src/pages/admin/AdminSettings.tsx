@@ -7,6 +7,7 @@ import { AdminIntegrations } from './AdminIntegrations';
 import { CohortRulesTab } from './settings/CohortRulesTab';
 import { InstalmentPlanCard } from './settings/InstalmentPlanCard';
 import { EmailTemplatesTab } from './settings/EmailTemplatesTab';
+import { SiteContactTab } from './settings/SiteContactTab';
 
 export function AdminSettings() {
   const { user, refreshUser } = useAuth();
@@ -54,6 +55,7 @@ export function AdminSettings() {
     { id: 'cohorts', label: 'Cohort Rules' },
     { id: 'payments', label: 'Payment Rules' },
     { id: 'notifications', label: 'Notification Templates' },
+    { id: 'site', label: 'Site & Contact' },
     // Credentials screen — super admins only (also enforced by the API).
     ...(user?.isSuperAdmin ? [{ id: 'integrations', label: 'Integrations' }] : []),
   ];
@@ -275,6 +277,7 @@ export function AdminSettings() {
 
           {activeTab === 'cohorts' && <CohortRulesTab />}
           {activeTab === 'notifications' && <EmailTemplatesTab />}
+          {activeTab === 'site' && <SiteContactTab />}
 
           {activeTab === 'integrations' && user?.isSuperAdmin && <AdminIntegrations />}
 

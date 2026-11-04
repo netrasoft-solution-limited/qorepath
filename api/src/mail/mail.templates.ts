@@ -372,3 +372,21 @@ export function programOpenEmail(p: {
     }),
   };
 }
+
+// ── Contact form ─────────────────────────────────────────────────────────────
+
+export function contactMessageEmail(p: { name: string; email: string; phone?: string; topic?: string; message: string }): EmailContent {
+  return {
+    subject: `Website message${p.topic ? ` (${p.topic})` : ''} from ${p.name}`,
+    html: layout({
+      heading: 'New message from the website',
+      body: `${details([
+        ['From', esc(p.name)],
+        ['Email', esc(p.email)],
+        ['Phone', esc(p.phone ?? '')],
+        ['Topic', esc(p.topic ?? '')],
+      ])}${paragraphs(p.message)}`,
+      footnote: 'Reply to this email to answer them directly.',
+    }),
+  };
+}

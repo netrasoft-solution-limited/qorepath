@@ -19,6 +19,8 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import { PublicHome } from './pages/public/PublicHome';
 import { PublicAbout } from './pages/public/PublicAbout';
 import { PublicVerify } from './pages/public/PublicVerify';
+import { PublicContact } from './pages/public/PublicContact';
+import { PublicLegal } from './pages/public/PublicLegal';
 import { CourseListing } from './pages/public/CourseListing';
 import { TrackListing } from './pages/public/TrackListing';
 import { TrackDetail } from './pages/public/TrackDetail';
@@ -202,6 +204,9 @@ export function App() {
           <Route path="/public/home" element={<PublicLayout><PublicHome /></PublicLayout>} />
           <Route path="/public/about" element={<PublicLayout><PublicAbout /></PublicLayout>} />
           <Route path="/public/verify" element={<PublicLayout><PublicVerify /></PublicLayout>} />
+          <Route path="/public/contact" element={<PublicLayout><PublicContact /></PublicLayout>} />
+          <Route path="/public/terms" element={<PublicLayout><PublicLegal kind="terms" /></PublicLayout>} />
+          <Route path="/public/privacy" element={<PublicLayout><PublicLegal kind="privacy" /></PublicLayout>} />
           <Route path="/public/verify/:certificateNumber" element={<PublicLayout><PublicVerify /></PublicLayout>} />
           <Route path="/public/courses" element={<PublicLayout><CourseListing /></PublicLayout>} />
           <Route path="/public/tracks" element={<PublicLayout><TrackListing /></PublicLayout>} />

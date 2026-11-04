@@ -16,7 +16,7 @@ export function Faq() {
           </h2>
           <p className="mt-4 max-w-sm text-gray-500">
             Can't find what you're after?{' '}
-            <Link to="/public/about" className="font-semibold text-qore-medium hover:underline">Get in touch</Link>.
+            <Link to="/public/contact" className="font-semibold text-qore-medium hover:underline">Get in touch</Link>.
           </p>
         </div>
         <div className="divide-y divide-gray-100 border-y border-gray-100">
