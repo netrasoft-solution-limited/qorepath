@@ -180,7 +180,7 @@ export function LearnerDashboard() {
       {/* Next session card */}
       {upcomingSession && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-          className="bg-qore-dark text-white rounded-2xl p-6 flex items-center justify-between"
+          className="nn-hero text-white rounded-2xl p-6 flex items-center justify-between"
         >
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">

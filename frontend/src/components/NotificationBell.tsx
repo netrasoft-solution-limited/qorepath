@@ -103,7 +103,7 @@ export function NotificationBell({ align = 'right' }: { align?: 'right' | 'left'
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className={`absolute top-12 z-50 w-[min(92vw,380px)] overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl shadow-qore-dark/15 ${align === 'right' ? 'right-0' : 'left-0'}`}
+            className={`absolute top-12 z-50 w-[min(92vw,380px)] overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl shadow-qore-dark/15 max-md:fixed max-md:inset-x-3 max-md:top-[4.5rem] max-md:w-auto ${align === 'right' ? 'right-0' : 'left-0'}`}
             role="dialog"
             aria-label="Notifications"
           >

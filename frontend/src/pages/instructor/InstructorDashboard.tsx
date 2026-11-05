@@ -65,7 +65,7 @@ export function InstructorDashboard() {
       </div>
 
       {upcomingSession && (
-        <div className="bg-qore-dark text-white rounded-2xl p-6">
+        <div className="nn-hero text-white rounded-2xl p-6">
           <p className="text-white/60 text-sm mb-1">Next Session</p>
           <p className="font-bold text-xl">{upcomingSession.title}</p>
           <p className="text-qore-highlight text-sm mt-1">
