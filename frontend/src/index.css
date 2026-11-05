@@ -20,6 +20,7 @@ body {
 @keyframes nn-marquee { to { transform: translateX(-50%); } }
 @keyframes nn-twinkle { 0%, 100% { opacity: .25; } 50% { opacity: .9; } }
 @keyframes nn-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes nn-aurora { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(6vw, 4vh) scale(1.12); } 66% { transform: translate(-4vw, 6vh) scale(.94); } }
 @keyframes nn-pulse-ring { 0% { transform: scale(.85); opacity: .7; } 100% { transform: scale(1.6); opacity: 0; } }
 
 .nn-spin { animation: nn-spin var(--nn-dur, 40s) linear infinite; }
@@ -28,6 +29,7 @@ body {
 .nn-marquee-rev { animation: nn-marquee var(--nn-dur, 40s) linear infinite reverse; }
 .nn-float { animation: nn-float 6s ease-in-out infinite; }
 .nn-pulse-ring { animation: nn-pulse-ring 2.4s ease-out infinite; }
+.nn-aurora { animation: nn-aurora 22s ease-in-out infinite; }
 .nn-pause-on-hover:hover .nn-marquee,
 .nn-pause-on-hover:hover .nn-marquee-rev { animation-play-state: paused; }
 
@@ -56,5 +58,5 @@ body {
 .nn-spotlight:hover::before { opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
-  .nn-spin, .nn-spin-rev, .nn-marquee, .nn-marquee-rev, .nn-float, .nn-pulse-ring, .nn-stars { animation: none !important; }
+  .nn-spin, .nn-spin-rev, .nn-marquee, .nn-marquee-rev, .nn-float, .nn-pulse-ring, .nn-stars, .nn-aurora { animation: none !important; }
 }

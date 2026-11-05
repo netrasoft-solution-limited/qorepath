@@ -2,42 +2,15 @@ import { useState, type ReactNode, type InputHTMLAttributes } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Eye, EyeOff, type LucideIcon } from 'lucide-react';
+import { AuthBackdrop } from './AuthBackdrop';
 
 // Shared look for sign-in, sign-up and password pages: one centred column on a dark
-// navy canvas (in the spirit of Resend's sign-in), with faint stars and orbit rings
-// behind it for the NetraNova feel.
-
-function Backdrop() {
-  return (
-    <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden>
-      <div className="nn-stars absolute inset-0 opacity-40" />
-      {/* soft glow behind the form */}
-      <div className="absolute left-1/2 top-[38%] h-[34rem] w-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-qore-medium/25 blur-[120px]" />
-      <div className="absolute left-1/2 top-[38%] h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#FF6A00]/10 blur-[90px]" />
-      {/* faint orbit rings */}
-      {[560, 820, 1080].map((s, i) => (
-        <div
-          key={s}
-          className={`absolute left-1/2 top-[38%] -translate-x-1/2 -translate-y-1/2 rounded-full border ${i === 1 ? 'border-dashed border-white/[0.06]' : 'border-white/[0.05]'}`}
-          style={{ width: s, height: s }}
-        />
-      ))}
-      {/* one slow moving "planet" on the middle ring */}
-      <div className="absolute left-1/2 top-[38%]" style={{ width: 820, height: 820, marginLeft: -410, marginTop: -410 }}>
-        <div className="nn-spin h-full w-full" style={{ ['--nn-dur' as any]: '90s' }}>
-          <span className="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#FFB020] shadow-[0_0_18px_4px_rgba(255,176,32,0.45)]" />
-        </div>
-      </div>
-      {/* fade the bottom */}
-      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#06133A] to-transparent" />
-    </div>
-  );
-}
+// navy canvas (in the spirit of Resend's sign-in), over the animated nova scene in AuthBackdrop.
 
 export function AuthShell({ badge, children, below }: { badge?: ReactNode; children: ReactNode; below?: ReactNode }) {
   return (
     <div className="relative min-h-screen bg-[#071743] text-white">
-      <Backdrop />
+      <AuthBackdrop />
       <div className="relative flex min-h-screen flex-col items-center px-5 py-10">
         <Link to="/public/home" aria-label="NetraNova home" className="mt-2 flex items-center gap-2.5 sm:mt-6">
           <img src="/netranova-icon.webp" alt="" className="h-10 w-10" />
