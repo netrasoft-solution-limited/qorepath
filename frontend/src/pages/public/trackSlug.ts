@@ -7,6 +7,8 @@ const TRACK_SLUGS: Record<string, string> = {
   'Data Analysis':          'data-analysis',
   'Cloud Engineering':      'cloud',
   'Cybersecurity':          'cybersecurity',
+  'Quality Assurance (QA)': 'qa',
+  'Quality Assurance':      'qa',
 };
 
 export function toSlug(track: string) {

@@ -25,6 +25,7 @@ const TRACK_OPTIONS = [
   'Cybersecurity',
   'Product Management',
   'Mobile Development',
+  'Quality Assurance (QA)',
 ];
 
 export function AdminCohorts() {

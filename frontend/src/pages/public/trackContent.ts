@@ -119,6 +119,41 @@ export const TRACKS: Record<string, TrackContent> = {
       { week: 10, title: 'Portfolio & demo day', topics: ['Polishing case studies', 'Presenting your work', 'Next steps'] },
     ],
   },
+  qa: {
+    slug: 'qa',
+    track: 'Quality Assurance (QA)',
+    tagline: 'Find the bugs before your users do.',
+    overview:
+      'Learn to test software the way product teams do: plan tests, find and report bugs clearly, test APIs, and automate checks so every release is safer. You work on real apps each week and finish with a full test project for your portfolio.',
+    duration: '12 weeks',
+    format: 'Live online classes',
+    schedule: '2 evening classes per week',
+    level: 'Beginner friendly',
+    outcomes: [
+      'Explain how testing fits into the way software is built and released',
+      'Write clear test plans, test cases and bug reports',
+      'Test web and mobile apps by hand, including accessibility checks',
+      'Test APIs with Postman and check data with basic SQL',
+      'Write automated browser tests with Playwright',
+      'Run tests automatically on every change with GitHub Actions',
+      'Check speed and basic security with performance and security tools',
+      'Present a complete test project to a panel',
+    ],
+    curriculum: [
+      { week: 1, title: 'What QA does', topics: ['How software is built and released', 'Testing levels and types', 'Agile teams and where QA fits'] },
+      { week: 2, title: 'Test design', topics: ['Requirements and acceptance criteria', 'Boundary values and equivalence classes', 'Writing test cases'] },
+      { week: 3, title: 'Manual and exploratory testing', topics: ['Exploratory sessions', 'Cross-browser and mobile checks', 'Accessibility basics'] },
+      { week: 4, title: 'Bugs and test management', topics: ['Writing a good bug report', 'Severity and priority', 'Jira and test plans'] },
+      { week: 5, title: 'API testing', topics: ['HTTP and REST', 'Postman collections and assertions', 'Testing errors and edge cases'] },
+      { week: 6, title: 'SQL for testers', topics: ['Querying test data', 'Checking what the app saved', 'Preparing test data'] },
+      { week: 7, title: 'Programming for testers', topics: ['JavaScript or TypeScript basics', 'Git and GitHub', 'Reading the code you test'] },
+      { week: 8, title: 'Browser automation', topics: ['Playwright setup', 'Locators and assertions', 'Page objects'] },
+      { week: 9, title: 'Reliable test suites', topics: ['Fixing flaky tests', 'Test data and environments', 'Reports and screenshots'] },
+      { week: 10, title: 'Automation in the pipeline', topics: ['Running tests in GitHub Actions', 'API tests in code', 'Release checklists'] },
+      { week: 11, title: 'Performance and security', topics: ['Load tests with k6', 'OWASP basics with ZAP', 'Capstone checkpoint'] },
+      { week: 12, title: 'Capstone & demo day', topics: ['Full test project on a real app', 'Bug report and quality summary', 'Present to a panel'] },
+    ],
+  },
 };
 
 /** Generic content for a track that exists in the database but has no built-in page copy. */
