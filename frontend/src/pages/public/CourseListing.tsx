@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BadgeCheck, CalendarDays, Film, Video, Wallet } from 'lucide-react';
-import { TRACKS } from './trackContent';
+import { TRACKS, genericTrack } from './trackContent';
 import { useOpenPrograms, shortDate, type OpenProgram } from './home/useOpenPrograms';
 import { TiltCard, type Card } from './home/TrackShowcase';
 import { naira, trackIcon } from './home/data';
@@ -26,16 +26,16 @@ function buildRows(programs: OpenProgram[]): Row[] {
   for (const p of programs) bySlug.set(p.slug, [...(bySlug.get(p.slug) ?? []), p]);
   const slugs = [...new Set([...Object.keys(TRACKS), ...bySlug.keys()])];
   return slugs.map((slug) => {
-    const t = TRACKS[slug];
     const open = bySlug.get(slug) ?? [];
+    const t = TRACKS[slug] ?? genericTrack(slug, open[0].track);
     const priced = open.filter((o) => o.price > 0).map((o) => o.price);
     return {
       slug,
-      track: t?.track ?? open[0].track,
-      tagline: t?.tagline ?? open[0].description ?? 'Live, expert-led training with real projects.',
-      duration: t?.duration ?? '',
-      level: t?.level ?? '',
-      schedule: t?.schedule ?? '',
+      track: t.track,
+      tagline: TRACKS[slug]?.tagline ?? open[0].description ?? t.tagline,
+      duration: open[0]?.duration || t.duration,
+      level: t.level,
+      schedule: open[0]?.schedule || t.schedule,
       next: open[0],
       fromPrice: priced.length ? Math.min(...priced) : null,
     };

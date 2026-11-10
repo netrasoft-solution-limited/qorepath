@@ -6,6 +6,8 @@ export interface OpenProgram {
   id: string;
   track: string;
   description?: string;
+  duration?: string;
+  schedule?: string;
   cohort: string;
   startDate?: string;
   price: number;
@@ -39,6 +41,8 @@ export function useOpenPrograms(): OpenProgram[] | null {
               id: p.id,
               track: p.track,
               description: p.description,
+              duration: p.duration || undefined,
+              schedule: p.schedule || undefined,
               cohort: cohort.name,
               startDate: cohort.startDate,
               price: Number(p.price) || 0,

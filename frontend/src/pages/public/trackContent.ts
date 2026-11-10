@@ -142,6 +142,18 @@ export const TRACKS: Record<string, TrackContent> = {
   },
 };
 
+export const DEFAULT_DURATION = '2 months (8 weeks)';
+export const DEFAULT_SCHEDULE = 'Fri, Sat & Sun · 4:30–6:30pm WAT';
+
+// Entry level for tracks without full built-in page copy (keyed by URL slug).
+const LEVELS: Record<string, string> = {
+  'data-analysis': 'Beginner friendly',
+  cloud: 'Beginner to intermediate',
+  cybersecurity: 'Beginner friendly',
+  'product-management': 'Beginner friendly',
+  'mobile-development': 'Basic JavaScript needed',
+};
+
 /** Generic content for a track that exists in the database but has no built-in page copy. */
 export function genericTrack(slug: string, track: string): TrackContent {
   return {
@@ -149,10 +161,10 @@ export function genericTrack(slug: string, track: string): TrackContent {
     track,
     tagline: 'Live, expert-led training with real projects.',
     overview: `Learn ${track} live with an expert tutor and a cohort of peers. Every week you build something real and get feedback on it.`,
-    duration: '',
+    duration: DEFAULT_DURATION,
     format: 'Live online classes',
-    schedule: '',
-    level: '',
+    schedule: DEFAULT_SCHEDULE,
+    level: LEVELS[slug] ?? 'Beginner friendly',
     outcomes: [],
     curriculum: [],
   };
