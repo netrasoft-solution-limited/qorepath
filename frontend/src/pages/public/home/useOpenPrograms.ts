@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import api from '../../../lib/api';
 import { toSlug } from '../trackSlug';
 
+const TRACK_ORDER = ['frontend', 'backend', 'product-design', 'data-analysis', 'cloud', 'cybersecurity', 'product-management', 'mobile-development', 'qa'];
+
 export interface OpenProgram {
   id: string;
   track: string;
@@ -50,7 +52,9 @@ export function useOpenPrograms(): OpenProgram[] | null {
             });
           }
         }
-        open.sort((a, b) => +new Date(a.startDate ?? 0) - +new Date(b.startDate ?? 0));
+        // Soonest cohort first; within a cohort, tracks keep a fixed, familiar order.
+        const rank = (slug: string) => { const i = TRACK_ORDER.indexOf(slug); return i < 0 ? TRACK_ORDER.length : i; };
+        open.sort((a, b) => +new Date(a.startDate ?? 0) - +new Date(b.startDate ?? 0) || rank(a.slug) - rank(b.slug) || a.track.localeCompare(b.track));
         if (alive) setPrograms(open);
       })
       .catch(() => alive && setPrograms([]));

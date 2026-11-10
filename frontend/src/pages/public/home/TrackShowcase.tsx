@@ -101,12 +101,13 @@ export function TrackShowcase({ programs }: { programs: OpenProgram[] | null }) 
   const payPlan = usePaymentPlan();
   const startPercent = payPlan.allowInstallments ? payPlan.firstInstallmentPercent : undefined;
   const cards: Card[] = live
-    ? programs!.slice(0, 6).map((p) => ({
+    ? programs!.map((p) => ({
         key: p.id,
         track: p.track,
         blurb: p.description,
         price: p.price,
         meta: `${p.cohort}${p.startDate ? ` · starts ${shortDate(p.startDate)}` : ''}`,
+        meta2: p.duration,
         href: `/public/tracks/${p.slug}`,
       }))
     : FALLBACK_TRACKS.map((t) => ({
