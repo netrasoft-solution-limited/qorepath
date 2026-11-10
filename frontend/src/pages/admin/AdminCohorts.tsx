@@ -703,7 +703,7 @@ function CourseContentModal({ program, onClose, onSaved }: { program: any; onClo
                 <input
                   value={schedule}
                   onChange={(e) => setSchedule(e.target.value)}
-                  placeholder="e.g. Tue, Thu & Sat — 7pm–9pm WAT"
+                  placeholder="e.g. Fri, Sat & Sun · 4:30–6:30pm WAT"
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-qore-medium"
                 />
               </div>

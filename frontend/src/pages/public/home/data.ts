@@ -12,9 +12,9 @@ export const SKILLS = [
 
 // Shown when no cohort is currently open in the database.
 export const FALLBACK_TRACKS = [
-  { track: 'Frontend Engineering', duration: '12 weeks', price: 150000, blurb: 'HTML, CSS & JavaScript through React and TypeScript.' },
-  { track: 'Backend Engineering', duration: '12 weeks', price: 150000, blurb: 'Node.js, NestJS, PostgreSQL, REST APIs and security.' },
-  { track: 'Product Design (UI/UX)', duration: '10 weeks', price: 120000, blurb: 'Figma, user research, testing and a portfolio.' },
+  { track: 'Frontend Engineering', duration: '2 months', price: 250000, blurb: 'HTML, CSS & JavaScript through React and TypeScript.' },
+  { track: 'Backend Engineering', duration: '2 months', price: 250000, blurb: 'Node.js, NestJS, PostgreSQL, REST APIs and security.' },
+  { track: 'Product Design (UI/UX)', duration: '2 months', price: 250000, blurb: 'Figma, user research, testing and a portfolio.' },
 ];
 
 export const JOURNEY = [
@@ -47,7 +47,7 @@ export const PROJECTS = [
 
 export const FAQS = [
   { q: 'Do I need prior experience to join?', a: 'No prior experience is required for any of our tracks. We start from the foundations and build up to industry-level skills over the course of the cohort.' },
-  { q: 'How long is each cohort?', a: 'Frontend and Backend Engineering run for 12 weeks; Product Design runs for 10 weeks. All sessions are live and scheduled around working hours.' },
+  { q: 'How long is each cohort?', a: 'Every course runs for 2 months. Live classes are on Friday, Saturday and Sunday from 4:30pm to 6:30pm (WAT), so they fit around work and school.' },
   { q: 'What if I miss a live session?', a: 'Every live session is recorded and shows up in your dashboard, so you can catch up. Attendance is still tracked for your graduation record.' },
   { q: 'Is the certificate recognised by employers?', a: 'Every certificate has a unique number that anyone — including employers — can verify on our public verification page.' },
   { q: 'Can I pay in instalments?', a: 'Yes. Choose the two-instalment plan at checkout: pay part of the fee to secure your seat and settle the balance from your Payments page.' },
