@@ -89,7 +89,19 @@ export function PublicContact() {
               <p className="mt-2 text-sm text-gray-500">Thanks, {form.name.split(' ')[0]}. We'll reply to {form.email}.</p>
             </div>
           ) : info && !info.acceptsMessages ? (
-            <div className="py-10 text-center text-sm text-gray-500">The contact form isn't available yet. Please check back soon.</div>
+            <div className="py-10 text-center">
+              <Phone size={36} className="mx-auto text-qore-medium" />
+              <h2 className="mt-4 font-display text-xl font-bold text-qore-dark">Talk to us</h2>
+              {info.phone ? (
+                <p className="mx-auto mt-2 max-w-sm text-sm text-gray-500">
+                  Call {info.contactName || 'our team'} on{' '}
+                  <a href={`tel:${info.phone.replace(/\s/g, '')}`} className="font-semibold text-qore-medium hover:underline">{info.phone}</a>
+                  {' '}for questions about tracks, payments or certificates.
+                </p>
+              ) : (
+                <p className="mt-2 text-sm text-gray-500">Our contact details are coming soon.</p>
+              )}
+            </div>
           ) : (
             <form onSubmit={submit} className="space-y-4">
               <h2 className="font-display text-xl font-bold text-qore-dark">Send a message</h2>

@@ -51,7 +51,7 @@ export const FAQS = [
   { q: 'What if I miss a live session?', a: 'Every live session is recorded and shows up in your dashboard, so you can catch up. Attendance is still tracked for your graduation record.' },
   { q: 'Is the certificate recognised by employers?', a: 'Every certificate has a unique number that anyone — including employers — can verify on our public verification page.' },
   { q: 'Can I pay in instalments?', a: 'Yes. Choose the two-instalment plan at checkout: pay part of the fee to secure your seat and settle the balance from your Payments page.' },
-  { q: 'Why does my payment say Binarify Community Outreach?', a: 'Binarify Community Outreach is NetraNova’s payment partner. Payments are processed securely by Paystack through their account, so that name appears at checkout and on your bank statement. Your receipt from NetraNova confirms your enrollment.' },
+  { q: 'Why does my payment say Binarify Community Outreach?', a: 'Binarify Community Outreach is Netrasoft Solutions’ payment partner. Payments are processed securely by Paystack through their account, so that name appears at checkout and on your bank statement. Your receipt from NetraNova confirms your enrollment.' },
   { q: 'What if I need to withdraw?', a: 'You can withdraw from the Programs page in your dashboard. Refunds follow our published refund policy and are reviewed by our team before any money moves.' },
 ];
 

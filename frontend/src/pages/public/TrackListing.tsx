@@ -185,7 +185,7 @@ export function TrackListing() {
           <div className="rounded-[28px] bg-[#F5F8FF] p-8">
             <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-qore-medium"><Lock size={13} /> Secure checkout</p>
             <h3 className="font-display text-2xl font-extrabold text-qore-dark">Pay the way you prefer</h3>
-            <p className="mt-2 text-sm text-gray-500">Payments are processed by Paystack through Binarify Community Outreach, NetraNova's payment partner, so that name appears at checkout and on your bank statement. We never see or store your card details.</p>
+            <p className="mt-2 text-sm text-gray-500">Payments are processed by Paystack through Binarify Community Outreach, Netrasoft Solutions' payment partner, so that name appears at checkout and on your bank statement. We never see or store your card details.</p>
             <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
               {[[CreditCard, 'Card'], [Landmark, 'Bank transfer'], [Smartphone, 'USSD']].map(([I, t]: any) => (
                 <div key={t} className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
