@@ -434,6 +434,21 @@ export function AdminCohorts() {
         <div className="p-12 text-center text-gray-400">Loading…</div>
       ) : (
         <div className="space-y-4">
+          {cohorts.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-gray-200 bg-white/70 p-12 text-center">
+              <p className="font-semibold text-qore-text">No cohorts yet</p>
+              <p className="mx-auto mt-1 max-w-md text-sm text-gray-500">
+                A cohort is one intake with start and end dates. Create one, then use <b>Add track</b> on it to add courses
+                such as Cloud Engineering or Quality Assurance (QA).
+              </p>
+              <button onClick={openNewCohort} className="mt-5 rounded-xl bg-qore-medium px-5 py-2.5 text-sm font-semibold text-white hover:bg-qore-dark">
+                Create your first cohort
+              </button>
+            </div>
+          )}
+          {cohorts.length > 0 && filtered.length === 0 && (
+            <p className="p-8 text-center text-sm text-gray-400">No cohorts match your search.</p>
+          )}
           {filtered.map((cohort) => (
             <div key={cohort.id} className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
               {/* Cohort header row */}
