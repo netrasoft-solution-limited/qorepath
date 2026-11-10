@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, Clock, MessageCircle, Send, CheckCircle, AlertCircle } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, MessageCircle, UserRound, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import api from '../../lib/api';
 import { useSiteInfo, whatsappLink } from '../../lib/siteInfo';
 import { SocialLinks } from '../../components/SocialLinks';
@@ -32,6 +32,7 @@ export function PublicContact() {
   };
 
   const channels = info ? [
+    info.contactName && { icon: UserRound, label: 'NetraNova representative', value: info.contactName },
     info.contactEmail && { icon: Mail, label: 'Email', value: info.contactEmail, href: `mailto:${info.contactEmail}` },
     info.phone && { icon: Phone, label: 'Phone', value: info.phone, href: `tel:${info.phone.replace(/\s/g, '')}` },
     info.whatsapp && { icon: MessageCircle, label: 'WhatsApp', value: info.whatsapp, href: whatsappLink(info.whatsapp) },

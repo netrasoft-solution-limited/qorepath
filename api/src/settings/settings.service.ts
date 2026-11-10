@@ -38,6 +38,7 @@ export type EmailSettings = Record<string, EmailSetting>;
 export const SOCIALS = ['instagram', 'x', 'linkedin', 'facebook', 'youtube', 'tiktok'] as const;
 export interface SiteInfo {
   contactEmail: string; // where contact-form messages go, and shown on the Contact page
+  contactName: string; // the person visitors speak to, shown with the phone number
   phone: string;
   whatsapp: string;
   address: string;
@@ -46,7 +47,7 @@ export interface SiteInfo {
   termsText: string;
   privacyText: string;
 }
-export const EMPTY_SITE_INFO: SiteInfo = { contactEmail: '', phone: '', whatsapp: '', address: '', hours: '', socials: {}, termsText: '', privacyText: '' };
+export const EMPTY_SITE_INFO: SiteInfo = { contactEmail: '', contactName: '', phone: '', whatsapp: '', address: '', hours: '', socials: {}, termsText: '', privacyText: '' };
 const SITE_INFO_KEY = 'site_info';
 const MAX_LEGAL = 50_000;
 
@@ -141,7 +142,7 @@ export class SettingsService {
   async setSiteInfo(patch: Partial<SiteInfo>): Promise<SiteInfo> {
     const next = await this.getSiteInfo();
     const text = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : undefined);
-    for (const [k, max] of [['phone', 40], ['whatsapp', 40], ['address', 300], ['hours', 120], ['termsText', MAX_LEGAL], ['privacyText', MAX_LEGAL]] as const) {
+    for (const [k, max] of [['contactName', 120], ['phone', 40], ['whatsapp', 40], ['address', 300], ['hours', 120], ['termsText', MAX_LEGAL], ['privacyText', MAX_LEGAL]] as const) {
       const v = text(patch[k], max);
       if (v !== undefined) next[k] = v;
     }

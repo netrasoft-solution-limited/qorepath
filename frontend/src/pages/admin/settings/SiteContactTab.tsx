@@ -69,6 +69,7 @@ export function SiteContactTab() {
           <input type="email" value={form.contactEmail} onChange={(e) => set('contactEmail', e.target.value)} placeholder="hello@netrasoft.co" className={input} />
           <p className="text-xs text-gray-400 mt-1">Contact-form messages are emailed here (reply directly to answer the sender). Without it, the form is hidden.</p>
         </div>
+        <div><label className={label}>Contact person</label><input value={form.contactName ?? ''} onChange={(e) => set('contactName', e.target.value)} placeholder="e.g. NetraNova Representative" className={input} /></div>
         <div><label className={label}>Phone</label><input value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="+234 …" className={input} /></div>
         <div><label className={label}>WhatsApp number</label><input value={form.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} placeholder="+234 …" className={input} /></div>
         <div><label className={label}>Address</label><textarea rows={2} value={form.address} onChange={(e) => set('address', e.target.value)} className={input} /></div>

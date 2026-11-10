@@ -14,7 +14,7 @@ import { clientIp } from '../audit/audit.interceptor';
 
 // Logs the values actually saved (out-of-range input is clamped), for the fields that were sent.
 const SITE_LABELS: Record<string, string> = {
-  contactEmail: 'contact email', phone: 'phone', whatsapp: 'WhatsApp', address: 'address', hours: 'opening hours',
+  contactEmail: 'contact email', contactName: 'contact person', phone: 'phone', whatsapp: 'WhatsApp', address: 'address', hours: 'opening hours',
   socials: 'social links', termsText: 'Terms of Service', privacyText: 'Privacy Policy',
 };
 

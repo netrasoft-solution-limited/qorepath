@@ -3,6 +3,7 @@ import api from './api';
 
 export interface SiteInfo {
   contactEmail: string;
+  contactName: string;
   phone: string;
   whatsapp: string;
   address: string;

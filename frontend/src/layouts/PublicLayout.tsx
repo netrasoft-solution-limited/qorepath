@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, Menu, X } from 'lucide-react';
+import { ArrowRight, Menu, Phone, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { TRACKS } from '../pages/public/trackContent';
 import { useSiteInfo } from '../lib/siteInfo';
@@ -136,6 +136,15 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               <Link to="/register" className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#FFB020] to-[#FF6A00] px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-500/20">
                 Get notified about new cohorts <ArrowRight size={15} />
               </Link>
+              {site?.phone && (
+                <a href={`tel:${site.phone.replace(/\s/g, '')}`} className="mt-6 flex items-center gap-3 text-sm text-white/70 hover:text-white">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10"><Phone size={15} className="text-qore-highlight" /></span>
+                  <span>
+                    {site.contactName && <span className="block text-xs text-white/45">{site.contactName}, NetraNova representative</span>}
+                    <span className="font-semibold">{site.phone}</span>
+                  </span>
+                </a>
+              )}
               <SocialLinks socials={site?.socials} className="mt-6" />
             </div>
             <div className="grid grid-cols-2 gap-10 sm:grid-cols-3">
