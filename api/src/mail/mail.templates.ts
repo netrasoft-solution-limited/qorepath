@@ -156,6 +156,7 @@ export function paymentReceiptEmail(p: {
         ['Amount paid', esc(naira(p.amount))],
         ['Payment', p.installment ? esc(`Installment ${p.installment.number} of ${p.installment.total}`) : 'Full payment'],
         ['Reference', esc(p.reference)],
+        ['Paid to', "Binarify Community Outreach (NetraNova's payment partner)"],
       ])}${balanceNote}`,
       cta: { label: 'Go to my programs', url: `${p.appUrl}/learner/programs` },
       footnote: 'Keep this email as your receipt.',

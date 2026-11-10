@@ -193,6 +193,7 @@ export function PaymentModal({
 
               <p className="text-sm text-gray-500">
                 You'll complete your payment securely through Paystack — card, bank transfer, or USSD.
+                {' '}The checkout and your bank statement will show <b className="font-semibold text-gray-700">Binarify Community Outreach</b>, NetraNova's payment partner.
                 {isBalance ? ' This clears your remaining balance.' : ' You get access as soon as your first payment is confirmed.'}
               </p>
 

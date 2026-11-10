@@ -46,11 +46,12 @@ export const PROJECTS = [
 ];
 
 export const FAQS = [
-  { q: 'Do I need prior experience to join?', a: 'No prior experience is required for any of our tracks. We start from the foundations and build up to industry-level skills over the course of the cohort.' },
+  { q: 'Do I need prior experience to join?', a: 'Most tracks need no prior experience: we start from the foundations and build up to industry-level skills. Backend Engineering and Mobile Development ask for basic JavaScript first.' },
   { q: 'How long is each cohort?', a: 'Every course runs for 2 months. Live classes are on Friday, Saturday and Sunday from 4:30pm to 6:30pm (WAT), so they fit around work and school.' },
   { q: 'What if I miss a live session?', a: 'Every live session is recorded and shows up in your dashboard, so you can catch up. Attendance is still tracked for your graduation record.' },
   { q: 'Is the certificate recognised by employers?', a: 'Every certificate has a unique number that anyone — including employers — can verify on our public verification page.' },
   { q: 'Can I pay in instalments?', a: 'Yes. Choose the two-instalment plan at checkout: pay part of the fee to secure your seat and settle the balance from your Payments page.' },
+  { q: 'Why does my payment say Binarify Community Outreach?', a: 'Binarify Community Outreach is NetraNova’s payment partner. Payments are processed securely by Paystack through their account, so that name appears at checkout and on your bank statement. Your receipt from NetraNova confirms your enrollment.' },
   { q: 'What if I need to withdraw?', a: 'You can withdraw from the Programs page in your dashboard. Refunds follow our published refund policy and are reviewed by our team before any money moves.' },
 ];
 
